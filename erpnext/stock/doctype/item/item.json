@@ -16,6 +16,7 @@
   "variant_of",
   "item_name",
   "item_group",
+  "item_type",
   "is_item_from_hub",
   "stock_uom",
   "column_break0",
@@ -1053,6 +1054,19 @@
    "fieldtype": "Data",
    "label": "Default Manufacturer Part No",
    "read_only": 1
+  },
+  {
+   "bold": 1,
+   "default": "Product",
+   "fieldname": "item_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Type",
+   "length": 30,
+   "options": "Bundle\nFarm Box\nOther\nProduct\nPackaging\nService",
+   "reqd": 1,
+   "search_index": 1
   }
  ],
  "has_web_view": 1,
@@ -1060,7 +1074,7 @@
  "idx": 2,
  "image_field": "image",
  "max_attachments": 1,
- "modified": "2021-04-12 17:25:32.564158",
+ "modified": "2021-04-13 23:21:26.041878",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

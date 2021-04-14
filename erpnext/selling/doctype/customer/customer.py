@@ -104,6 +104,7 @@ class Customer(TransactionBase):
 				contact = make_contact(self)
 				self.db_set('customer_primary_contact', contact.name)
 				self.db_set('mobile_no', self.mobile_no)
+				# Farm To People - Disabling this so that email does not change.
 				self.db_set('email_id', self.email_id)
 
 	def create_primary_address(self):
