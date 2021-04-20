@@ -1,5 +1,4 @@
 {
- "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:item_group_name",
@@ -13,6 +12,10 @@
   "item_group_name",
   "parent_item_group",
   "is_group",
+  "show_in_website",
+  "route",
+  "slideshow",
+  "website_specifications",
   "image",
   "column_break_5",
   "defaults",
@@ -20,12 +23,8 @@
   "sec_break_taxes",
   "taxes",
   "sb9",
-  "show_in_website",
-  "route",
   "weightage",
-  "slideshow",
   "description",
-  "website_specifications",
   "lft",
   "rgt",
   "old_parent"
@@ -110,12 +109,14 @@
    "description": "Check this if you want to show in website",
    "fieldname": "show_in_website",
    "fieldtype": "Check",
+   "in_list_view": 1,
    "label": "Show in Website"
   },
   {
    "depends_on": "show_in_website",
    "fieldname": "route",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Route",
    "unique": 1
   },
@@ -129,6 +130,7 @@
    "description": "Show this slideshow at the top of the page",
    "fieldname": "slideshow",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Slideshow",
    "options": "Website Slideshow"
   },
@@ -143,6 +145,7 @@
    "depends_on": "show_in_website",
    "fieldname": "website_specifications",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Website Specifications",
    "options": "Item Website Specification"
   },
@@ -186,9 +189,8 @@
  "idx": 1,
  "image_field": "image",
  "is_tree": 1,
- "links": [],
  "max_attachments": 3,
- "modified": "2020-03-18 18:25:59.979083",
+ "modified": "2021-04-16 14:31:36.754043",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",
