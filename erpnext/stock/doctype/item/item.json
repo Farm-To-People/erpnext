@@ -323,6 +323,7 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "sb_barcodes",
    "fieldtype": "Section Break",
    "label": "Barcodes"
@@ -1074,7 +1075,7 @@
  "idx": 2,
  "image_field": "image",
  "max_attachments": 1,
- "modified": "2021-04-13 23:21:26.041878",
+ "modified": "2021-04-27 07:02:33.144775",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
