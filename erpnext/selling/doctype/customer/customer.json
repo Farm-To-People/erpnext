@@ -13,6 +13,8 @@
   "naming_series",
   "salutation",
   "customer_name",
+  "first_name",
+  "last_name",
   "email_id",
   "gender",
   "customer_type",
@@ -476,12 +478,22 @@
    "fieldname": "dn_required",
    "fieldtype": "Check",
    "label": "Allow Sales Invoice Creation Without Delivery Note"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
   }
  ],
  "icon": "fa fa-user",
  "idx": 363,
  "image_field": "image",
- "modified": "2021-04-14 04:49:50.264816",
+ "modified": "2021-05-14 11:20:06.316765",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
