@@ -560,6 +560,7 @@
   {
    "fieldname": "total_net_weight",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Total Net Weight",
    "print_hide": 1,
    "read_only": 1
@@ -1055,8 +1056,7 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "links": [],
- "modified": "2021-01-22 20:27:11.418690",
+ "modified": "2021-05-26 14:16:08.663315",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",

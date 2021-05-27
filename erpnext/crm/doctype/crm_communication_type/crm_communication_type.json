@@ -1,0 +1,48 @@
+{
+ "autoname": "field:comm_type",
+ "creation": "2021-05-25 21:42:08.731053",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "comm_type",
+  "comm_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "comm_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Type",
+   "unique": 1
+  },
+  {
+   "fieldname": "comm_description",
+   "fieldtype": "Data",
+   "label": "Description"
+  }
+ ],
+ "modified": "2021-05-25 21:56:06.911093",
+ "modified_by": "Administrator",
+ "module": "CRM",
+ "name": "CRM Communication Type",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "comm_type"
+}

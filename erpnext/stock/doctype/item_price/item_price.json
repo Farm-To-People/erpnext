@@ -1,5 +1,4 @@
 {
- "actions": [],
  "allow_import": 1,
  "creation": "2013-05-02 16:29:48",
  "description": "Multiple Item prices.",
@@ -77,7 +76,6 @@
    "fetch_from": "item_code.brand",
    "fieldname": "brand",
    "fieldtype": "Read Only",
-   "in_list_view": 1,
    "label": "Brand",
    "read_only": 1
   },
@@ -207,8 +205,7 @@
  ],
  "icon": "fa fa-flag",
  "idx": 1,
- "links": [],
- "modified": "2020-02-28 14:21:25.580331",
+ "modified": "2021-05-26 12:39:28.330759",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
