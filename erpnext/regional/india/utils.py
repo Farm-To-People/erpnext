@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import frappe, re, json
 from frappe import _
 import erpnext
-from frappe.utils import cstr, flt, date_diff, nowdate, round_based_on_smallest_currency_fraction, money_in_words
+from frappe.utils import cstr, flt, cint, date_diff, nowdate, round_based_on_smallest_currency_fraction, money_in_words, getdate
 from erpnext.regional.india import states, state_numbers
 from erpnext.controllers.taxes_and_totals import get_itemised_tax, get_itemised_taxable_amount, calculate_outstanding_amount
 from erpnext.controllers.accounts_controller import get_taxes_and_charges
@@ -14,6 +14,13 @@ from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.utils import get_account_currency
 from frappe.contacts.doctype.address.address import get_address_display
 from frappe.model.utils import get_fetch_values
+
+
+GST_INVOICE_NUMBER_FORMAT = re.compile(r"^[a-zA-Z0-9\-/]+$")   #alphanumeric and - /
+GSTIN_FORMAT = re.compile("^[0-9]{2}[A-Z]{4}[0-9A-Z]{1}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[1-9A-Z]{1}[0-9A-Z]{1}$")
+GSTIN_UIN_FORMAT = re.compile("^[0-9]{4}[A-Z]{3}[0-9]{5}[0-9A-Z]{3}")
+PAN_NUMBER_FORMAT = re.compile("[A-Z]{5}[0-9]{4}[A-Z]{1}")
+
 
 def validate_gstin_for_india(doc, method):
 	if hasattr(doc, 'gst_state') and doc.gst_state:
@@ -38,12 +45,10 @@ def validate_gstin_for_india(doc, method):
 		frappe.throw(_("Invalid GSTIN! A GSTIN must have 15 characters."))
 
 	if gst_category and gst_category == 'UIN Holders':
-		p = re.compile("^[0-9]{4}[A-Z]{3}[0-9]{5}[0-9A-Z]{3}")
-		if not p.match(doc.gstin):
+		if not GSTIN_UIN_FORMAT.match(doc.gstin):
 			frappe.throw(_("Invalid GSTIN! The input you've entered doesn't match the GSTIN format for UIN Holders or Non-Resident OIDAR Service Providers"))
 	else:
-		p = re.compile("^[0-9]{2}[A-Z]{4}[0-9A-Z]{1}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[1-9A-Z]{1}[0-9A-Z]{1}$")
-		if not p.match(doc.gstin):
+		if not GSTIN_FORMAT.match(doc.gstin):
 			frappe.throw(_("Invalid GSTIN! The input you've entered doesn't match the format of GSTIN."))
 
 		validate_gstin_check_digit(doc.gstin)
@@ -161,6 +166,20 @@ def set_transporter_address(doc, method=None):
 
 	doc.transporter_address = transporter_address
 	doc.transporter_address_display = get_address_display(transporter_address)
+
+def validate_document_name(doc, method=None):
+	"""Validate GST invoice number requirements."""
+	country = frappe.get_cached_value("Company", doc.company, "country")
+
+	# Date was chosen as start of next FY to avoid irritating current users.
+	if country != "India" or getdate(doc.posting_date) < getdate("2021-04-01"):
+		return
+
+	if len(doc.name) > 16:
+		frappe.throw(_("Maximum length of document number should be 16 characters as per GST rules. Please change the naming series."))
+
+	if not GST_INVOICE_NUMBER_FORMAT.match(doc.name):
+		frappe.throw(_("Document name should only contain alphanumeric values, dash(-) and slash(/) characters as per GST rules. Please change the naming series."))
 
 # don't remove this function it is used in tests
 def test_method():
@@ -715,25 +734,12 @@ def update_grand_total_for_rcm(doc, method):
 	if country != 'India':
 		return
 
-	if not doc.total_taxes_and_charges:
+	gst_tax, base_gst_tax = get_gst_tax_amount(doc)
+
+	if not base_gst_tax:
 		return
 
 	if doc.reverse_charge == 'Y':
-		gst_accounts = get_gst_accounts(doc.company)
-		gst_account_list = gst_accounts.get('cgst_account') + gst_accounts.get('sgst_account') \
-			+ gst_accounts.get('igst_account')
-
-		base_gst_tax = 0
-		gst_tax = 0
-
-		for tax in doc.get('taxes'):
-			if tax.category not in ("Total", "Valuation and Total"):
-				continue
-
-			if flt(tax.base_tax_amount_after_discount_amount) and tax.account_head in gst_account_list:
-				base_gst_tax += tax.base_tax_amount_after_discount_amount
-				gst_tax += tax.tax_amount_after_discount_amount
-
 		doc.taxes_and_charges_added -= gst_tax
 		doc.total_taxes_and_charges -= gst_tax
 		doc.base_taxes_and_charges_added -= base_gst_tax
@@ -742,16 +748,18 @@ def update_grand_total_for_rcm(doc, method):
 		update_totals(gst_tax, base_gst_tax, doc)
 
 def update_totals(gst_tax, base_gst_tax, doc):
-	doc.base_grand_total -= base_gst_tax
 	doc.grand_total -= gst_tax
+	doc.base_grand_total = (doc.grand_total * doc.conversion_rate)
 
 	if doc.meta.get_field("rounded_total"):
 		if not doc.is_rounded_total_disabled():
 			doc.rounded_total = round_based_on_smallest_currency_fraction(doc.grand_total,
 				doc.currency, doc.precision("rounded_total"))
+			doc.base_rounded_total = doc.rounded_total * doc.conversion_rate
 
-			doc.rounding_adjustment += flt(doc.rounded_total - doc.grand_total,
+			doc.rounding_adjustment = flt(doc.rounded_total - doc.grand_total,
 				doc.precision("rounding_adjustment"))
+			doc.base_rounding_adjustment = doc.rounding_adjustment * doc.conversion_rate
 
 		calculate_outstanding_amount(doc)
 
@@ -763,6 +771,11 @@ def make_regional_gl_entries(gl_entries, doc):
 	country = frappe.get_cached_value('Company', doc.company, 'country')
 
 	if country != 'India':
+		return gl_entries
+
+	gst_tax, base_gst_tax = get_gst_tax_amount(doc)
+
+	if not base_gst_tax:
 		return gl_entries
 
 	if doc.reverse_charge == 'Y':
@@ -792,3 +805,70 @@ def make_regional_gl_entries(gl_entries, doc):
 				)
 
 	return gl_entries
+
+def get_gst_tax_amount(doc):
+	gst_accounts = get_gst_accounts(doc.company)
+	gst_account_list = gst_accounts.get('cgst_account', []) + gst_accounts.get('sgst_account', []) \
+		+ gst_accounts.get('igst_account', [])
+
+	base_gst_tax = 0
+	gst_tax = 0
+
+	for tax in doc.get('taxes'):
+		if tax.category not in ("Total", "Valuation and Total"):
+			continue
+
+		if flt(tax.base_tax_amount_after_discount_amount) and tax.account_head in gst_account_list:
+			if tax.add_deduct_tax == "Add":
+				base_gst_tax += tax.base_tax_amount_after_discount_amount
+				gst_tax += tax.tax_amount_after_discount_amount
+			else:
+				base_gst_tax -= tax.base_tax_amount_after_discount_amount
+				gst_tax -= tax.tax_amount_after_discount_amount
+
+	return gst_tax, base_gst_tax
+
+def update_taxable_values(doc, method):
+	country = frappe.get_cached_value('Company', doc.company, 'country')
+
+	if country != 'India':
+		return
+
+	gst_accounts = get_gst_accounts(doc.company)
+
+	# Only considering sgst account to avoid inflating taxable value
+	gst_account_list = gst_accounts.get('sgst_account', []) + gst_accounts.get('sgst_account', []) \
+		+ gst_accounts.get('igst_account', [])
+
+	additional_taxes = 0
+	total_charges = 0
+	item_count = 0
+	considered_rows = []
+
+	for tax in doc.get('taxes'):
+		prev_row_id = cint(tax.row_id) - 1
+		if tax.account_head in gst_account_list and prev_row_id not in considered_rows:
+			if tax.charge_type == 'On Previous Row Amount':
+				additional_taxes += doc.get('taxes')[prev_row_id].tax_amount_after_discount_amount
+				considered_rows.append(prev_row_id)
+			if tax.charge_type == 'On Previous Row Total':
+				additional_taxes += doc.get('taxes')[prev_row_id].base_total - doc.base_net_total
+				considered_rows.append(prev_row_id)
+
+	for item in doc.get('items'):
+		if doc.apply_discount_on == 'Grand Total' and doc.discount_amount:
+			proportionate_value = item.base_amount if doc.base_total else item.qty
+			total_value = doc.base_total if doc.base_total else doc.total_qty
+		else:
+			proportionate_value = item.base_net_amount if doc.base_net_total else item.qty
+			total_value = doc.base_net_total if doc.base_net_total else doc.total_qty
+
+		applicable_charges = flt(flt(proportionate_value * (flt(additional_taxes) / flt(total_value)),
+			item.precision('taxable_value')))
+		item.taxable_value = applicable_charges + proportionate_value
+		total_charges += applicable_charges
+		item_count += 1
+
+	if total_charges != additional_taxes:
+		diff = additional_taxes - total_charges
+		doc.get('items')[item_count - 1].taxable_value += diff

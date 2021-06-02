@@ -507,6 +507,7 @@ erpnext.utils.update_child_items = function(opts) {
 	}, {
 		fieldtype:'Currency',
 		fieldname:"rate",
+		options: "currency",
 		default: 0,
 		read_only: 0,
 		in_list_view: 1,
@@ -693,7 +694,7 @@ erpnext.utils.map_current_doc = function(opts) {
 }
 
 frappe.form.link_formatters['Item'] = function(value, doc) {
-	if (doc && value && doc.item_name && doc.item_name !== value) {
+	if (doc && value && doc.item_name && doc.item_name !== value && doc.item_code === value) {
 		return value + ': ' + doc.item_name;
 	} else if (!value && doc.doctype && doc.item_name) {
 		// format blank value in child table
