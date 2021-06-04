@@ -14,6 +14,9 @@
   "naming_series",
   "salutation",
   "customer_name",
+  "first_name",
+  "last_name",
+  "email_id",
   "gender",
   "customer_type",
   "pan",
@@ -46,8 +49,6 @@
   "primary_address_and_contact_detail",
   "customer_primary_contact",
   "mobile_no",
-  "email_id",
-  "column_break_26",
   "customer_primary_address",
   "primary_address",
   "default_receivable_accounts",
@@ -70,7 +71,8 @@
   "default_commission_rate",
   "sales_team_section",
   "sales_team",
-  "customer_pos_id"
+  "customer_pos_id",
+  "crm_communications"
  ],
  "fields": [
   {
@@ -309,14 +311,12 @@
    "label": "Mobile No"
   },
   {
-   "fetch_from": "customer_primary_contact.email_id",
    "fieldname": "email_id",
-   "fieldtype": "Read Only",
-   "label": "Email Id"
-  },
-  {
-   "fieldname": "column_break_26",
-   "fieldtype": "Column Break"
+   "fieldtype": "Data",
+   "label": "Email Id",
+   "reqd": 1,
+   "set_only_once": 1,
+   "unique": 1
   },
   {
    "description": "Reselect, if the chosen address is edited after save",
@@ -493,6 +493,22 @@
    "fieldtype": "Link",
    "label": "Tax Withholding Category",
    "options": "Tax Withholding Category"
+  },
+  {
+    "fieldname": "first_name",
+    "fieldtype": "Data",
+    "label": "First Name"
+  },
+  {
+    "fieldname": "last_name",
+    "fieldtype": "Data",
+    "label": "Last Name"
+  },
+  {
+    "fieldname": "crm_communications",
+    "fieldtype": "Table",
+    "label": "CRM Communications",
+    "options": "CRM Communication Subscription"
   }
  ],
  "icon": "fa fa-user",
@@ -500,7 +516,7 @@
  "image_field": "image",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-01-28 12:54:57.258959",
+ "modified": "2021-06-01 12:54:57.258959",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

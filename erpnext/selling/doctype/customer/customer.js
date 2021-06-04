@@ -93,7 +93,8 @@ frappe.ui.form.on("Customer", {
 	customer_primary_contact: function(frm){
 		if(!frm.doc.customer_primary_contact){
 			frm.set_value("mobile_no", "");
-			frm.set_value("email_id", "");
+			// Farm To People: Do Not reset email_id
+			// frm.set_value("email_id", "");
 		}
 	},
 

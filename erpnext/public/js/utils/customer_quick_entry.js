@@ -17,6 +17,8 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
 			label: __("Primary Contact Details"),
 			collapsible: 1
 		},
+		// Farm To People: Do not allow 'email_id' in Quick Entry
+		/*		
 		{
 			label: __("Email Id"),
 			fieldname: "email_id",
@@ -25,6 +27,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
 		{
 			fieldtype: "Column Break"
 		},
+		*/
 		{
 			label: __("Mobile Number"),
 			fieldname: "mobile_no",

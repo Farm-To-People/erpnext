@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 
+# Farm To People: Do not update a Customer's email_id when Contacts are updated.
 def execute():	
 	frappe.reload_doctype('Customer')
 
@@ -17,5 +18,5 @@ def execute():
 			) as contact
 		set 
 			`tabCustomer`.customer_primary_contact = contact.name,
-			`tabCustomer`.mobile_no = contact.mobile_no, `tabCustomer`.email_id = contact.email_id 
+			`tabCustomer`.mobile_no = contact.mobile_no
 		where `tabCustomer`.name = contact.link_name""")

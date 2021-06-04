@@ -18,6 +18,9 @@ from erpnext.accounts.doctype.invoice_discounting.invoice_discounting import get
 
 from six import string_types, iteritems
 
+# Pinstripe
+from pinstripe.pinstripe.doctype.pinstripe_payment.pinstripe_payment import create_from_payment_entry, cancel_from_payment_entry
+
 class InvalidPaymentEntry(ValidationError):
 	pass
 
@@ -68,6 +71,10 @@ class PaymentEntry(AccountsController):
 		self.setup_party_account_field()
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
+		# Begin: Farm To People
+		if not create_from_payment_entry(self.name):
+			frappe.throw(_("Unsuccessful attempt at creating payment via Stripe API."))
+		# End: Farm To People
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
 		self.update_advance_paid()
@@ -76,7 +83,13 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule()
 		self.set_status()
 
+	def before_cancel(self):
+		print("TBD: Python Code: Before I cancel, either refund in Stripe, or credit Customer's account).")
+
 	def on_cancel(self):
+		# TODO: Add a dialog button/box to confirm cancellation.
+		frappe.msgprint("Confirm cancel Stripe payment?")
+		return		
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
 		self.setup_party_account_field()
 		self.make_gl_entries(cancel=1)
@@ -85,6 +98,10 @@ class PaymentEntry(AccountsController):
 		self.update_expense_claim()
 		self.update_donation(cancel=1)
 		self.delink_advance_entry_references()
+		# Begin: Farm To People
+		if not cancel_from_payment_entry(self.name):
+			frappe.throw(_("Unsuccessful attempt at cancelling payment via Stripe API."))
+		# End: Farm To People		
 		self.update_payment_schedule(cancel=1)
 		self.set_payment_req_status()
 		self.set_status()

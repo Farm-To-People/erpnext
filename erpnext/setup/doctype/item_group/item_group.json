@@ -13,6 +13,10 @@
   "item_group_name",
   "parent_item_group",
   "is_group",
+  "show_in_website",
+  "route",
+  "slideshow",
+  "website_specifications",
   "image",
   "column_break_5",
   "defaults",
@@ -20,8 +24,6 @@
   "sec_break_taxes",
   "taxes",
   "sb9",
-  "show_in_website",
-  "route",
   "weightage",
   "slideshow",
   "website_title",
@@ -114,13 +116,15 @@
    "description": "Check this if you want to show in website",
    "fieldname": "show_in_website",
    "fieldtype": "Check",
-   "label": "Show in Website"
+   "label": "Show in Website",
+   "in_list_view": 1
   },
   {
    "depends_on": "show_in_website",
    "fieldname": "route",
    "fieldtype": "Data",
    "label": "Route",
+    "hidden": 1,
    "unique": 1
   },
   {
@@ -134,7 +138,8 @@
    "fieldname": "slideshow",
    "fieldtype": "Link",
    "label": "Slideshow",
-   "options": "Website Slideshow"
+   "options": "Website Slideshow",
+   "hidden": 1
   },
   {
    "depends_on": "show_in_website",
@@ -148,7 +153,8 @@
    "fieldname": "website_specifications",
    "fieldtype": "Table",
    "label": "Website Specifications",
-   "options": "Item Website Specification"
+   "options": "Item Website Specification",
+   "hidden": 1
   },
   {
    "fieldname": "lft",
@@ -214,7 +220,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2021-02-18 13:40:30.049650",
+ "modified": "2021-06-23 13:40:30.049650",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",

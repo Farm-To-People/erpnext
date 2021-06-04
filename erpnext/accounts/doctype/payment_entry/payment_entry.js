@@ -4,6 +4,24 @@
 frappe.provide("erpnext.accounts.dimensions");
 
 frappe.ui.form.on('Payment Entry', {
+
+	// Farm To People
+	before_cancel: function(frm) {
+		var me = this;
+		let confirm_msg = "Are you sure you want to Cancel this Payment Entry?  This will Refund the Stripe payment.";
+		frappe.confirm(__(confirm_msg, [__("Refund Stripe?")]), 
+			function() {
+
+				frappe.msgprint("Confirmed.");
+			},
+			function() {
+				// if No
+				frappe.msgprint("Not Confirmed.");
+				return me.handle_save_fail(btn, on_error);
+			}
+		);
+	},
+
 	onload: function(frm) {
 		if(frm.doc.__islocal) {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);

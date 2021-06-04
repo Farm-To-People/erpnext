@@ -17,6 +17,7 @@
   "variant_of",
   "item_name",
   "item_group",
+  "item_type",
   "is_item_from_hub",
   "stock_uom",
   "column_break0",
@@ -320,12 +321,14 @@
    "in_preview": 1,
    "label": "Description",
    "oldfieldname": "description",
-   "oldfieldtype": "Text"
+   "oldfieldtype": "Text",
+   "read_only": 1
   },
   {
    "fieldname": "sb_barcodes",
    "fieldtype": "Section Break",
-   "label": "Barcodes"
+   "label": "Barcodes",
+   "collapsible": 1
   },
   {
    "fieldname": "barcodes",
@@ -346,8 +349,7 @@
   {
    "fieldname": "shelf_life_in_days",
    "fieldtype": "Int",
-   "label": "Shelf Life In Days",
-   "mandatory_depends_on": "eval:doc.has_batch_no && doc.has_expiry_date"
+   "label": "Shelf Life In Days"
   },
   {
    "default": "2099-12-31",
@@ -1058,7 +1060,20 @@
    "fieldname": "website_image_alt",
    "fieldtype": "Data",
    "label": "Image Description"
-  }
+  },
+  {
+	"bold": 1,
+	"default": "Product",
+	"fieldname": "item_type",
+	"fieldtype": "Select",
+	"in_list_view": 1,
+	"in_standard_filter": 1,
+	"label": "Item Type",
+	"length": 30,
+	"options": "Bundle\nFarm Box\nOther\nProduct\nPackaging\nService",
+	"reqd": 1,
+	"search_index": 1
+   }
  ],
  "has_web_view": 1,
  "icon": "fa fa-tag",
@@ -1067,7 +1082,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-03-18 14:04:38.575519",
+ "modified": "2021-06-01 14:04:38.575519",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
