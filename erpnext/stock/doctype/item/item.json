@@ -16,6 +16,7 @@
   "item_code",
   "variant_of",
   "item_name",
+  "item_name_web",
   "item_group",
   "item_type",
   "is_item_from_hub",
@@ -140,7 +141,10 @@
   "publish_in_hub",
   "hub_category_to_publish",
   "hub_warehouse",
-  "synced_with_hub"
+  "synced_with_hub",
+  "ingredients_ftp",
+  "legacy_image_url_ftp",
+  "nutrition_facts_ftp"
  ],
  "fields": [
   {
@@ -325,10 +329,10 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "sb_barcodes",
    "fieldtype": "Section Break",
-   "label": "Barcodes",
-   "collapsible": 1
+   "label": "Barcodes"
   },
   {
    "fieldname": "barcodes",
@@ -971,7 +975,8 @@
    "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
    "fieldname": "web_long_description",
    "fieldtype": "Text Editor",
-   "label": "Website Description"
+   "label": "Website Description",
+   "read_only": 1
   },
   {
    "description": "You can use any valid Bootstrap 4 markup in this field. It will be shown on your Item Page.",
@@ -1062,18 +1067,43 @@
    "label": "Image Description"
   },
   {
-	"bold": 1,
-	"default": "Product",
-	"fieldname": "item_type",
-	"fieldtype": "Select",
-	"in_list_view": 1,
-	"in_standard_filter": 1,
-	"label": "Item Type",
-	"length": 30,
-	"options": "Bundle\nFarm Box\nOther\nProduct\nPackaging\nService",
-	"reqd": 1,
-	"search_index": 1
-   }
+   "bold": 1,
+   "default": "Product",
+   "fieldname": "item_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Type",
+   "length": 30,
+   "options": "Bundle\nFarm Box\nOther\nProduct\nPackaging\nService",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "item_name",
+   "fetch_if_empty": 1,
+   "fieldname": "item_name_web",
+   "fieldtype": "Data",
+   "label": "Item Web Name",
+   "search_index": 1
+  },
+  {
+   "fieldname": "ingredients_ftp",
+   "fieldtype": "Long Text",
+   "label": "Ingredients"
+  },
+  {
+   "fieldname": "legacy_image_url_ftp",
+   "fieldtype": "Data",
+   "label": "Legacy Image URL",
+   "length": 255,
+   "read_only": 1
+  },
+  {
+   "fieldname": "nutrition_facts_ftp",
+   "fieldtype": "Small Text",
+   "label": "Nutrition Facts"
+  }
  ],
  "has_web_view": 1,
  "icon": "fa fa-tag",
@@ -1082,7 +1112,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-06-01 14:04:38.575519",
+ "modified": "2021-06-16 20:23:22.982318",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
