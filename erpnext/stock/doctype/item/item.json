@@ -81,6 +81,7 @@
   "is_customer_provided_item",
   "customer",
   "supplier_details",
+  "default_supplier",
   "delivered_by_supplier",
   "column_break2",
   "supplier_items",
@@ -218,7 +219,7 @@
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "label": "Default Unit of Measure",
+   "label": "Stock Unit of Measure",
    "oldfieldname": "stock_uom",
    "oldfieldtype": "Link",
    "options": "UOM",
@@ -1103,6 +1104,13 @@
    "fieldname": "nutrition_facts_ftp",
    "fieldtype": "Small Text",
    "label": "Nutrition Facts"
+  },
+  {
+   "fieldname": "default_supplier",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Default Supplier",
+   "options": "Supplier"
   }
  ],
  "has_web_view": 1,
@@ -1112,7 +1120,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-06-16 20:23:22.982318",
+ "modified": "2021-06-21 17:53:27.537921",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

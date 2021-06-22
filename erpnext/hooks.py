@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from frappe import _
 
+# pylint: disable=invalid-name
+
 app_name = "erpnext"
 app_title = "ERPNext"
 app_publisher = "Frappe Technologies Pvt. Ltd."
@@ -381,11 +383,12 @@ scheduler_events = {
 
 email_brand_image = "assets/erpnext/images/erpnext-logo.jpg"
 
+# Farm To People : Changing the default mail footer.
 default_mail_footer = """
 	<span>
-		Sent via
-		<a class="text-muted" href="https://erpnext.com?source=via_email_footer" target="_blank">
-			ERPNext
+		Sent from
+		<a class="text-muted" href="https://farmtopeople.com?source=via_email_footer" target="_blank">
+			Farm To People
 		</a>
 	</span>
 """

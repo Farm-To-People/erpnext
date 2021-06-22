@@ -72,7 +72,11 @@
   "sales_team_section",
   "sales_team",
   "customer_pos_id",
-  "crm_communications"
+  "crm_communications",
+  "sb_pauses",
+  "pauses",
+  "sb_item_preferences",
+  "preferences"
  ],
  "fields": [
   {
@@ -495,20 +499,42 @@
    "options": "Tax Withholding Category"
   },
   {
-    "fieldname": "first_name",
-    "fieldtype": "Data",
-    "label": "First Name"
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name"
   },
   {
-    "fieldname": "last_name",
-    "fieldtype": "Data",
-    "label": "Last Name"
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
   },
   {
-    "fieldname": "crm_communications",
-    "fieldtype": "Table",
-    "label": "CRM Communications",
-    "options": "CRM Communication Subscription"
+   "fieldname": "crm_communications",
+   "fieldtype": "Table",
+   "label": "CRM Communications",
+   "options": "CRM Communication Subscription"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_pauses",
+   "fieldtype": "Section Break",
+   "label": "Pauses"
+  },
+  {
+   "fieldname": "pauses",
+   "fieldtype": "Table",
+   "options": "Customer Holds"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_item_preferences",
+   "fieldtype": "Section Break",
+   "label": "Item Preferences"
+  },
+  {
+   "fieldname": "preferences",
+   "fieldtype": "Table",
+   "options": "Customer Item Prefs"
   }
  ],
  "icon": "fa fa-user",
@@ -516,7 +542,7 @@
  "image_field": "image",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-06-01 12:54:57.258959",
+ "modified": "2021-06-22 07:23:53.387180",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
