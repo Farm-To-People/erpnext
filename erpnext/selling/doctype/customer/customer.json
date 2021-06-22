@@ -46,6 +46,7 @@
   "website",
   "column_break1",
   "contact_html",
+  "delivery_instructions",
   "primary_address_and_contact_detail",
   "customer_primary_contact",
   "mobile_no",
@@ -511,7 +512,6 @@
   {
    "fieldname": "crm_communications",
    "fieldtype": "Table",
-   "label": "CRM Communications",
    "options": "CRM Communication Subscription"
   },
   {
@@ -535,6 +535,12 @@
    "fieldname": "preferences",
    "fieldtype": "Table",
    "options": "Customer Item Prefs"
+  },
+  {
+   "description": "Instructions for driver to deliver products.",
+   "fieldname": "delivery_instructions",
+   "fieldtype": "Small Text",
+   "label": "Delivery Instructions"
   }
  ],
  "icon": "fa fa-user",
@@ -542,7 +548,7 @@
  "image_field": "image",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-06-22 07:23:53.387180",
+ "modified": "2021-06-22 12:57:10.733952",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
