@@ -58,6 +58,7 @@
   "reference_no",
   "column_break_23",
   "reference_date",
+  "daily_order",
   "clearance_date",
   "accounting_dimensions_section",
   "project",
@@ -584,12 +585,18 @@
    "fieldname": "custom_remarks",
    "fieldtype": "Check",
    "label": "Custom Remarks"
+  },
+  {
+   "fieldname": "daily_order",
+   "fieldtype": "Link",
+   "label": "Daily Order",
+   "options": "Daily Order"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-03-08 13:05:16.958866",
+ "modified": "2021-06-23 08:19:45.832698",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",

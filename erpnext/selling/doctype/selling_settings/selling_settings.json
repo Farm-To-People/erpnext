@@ -43,6 +43,7 @@
    "options": "Campaign Name\nNaming Series"
   },
   {
+   "description": "This is the default value for new Customers; not the default filter.",
    "fieldname": "customer_group",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -159,7 +160,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2021-04-04 20:18:12.814624",
+ "modified": "2021-06-27 09:40:02.191247",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",

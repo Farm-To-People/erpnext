@@ -204,6 +204,29 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		});
 	},
 
+	// Begin: Datahenge LLC
+	get_items_from_daily_orders: function() {
+		erpnext.utils.map_current_doc({
+			method: "ftp.ftp_module.doctype.daily_order.to_purchase_order.make_purchase_order_based_on_supplier",
+			args: {
+				supplier: this.frm.doc.supplier
+			},
+			source_doctype: "Daily Order",
+			source_name: this.frm.doc.supplier,
+			target: this.frm,
+			setters: {
+				company: me.frm.doc.company
+			},
+			get_query_filters: {
+				docstatus: ["!=", 2],
+				supplier: this.frm.doc.supplier
+			},
+			// get_query_method: "erpnext.stock.doctype.material_request.material_request.get_material_requests_based_on_supplier"
+			get_query_method: "ftp.ftp_module.doctype.daily_order.to_purchase_order.get_daily_orders_based_on_supplier"
+		});
+	},	
+	// End: Datahenge LLC
+
 	validate: function() {
 		set_schedule_date(this.frm);
 	},

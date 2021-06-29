@@ -72,8 +72,10 @@ class PaymentEntry(AccountsController):
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
 		# Begin: Farm To People
-		if not create_from_payment_entry(self.name):
+		payment_intent_id =  create_from_payment_entry(self.name)
+		if not payment_intent_id:
 			frappe.throw(_("Unsuccessful attempt at creating payment via Stripe API."))
+		self.reference_no = payment_intent_id
 		# End: Farm To People
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
