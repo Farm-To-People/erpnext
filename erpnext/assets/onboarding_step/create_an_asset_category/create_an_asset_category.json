@@ -13,6 +13,7 @@
  "name": "Create an Asset Category",
  "owner": "Administrator",
  "reference_document": "Asset Category",
+ "show_form_tour": 0,
  "show_full_form": 0,
  "title": "Create an Asset Category",
  "validate_action": 0

@@ -13,6 +13,7 @@
  "name": "Create a Fixed Asset Item",
  "owner": "Administrator",
  "reference_document": "Item",
+ "show_form_tour": 0,
  "show_full_form": 0,
  "title": "Create a Fixed Asset Item",
  "validate_action": 0

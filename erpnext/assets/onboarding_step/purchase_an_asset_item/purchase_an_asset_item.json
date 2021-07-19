@@ -13,6 +13,7 @@
  "name": "Purchase an Asset Item",
  "owner": "Administrator",
  "reference_document": "Purchase Receipt",
+ "show_form_tour": 0,
  "show_full_form": 0,
  "title": "Purchase an Asset Item",
  "validate_action": 0

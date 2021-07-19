@@ -26,6 +26,12 @@ frappe.ui.form.on("Item", {
 
 	refresh: function(frm) {
 		if (frm.doc.is_stock_item) {
+			// Begin: FTP
+			frm.add_custom_button(__("Website Sales Controls"), function() {
+				frappe.set_route("Form", "Item Sales Controls", frm.doc.name);
+			}, __( )).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});;
+			// End: FTP
+
 			frm.add_custom_button(__("Stock Balance"), function() {
 				frappe.route_options = {
 					"item_code": frm.doc.name
@@ -98,6 +104,7 @@ frappe.ui.form.on("Item", {
 			erpnext.item.make_dashboard(frm);
 		}
 
+		/* Redundant: Already part of Tridot 
 		frm.add_custom_button(__('Duplicate'), function() {
 			var new_item = frappe.model.copy_doc(frm.doc);
 			if(new_item.item_name===new_item.item_code) {
@@ -108,6 +115,7 @@ frappe.ui.form.on("Item", {
 			}
 			frappe.set_route('Form', 'Item', new_item.name);
 		});
+		*/
 
 		if(frm.doc.has_variants) {
 			frm.add_custom_button(__("Item Variant Settings"), function() {

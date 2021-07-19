@@ -13,6 +13,7 @@
  "name": "Create an Asset",
  "owner": "Administrator",
  "reference_document": "Asset",
+ "show_form_tour": 0,
  "show_full_form": 0,
  "title": "Create an Asset",
  "validate_action": 0

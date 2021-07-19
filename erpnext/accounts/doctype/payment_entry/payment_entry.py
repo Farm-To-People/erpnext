@@ -3,9 +3,12 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe, erpnext, json
+import json
+from six import string_types, iteritems
+import frappe
 from frappe import _, scrub, ValidationError
 from frappe.utils import flt, comma_or, nowdate, getdate
+import erpnext
 from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on
 from erpnext.accounts.party import get_party_account
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
@@ -16,10 +19,10 @@ from erpnext.accounts.doctype.bank_account.bank_account import get_party_bank_ac
 from erpnext.controllers.accounts_controller import AccountsController, get_supplier_block_status
 from erpnext.accounts.doctype.invoice_discounting.invoice_discounting import get_party_account_based_on_invoice_discounting
 
-from six import string_types, iteritems
+# FTP and Pinstripe
+from ftp.ftp_module.generics import Result
+from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment
 
-# Pinstripe
-from pinstripe.pinstripe.doctype.pinstripe_payment.pinstripe_payment import create_from_payment_entry, cancel_from_payment_entry
 
 class InvalidPaymentEntry(ValidationError):
 	pass
@@ -72,10 +75,12 @@ class PaymentEntry(AccountsController):
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
 		# Begin: Farm To People
-		payment_intent_id =  create_from_payment_entry(self.name)
-		if not payment_intent_id:
-			frappe.throw(_("Unsuccessful attempt at creating payment via Stripe API."))
-		self.reference_no = payment_intent_id
+		if self.mode_of_payment == 'Stripe' and not self.reference_no:
+			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name)
+			if not payment_intent_id:
+				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API."))
+			self.reference_no = payment_intent_id
+		
 		# End: Farm To People
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
@@ -85,13 +90,25 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule()
 		self.set_status()
 
+	def create_stripe_refund(self):
+		"""
+		This function should be called rarely.
+		The purpose is to reverse the Payment in Stripe, and cancel the ERPNext Payment Entry.
+		"""
+
+	def can_cancel(self):
+		 # We can never cancel a Payment Entry that references Stripe;
+		 # Instead, the solution is to create a second, opposite Payment Entry.
+		if self.mode_of_payment == 'Stripe':
+			return Result(False, 'Cannot cancel a Stripe-based payment; perform a refund instead.')
+		return Result(True,"")
+
 	def before_cancel(self):
-		print("TBD: Python Code: Before I cancel, either refund in Stripe, or credit Customer's account).")
+		okay = self.can_cancel()
+		if not okay:
+			raise Exception(okay.message)
 
 	def on_cancel(self):
-		# TODO: Add a dialog button/box to confirm cancellation.
-		frappe.msgprint("Confirm cancel Stripe payment?")
-		return		
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
 		self.setup_party_account_field()
 		self.make_gl_entries(cancel=1)
@@ -100,10 +117,6 @@ class PaymentEntry(AccountsController):
 		self.update_expense_claim()
 		self.update_donation(cancel=1)
 		self.delink_advance_entry_references()
-		# Begin: Farm To People
-		if not cancel_from_payment_entry(self.name):
-			frappe.throw(_("Unsuccessful attempt at cancelling payment via Stripe API."))
-		# End: Farm To People		
 		self.update_payment_schedule(cancel=1)
 		self.set_payment_req_status()
 		self.set_status()
@@ -1071,7 +1084,7 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
 	})
 
 def get_amounts_based_on_reference_doctype(reference_doctype, ref_doc, party_account_currency, company_currency, reference_name):
-	total_amount, outstanding_amount, exchange_rate = None
+	total_amount, outstanding_amount, exchange_rate = None, None, None
 	if reference_doctype == "Fees":
 		total_amount = ref_doc.get("grand_total")
 		exchange_rate = 1
@@ -1091,7 +1104,7 @@ def get_amounts_based_on_reference_doctype(reference_doctype, ref_doc, party_acc
 	return total_amount, outstanding_amount, exchange_rate
 
 def get_amounts_based_on_ref_doc(reference_doctype, ref_doc, party_account_currency, company_currency):
-	total_amount, outstanding_amount, exchange_rate = None
+	total_amount, outstanding_amount, exchange_rate = None, None, None
 	if ref_doc.doctype == "Expense Claim":
 			total_amount = flt(ref_doc.total_sanctioned_amount) + flt(ref_doc.total_taxes_and_charges)
 	elif ref_doc.doctype == "Employee Advance":
@@ -1131,7 +1144,7 @@ def get_total_amount_exchange_rate_base_on_currency(party_account_currency, comp
 	return total_amount, exchange_rate
 
 def get_bill_no_and_update_amounts(reference_doctype, ref_doc, total_amount, exchange_rate, party_account_currency, company_currency):
-	outstanding_amount, bill_no = None
+	outstanding_amount, bill_no = None, None
 	if reference_doctype in ("Sales Invoice", "Purchase Invoice"):
 		outstanding_amount = ref_doc.get("outstanding_amount")
 		bill_no = ref_doc.get("bill_no")

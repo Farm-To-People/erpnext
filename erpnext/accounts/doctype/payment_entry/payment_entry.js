@@ -5,23 +5,6 @@ frappe.provide("erpnext.accounts.dimensions");
 
 frappe.ui.form.on('Payment Entry', {
 
-	// Farm To People
-	before_cancel: function(frm) {
-		var me = this;
-		let confirm_msg = "Are you sure you want to Cancel this Payment Entry?  This will Refund the Stripe payment.";
-		frappe.confirm(__(confirm_msg, [__("Refund Stripe?")]), 
-			function() {
-
-				frappe.msgprint("Confirmed.");
-			},
-			function() {
-				// if No
-				frappe.msgprint("Not Confirmed.");
-				return me.handle_save_fail(btn, on_error);
-			}
-		);
-	},
-
 	onload: function(frm) {
 		if(frm.doc.__islocal) {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
@@ -170,6 +153,25 @@ frappe.ui.form.on('Payment Entry', {
 		frm.events.hide_unhide_fields(frm);
 		frm.events.set_dynamic_labels(frm);
 		frm.events.show_general_ledger(frm);
+
+		// Begin: Farm To People
+		// Add a button that enables the User to refund the Stripe payment.
+		if (cur_frm.doc.status == "Submitted" &&
+		    cur_frm.doc.mode_of_payment == "Stripe" &&
+			cur_frm.doc.payment_type == "Receive" &&
+			cur_frm.doc.reference_no) {
+
+			frm.add_custom_button(__('Create Stripe Refund'), function() {
+				frappe.call({
+					doc: frm.doc,
+					method: 'create_stripe_refund',
+					callback: function() {
+						frm.reload_doc();
+					}
+				});
+			}, __( ));
+		}
+		// End: Farm To People
 	},
 
 	validate_company: (frm) => {

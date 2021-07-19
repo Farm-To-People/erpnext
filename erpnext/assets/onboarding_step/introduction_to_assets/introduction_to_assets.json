@@ -12,6 +12,7 @@
  "modified_by": "Administrator",
  "name": "Introduction to Assets",
  "owner": "Administrator",
+ "show_form_tour": 0,
  "show_full_form": 0,
  "title": "Introduction to Assets",
  "validate_action": 0,

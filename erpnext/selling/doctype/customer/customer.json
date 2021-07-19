@@ -181,7 +181,7 @@
   {
    "fieldname": "territory",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "in_standard_filter": 1,
    "label": "Territory",
    "oldfieldname": "territory",
@@ -547,8 +547,13 @@
  "idx": 363,
  "image_field": "image",
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2021-06-22 12:57:10.733952",
+ "links": [
+  {
+   "link_doctype": "Customer Integrations",
+   "link_fieldname": "customer"
+  }
+ ],
+ "modified": "2021-07-14 10:22:01.347760",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
