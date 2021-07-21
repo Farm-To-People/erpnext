@@ -73,11 +73,11 @@
   "sales_team_section",
   "sales_team",
   "customer_pos_id",
-  "crm_communications",
   "sb_pauses",
   "pauses",
   "sb_item_preferences",
-  "preferences"
+  "preferences",
+  "opted_into_promotional_emails"
  ],
  "fields": [
   {
@@ -181,7 +181,6 @@
   {
    "fieldname": "territory",
    "fieldtype": "Link",
-   "in_list_view": 0,
    "in_standard_filter": 1,
    "label": "Territory",
    "oldfieldname": "territory",
@@ -510,11 +509,6 @@
    "label": "Last Name"
   },
   {
-   "fieldname": "crm_communications",
-   "fieldtype": "Table",
-   "options": "CRM Communication Subscription"
-  },
-  {
    "collapsible": 1,
    "fieldname": "sb_pauses",
    "fieldtype": "Section Break",
@@ -541,6 +535,11 @@
    "fieldname": "delivery_instructions",
    "fieldtype": "Small Text",
    "label": "Delivery Instructions"
+  },
+  {
+   "fieldname": "opted_into_promotional_emails",
+   "fieldtype": "Data",
+   "label": "Subscribed to Promotional Emails"
   }
  ],
  "icon": "fa fa-user",
@@ -553,7 +552,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2021-07-14 10:22:01.347760",
+ "modified": "2021-07-20 14:23:59.017810",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
