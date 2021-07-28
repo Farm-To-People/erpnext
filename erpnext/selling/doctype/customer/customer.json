@@ -71,13 +71,13 @@
   "default_sales_partner",
   "default_commission_rate",
   "sales_team_section",
+  "opted_into_promotional_emails",
   "sales_team",
   "customer_pos_id",
   "sb_pauses",
   "pauses",
   "sb_item_preferences",
-  "preferences",
-  "opted_into_promotional_emails"
+  "preferences"
  ],
  "fields": [
   {
@@ -92,7 +92,7 @@
    "fieldtype": "Select",
    "label": "Series",
    "no_copy": 1,
-   "options": "CUST-.YYYY.-",
+   "options": "CUST-.",
    "set_only_once": 1
   },
   {
@@ -537,8 +537,9 @@
    "label": "Delivery Instructions"
   },
   {
+   "default": "0",
    "fieldname": "opted_into_promotional_emails",
-   "fieldtype": "Data",
+   "fieldtype": "Check",
    "label": "Subscribed to Promotional Emails"
   }
  ],
@@ -552,7 +553,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2021-07-20 14:23:59.017810",
+ "modified": "2021-07-27 16:11:00.316698",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
