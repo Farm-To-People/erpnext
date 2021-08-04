@@ -1376,7 +1376,7 @@
   {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
-  }
+  },
   {
    "default": "0",
    "fieldname": "apply_tds",

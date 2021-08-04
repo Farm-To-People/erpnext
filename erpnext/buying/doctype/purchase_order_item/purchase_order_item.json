@@ -98,7 +98,7 @@
   "item_tax_rate",
   "section_break_72",
   "exclude_posted_qty_ftp",
-  "include_draft_qty_ftp"
+  "include_draft_qty_ftp",
   "production_plan",
   "production_plan_item",
   "production_plan_sub_assembly_item",
