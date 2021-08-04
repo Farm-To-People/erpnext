@@ -262,7 +262,29 @@ class PurchaseOrder(BuyingController):
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_order_reference)
 
 	def on_update(self):
-		pass
+		"""
+		Farm To People:  After the PO is updated, we probably need to refresh Redis Inventory Quantities.
+		"""
+		from ftp.ftp_invent import repopulate_redis_for_item
+
+		def method1():
+			# Option 1:  Update every PO line indiscriminately.
+			items = list(set([d.item_code for d in self.get("items")]))
+			if not items:
+				return
+			for item_code in items:
+				repopulate_redis_for_item(item_code)
+
+		def method2():
+			# Option 2: Try to detect changes (stock_qty, new_line, delivery_date, FTP parms)
+			for idx, purchase_line in enumerate(self.items):
+				line_orig = self.get_doc_before_save().get("items")[idx]
+				if line_orig.stock_qty != purchase_line.stock_qty:
+					print(f"(2 Change Detected: PO Line stock quantity) : {line_orig.stock_qty} {line_orig.stock_uom} --> {purchase_line.stock_qty}")
+					repopulate_redis_for_item(purchase_line.item_code)
+
+		# Brian: For now just update whenever the PO is touched.  There are so many ways we'd need to detect.
+		method1()
 
 	def update_status_updater(self):
 		self.status_updater.append({
