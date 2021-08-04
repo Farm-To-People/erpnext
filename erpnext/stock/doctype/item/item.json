@@ -91,6 +91,7 @@
   "sales_details",
   "sales_uom",
   "is_sales_item",
+  "tag_sales_uom",
   "column_break3",
   "max_discount",
   "deferred_revenue",
@@ -1103,6 +1104,13 @@
    "fieldname": "nutrition_facts_ftp",
    "fieldtype": "Small Text",
    "label": "Nutrition Facts"
+  },
+  {
+   "description": "This descriptive tag appears on the shopping website.",
+   "fieldname": "tag_sales_uom",
+   "fieldtype": "Data",
+   "label": "Sales UOM Tag",
+   "length": 60
   }
  ],
  "has_web_view": 1,
@@ -1112,7 +1120,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-07-07 09:38:20.883768",
+ "modified": "2021-08-03 15:53:00.556519",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

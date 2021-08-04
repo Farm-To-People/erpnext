@@ -821,7 +821,7 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "discount_amount",
+   "collapsible_depends_on": "discount_amount or coupon_code",
    "fieldname": "section_break_48",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -1492,7 +1492,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-15 23:55:13.439068",
+ "modified": "2021-08-02 08:48:17.952765",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

@@ -623,3 +623,20 @@ def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, fil
 			'customer': customer,
 			'txt': '%%%s%%' % txt
 		})
+
+# Farm To People
+def get_customer_by_emailid(email_address, err_on_missing=False):
+	"""
+	Find a Customer based on email address.
+	"""
+	customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name')
+	# Rule: There Can Only Be One
+	if len(customers) == 0:
+		if err_on_missing:
+			frappe.throw(_(f"No customer found with email address = '{email_address}'"))
+		return None
+	if len(customers) > 1:
+		frappe.throw(_(f"Unexpected Error: More than 1 customer found with email address '{email_address}'"))
+
+	customer = frappe.get_doc("Customer", customers[0])
+	return customer
