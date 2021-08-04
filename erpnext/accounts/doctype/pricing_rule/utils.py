@@ -461,6 +461,19 @@ def apply_pricing_rule_on_transaction(doc):
 			remove_free_item(doc)
 
 		for d in pricing_rules:
+			# Datahenge: Begin
+			# Check if the coupon code matches the Pricing Rule:
+			if d.coupon_code_based:
+				if not doc.coupon_code:
+					continue  # no coupon code specified on Order.
+				# Fetch the Coupon Code document:
+				coupon_code = frappe.get_doc("Coupon Code", doc.coupon_code)
+				if not coupon_code.valid_for_date(doc.delivery_date):
+					continue  # coupon code is not valid
+				if coupon_code.pricing_rule != d.name:
+					continue # coupon code is not associated with this pricing rule
+			# Datahenge: End
+
 			if d.price_or_product_discount == 'Price':
 				if d.apply_discount_on:
 					doc.set('apply_discount_on', d.apply_discount_on)

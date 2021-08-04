@@ -280,6 +280,7 @@ def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=Fa
 				})
 
 			if pricing_rule.coupon_code_based==1 and args.coupon_code==None:
+				print("Pricing Rule requires Coupon; not found.")
 				return item_details
 
 			if not pricing_rule.validate_applied_rule:
