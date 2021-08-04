@@ -97,9 +97,12 @@
   "is_fixed_asset",
   "item_tax_rate",
   "section_break_72",
-  "page_break",
   "exclude_posted_qty_ftp",
   "include_draft_qty_ftp"
+  "production_plan",
+  "production_plan_item",
+  "production_plan_sub_assembly_item",
+  "page_break"
  ],
  "fields": [
   {
@@ -171,6 +174,7 @@
    "oldfieldname": "description",
    "oldfieldtype": "Small Text",
    "print_width": "300px",
+   "reqd": 0,
    "width": "300px"
   },
   {
@@ -439,6 +443,7 @@
   {
    "fieldname": "warehouse",
    "fieldtype": "Link",
+   "in_list_view": 0,
    "label": "Warehouse",
    "oldfieldname": "warehouse",
    "oldfieldtype": "Link",
@@ -817,6 +822,30 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Include Draft Qty"
+  },
+  {
+   "fieldname": "production_plan",
+   "fieldtype": "Link",
+   "label": "Production Plan",
+   "options": "Production Plan",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "production_plan_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Production Plan Item",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "production_plan_sub_assembly_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Production Plan Sub Assembly Item",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "idx": 1,
