@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 import copy
 import json
 
-from six import string_types
 
 import frappe
 from erpnext.setup.doctype.item_group.item_group import get_child_item_groups
@@ -16,6 +15,7 @@ from erpnext.stock.doctype.warehouse.warehouse import get_child_warehouses
 from erpnext.stock.get_item_details import get_conversion_factor
 from frappe import _, bold
 from frappe.utils import cint, flt, get_link_to_form, getdate, today, fmt_money
+from frappe.exceptions import ArgumentMissing
 
 class MultiplePricingRuleConflict(frappe.ValidationError): pass
 
@@ -339,6 +339,34 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 
 	return rules
 
+
+def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_date):
+	"""
+	Farm To People: Remove any Pricing Rules that aren't applicable, due to Coupon Codes.
+	"""
+	# FTP Development CC1
+	if not delivery_date:
+		raise ArgumentMissing("Missing argument 'delivery_date' in call to function.")	
+	rules = []
+	for rule in pricing_rules:
+		# 1. Allow non-coupon Pricing Rules.
+		if not rule.coupon_code_based:
+			rules.append(rule)
+			continue
+		# 2. If no coupon codes, drop the Pricing Rule.
+		if not coupon_codes:
+			continue
+		# 3. Examine each coupon code
+		for coupon_code_list in coupon_codes:
+			doc_coupon_code = frappe.get_doc("Coupon Code", coupon_code_list.coupon_code)
+			if not doc_coupon_code.valid_for_date(delivery_date):
+				continue  # coupon code is not valid for this Delivery Date.
+			if doc_coupon_code.pricing_rule == rule.name:
+				rules.append(rule)
+				break
+	return rules
+
+
 def if_all_rules_same(pricing_rules, fields):
 	all_rules_same = True
 	val = [pricing_rules[0].get(k) for k in fields]
@@ -457,22 +485,15 @@ def apply_pricing_rule_on_transaction(doc):
 		pricing_rules = filter_pricing_rules_for_qty_amount(doc.total_qty,
 			doc.total, pricing_rules)
 
+		# FTP Development CC1
+		# Remove rules based on Coupon Code matching.
+		pricing_rules = filter_pricing_rules_for_coupon_codes(pricing_rules,
+		    doc.coupon_codes, doc.delivery_date)
+
 		if not pricing_rules:
 			remove_free_item(doc)
 
 		for d in pricing_rules:
-			# Datahenge: Begin
-			# Check if the coupon code matches the Pricing Rule:
-			if d.coupon_code_based:
-				if not doc.coupon_code:
-					continue  # no coupon code specified on Order.
-				# Fetch the Coupon Code document:
-				coupon_code = frappe.get_doc("Coupon Code", doc.coupon_code)
-				if not coupon_code.valid_for_date(doc.delivery_date):
-					continue  # coupon code is not valid
-				if coupon_code.pricing_rule != d.name:
-					continue # coupon code is not associated with this pricing rule
-			# Datahenge: End
 
 			if d.price_or_product_discount == 'Price':
 				if d.apply_discount_on:
@@ -552,7 +573,7 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 
 	item_details.free_item_data.append(free_item_data_args)
 
-def apply_pricing_rule_for_free_items(doc, pricing_rule_args, set_missing_values=False):
+def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
 	if pricing_rule_args:
 		items = tuple((d.item_code, d.pricing_rules) for d in doc.items if d.is_free_item)
 

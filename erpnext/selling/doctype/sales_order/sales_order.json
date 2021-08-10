@@ -81,7 +81,8 @@
   "loyalty_points",
   "loyalty_amount",
   "section_break_48",
-  "coupon_code",
+  "del_coupon_code",
+  "coupon_codes",
   "apply_discount_on",
   "base_discount_amount",
   "column_break_50",
@@ -288,7 +289,8 @@
    "hide_seconds": 1,
    "in_list_view": 1,
    "label": "Delivery Date",
-   "no_copy": 1
+   "no_copy": 1,
+   "reqd": 1
   },
   {
    "allow_on_submit": 1,
@@ -821,20 +823,12 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "discount_amount or coupon_code",
+   "collapsible_depends_on": "discount_amount or coupon_codes",
    "fieldname": "section_break_48",
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Additional Discount and Coupon Code"
-  },
-  {
-   "fieldname": "coupon_code",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Coupon Code",
-   "options": "Coupon Code"
   },
   {
    "default": "Grand Total",
@@ -1486,13 +1480,27 @@
    "fieldname": "disable_rounded_total",
    "fieldtype": "Check",
    "label": "Disable Rounded Total"
+  },
+  {
+   "fieldname": "coupon_codes",
+   "fieldtype": "Table",
+   "label": "Coupon Codes",
+   "options": "Coupon Code List"
+  },
+  {
+   "fieldname": "del_coupon_code",
+   "fieldtype": "Link",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "Coupon Code",
+   "options": "Coupon Code"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-02 08:48:17.952765",
+ "modified": "2021-08-09 14:53:56.903168",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

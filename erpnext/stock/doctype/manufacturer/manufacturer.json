@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:short_name",
@@ -10,6 +11,7 @@
  "field_order": [
   "short_name",
   "full_name",
+  "disabled",
   "website",
   "country",
   "logo",
@@ -82,10 +84,17 @@
   {
    "fieldname": "section_break_10",
    "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disable"
   }
  ],
  "icon": "fa fa-certificate",
- "modified": "2019-07-06 13:06:47.237014",
+ "links": [],
+ "modified": "2021-08-06 09:21:05.967323",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Manufacturer",
@@ -115,6 +124,7 @@
  ],
  "search_fields": "short_name, full_name",
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "DESC",
  "title_field": "short_name"
 }
