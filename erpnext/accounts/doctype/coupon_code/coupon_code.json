@@ -1,19 +1,23 @@
 {
+ "actions": [],
  "allow_import": 1,
- "autoname": "field:coupon_name",
+ "autoname": "field:coupon_code",
  "creation": "2018-01-22 14:34:39.701832",
  "doctype": "DocType",
  "document_type": "Other",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "coupon_name",
   "coupon_type",
   "customer",
   "column_break_4",
   "coupon_code",
   "pricing_rule",
+  "add_to_customer_group",
+  "apply_shipping_rule",
+  "coupon_code_group",
   "uses",
+  "stacks_with_other_coupons",
   "valid_from",
   "valid_upto",
   "maximum_use",
@@ -23,14 +27,6 @@
   "amended_from"
  ],
  "fields": [
-  {
-   "description": "e.g. \"Summer Holiday 2019 Offer 20\"",
-   "fieldname": "coupon_name",
-   "fieldtype": "Data",
-   "label": "Coupon Name",
-   "reqd": 1,
-   "unique": 1
-  },
   {
    "fieldname": "coupon_type",
    "fieldtype": "Select",
@@ -54,6 +50,7 @@
    "description": "unique e.g. SAVE20  To be used to get discount",
    "fieldname": "coupon_code",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Coupon Code",
    "no_copy": 1,
    "set_only_once": 1,
@@ -61,10 +58,9 @@
   },
   {
    "fieldname": "pricing_rule",
-   "fieldtype": "Link",
+   "fieldtype": "Table",
    "label": "Pricing Rule",
-   "options": "Pricing Rule",
-   "reqd": 1
+   "options": "Coupon Code Pricing Rule"
   },
   {
    "fieldname": "uses",
@@ -113,9 +109,34 @@
    "options": "Coupon Code",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "add_to_customer_group",
+   "fieldtype": "Link",
+   "label": "Add customer to Group",
+   "options": "Customer Group"
+  },
+  {
+   "fieldname": "apply_shipping_rule",
+   "fieldtype": "Link",
+   "label": "Change Shipping Rule to",
+   "options": "Shipping Rule"
+  },
+  {
+   "fieldname": "coupon_code_group",
+   "fieldtype": "Link",
+   "label": "Coupon Code Group",
+   "options": "Coupon Code Group"
+  },
+  {
+   "default": "0",
+   "fieldname": "stacks_with_other_coupons",
+   "fieldtype": "Check",
+   "label": "Allow with other Coupon Codes"
   }
  ],
- "modified": "2019-10-19 14:48:14.602481",
+ "links": [],
+ "modified": "2021-08-10 15:12:28.776408",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",
@@ -172,6 +193,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "title_field": "coupon_name",
+ "title_field": "coupon_code",
  "track_changes": 1
 }

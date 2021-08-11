@@ -11,13 +11,18 @@ from frappe.utils import getdate
 
 
 class CouponCode(Document):
+
+
+	def before_rename(self, olddn, newdn, merge=False):
+		raise Exception("Coupon Codes cannot be renamed (please see Shelby)")
+
 	def autoname(self):
-		self.coupon_name = strip(self.coupon_name)
-		self.name = self.coupon_name
+		self.coupon_code = strip(self.coupon_code)
+		self.name = self.coupon_code
 
 		if not self.coupon_code:
 			if self.coupon_type == "Promotional":
-				self.coupon_code =''.join(i for i in self.coupon_name if not i.isdigit())[0:8].upper()
+				self.coupon_code =''.join(i for i in self.coupon_code if not i.isdigit())[0:8].upper()
 			elif self.coupon_type == "Gift Card":
 				self.coupon_code = frappe.generate_hash()[:10].upper()
 

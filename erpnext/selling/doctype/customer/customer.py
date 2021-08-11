@@ -16,6 +16,11 @@ from frappe.model.rename_doc import update_linked_doctypes
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils.user import get_users_with_role
 
+# Temporal
+from temporal import any_to_date
+
+# FTP
+from ftp.ftp_module.doctype.customer_holds import customer_holds
 
 class Customer(TransactionBase):
 	def get_feed(self):
@@ -134,6 +139,11 @@ class Customer(TransactionBase):
 			self.create_lead_address_contact()
 
 		self.update_customer_groups()
+
+		# Farm To People
+		if self.customer_holds_changed():
+			customer_holds._update_daily_orders(self.name)  # if Holds modified, update all related orders
+
 		# TODO: If value of opted_into_promotional_emails() changed, we need to do Mailchimp things.
 
 	def update_customer_groups(self):
@@ -301,6 +311,32 @@ class Customer(TransactionBase):
 							doc.name, args.get("customer_email_" + str(i)))
 				except frappe.NameError:
 					pass
+
+	def customer_holds_changed(self):
+		"""
+		Try to determine if the Customer Holds child table was modified.
+		"""
+		holds_orig = None
+		if hasattr(self, '_doc_before_save'):
+			holds_orig = self._doc_before_save.pauses
+		holds_current = self.pauses
+
+		if (not holds_orig) and (not holds_current):  # no pauses exist
+			return False
+		if holds_orig and not holds_current:  # rows deleted
+			return True
+		if not holds_orig and holds_current:  # rows added
+			return True
+		if len(holds_orig) != len(holds_current):  # rowcount changed
+			return True
+
+		for idx, row in enumerate(holds_current):
+			# I really, REALLY dislike how -inconsistent- date fields are in Frappe framework.
+			if any_to_date(row.from_date) != any_to_date(holds_orig[idx].from_date):
+				return True
+			if any_to_date(row.to_date) != any_to_date(holds_orig[idx].to_date):
+				return True
+		return False
 
 def create_contact(contact, party_type, party, email):
 	"""Create contact based on given contact name"""
