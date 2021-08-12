@@ -94,6 +94,8 @@
   "sales_uom_website",
   "column_break3",
   "max_discount",
+  "badge_on_sale",
+  "badge_promotional",
   "deferred_revenue",
   "deferred_revenue_account",
   "enable_deferred_revenue",
@@ -1111,6 +1113,20 @@
    "fieldtype": "Data",
    "label": "Sales UOM on Website",
    "length": 60
+  },
+  {
+   "description": "Badge priority #2",
+   "fieldname": "badge_on_sale",
+   "fieldtype": "Data",
+   "label": "On Sale Badge",
+   "length": 25
+  },
+  {
+   "description": "Badge priority #3",
+   "fieldname": "badge_promotional",
+   "fieldtype": "Data",
+   "label": "Promotional Badge",
+   "length": 25
   }
  ],
  "has_web_view": 1,
@@ -1120,7 +1136,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-08-05 09:16:31.959957",
+ "modified": "2021-08-11 09:52:07.381737",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

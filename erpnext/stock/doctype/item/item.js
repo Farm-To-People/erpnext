@@ -27,7 +27,7 @@ frappe.ui.form.on("Item", {
 	refresh: function(frm) {
 		if (frm.doc.is_stock_item) {
 			// Begin: FTP
-			frm.add_custom_button(__("Website Sales Controls"), function() {
+			frm.add_custom_button(__("Item Sales Controls"), function() {
 				frappe.set_route("Form", "Item Sales Controls", frm.doc.name);
 			}, __( )).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});;
 			// End: FTP
