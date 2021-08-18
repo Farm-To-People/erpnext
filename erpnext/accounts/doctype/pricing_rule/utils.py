@@ -486,9 +486,10 @@ def apply_pricing_rule_on_transaction(doc):
 			doc.total, pricing_rules)
 
 		# FTP Development CC1
-		# Remove rules based on Coupon Code matching.
-		pricing_rules = filter_pricing_rules_for_coupon_codes(pricing_rules,
-		    doc.coupon_codes, doc.delivery_date)
+		if doc.doctype in ['Daily Order', 'Sales Order']:
+			# Remove rules based on Coupon Code matching.
+			pricing_rules = filter_pricing_rules_for_coupon_codes(pricing_rules,
+				doc.coupon_codes, doc.delivery_date)
 
 		if not pricing_rules:
 			remove_free_item(doc)

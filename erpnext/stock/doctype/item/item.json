@@ -1088,6 +1088,7 @@
    "fieldname": "item_name_web",
    "fieldtype": "Data",
    "label": "Item Web Name",
+   "reqd": 1,
    "search_index": 1
   },
   {
@@ -1104,7 +1105,7 @@
   },
   {
    "fieldname": "nutrition_facts_ftp",
-   "fieldtype": "Small Text",
+   "fieldtype": "HTML Editor",
    "label": "Nutrition Facts"
   },
   {
@@ -1136,7 +1137,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-08-11 09:52:07.381737",
+ "modified": "2021-08-13 16:49:44.859796",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

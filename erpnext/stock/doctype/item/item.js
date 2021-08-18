@@ -52,6 +52,10 @@ frappe.ui.form.on("Item", {
 			}, __("View"));
 		}
 
+		// Begin: FTP
+		frm.add_custom_button(__("Update Sanity CMS"), function() {
+			py_update_sanity_cms(frm);
+		});
 
 		if (frm.doc.is_fixed_asset) {
 			frm.trigger('is_fixed_asset');
@@ -196,6 +200,13 @@ frappe.ui.form.on("Item", {
 		if(!frm.doc.item_name)
 			frm.set_value("item_name", frm.doc.item_code);
 	},
+
+	/* Farm to People: Default the Item Web Name */
+	item_name: function(frm) {
+		if(!frm.doc.item_name_web)
+			frm.set_value("item_name_web", frm.doc.item_name);
+	},
+
 
 	is_stock_item: function(frm) {
 		if(!frm.doc.is_stock_item) {
@@ -804,3 +815,16 @@ frappe.ui.form.on("UOM Conversion Detail", {
 		}
 	}
 })
+
+function py_update_sanity_cms(frm) {
+	frappe.msgprint("Transmitted request to Sanity.  Please standby...")
+	frappe.call({
+		method: "ftp.doc_extensions.post_ndjson_to_sanity",
+		args: {
+			"item_code": frm.doc.item_code
+		},
+		callback: function(r) {
+			frappe.msgprint(r);
+		}
+	});
+}

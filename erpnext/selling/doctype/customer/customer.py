@@ -10,6 +10,7 @@ import frappe.defaults
 from frappe.utils import flt, cint, cstr, today, get_formatted_email
 from frappe.desk.reportview import build_match_conditions, get_filters_cond
 from erpnext.utilities.transaction_base import TransactionBase
+from erpnext import get_default_company
 from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data # keep this
 from frappe.contacts.address_and_contact import load_address_and_contact, delete_contact_and_address
 from frappe.model.rename_doc import update_linked_doctypes
@@ -18,9 +19,6 @@ from frappe.utils.user import get_users_with_role
 
 # Temporal
 from temporal import any_to_date
-
-# FTP
-from ftp.ftp_module.doctype.customer_holds import customer_holds
 
 class Customer(TransactionBase):
 	def get_feed(self):
@@ -128,6 +126,8 @@ class Customer(TransactionBase):
 				frappe.bold(self.represents_company)))
 
 	def on_update(self):
+		from ftp.ftp_module.doctype.customer_holds import customer_holds  # Important: Late Import due to Circular Reference
+
 		self.validate_name_with_customer_group()
 		self.create_primary_contact()
 		self.create_primary_address()
@@ -142,7 +142,8 @@ class Customer(TransactionBase):
 
 		# Farm To People
 		if self.customer_holds_changed():
-			customer_holds._update_daily_orders(self.name)  # if Holds modified, update all related orders
+			# If any Holds modified, update all related orders
+			customer_holds._update_daily_orders(self.name)  # pylint: disable=protected-access
 
 		# TODO: If value of opted_into_promotional_emails() changed, we need to do Mailchimp things.
 
@@ -683,19 +684,53 @@ def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, fil
 			'txt': '%%%s%%' % txt
 		})
 
-# Farm To People
-def get_customer_by_emailid(email_address, err_on_missing=False):
-	"""
-	Find a Customer based on email address.
-	"""
-	customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name')
-	# Rule: There Can Only Be One
-	if len(customers) == 0:
-		if err_on_missing:
-			frappe.throw(_(f"No customer found with email address = '{email_address}'"))
-		return None
-	if len(customers) > 1:
-		frappe.throw(_(f"Unexpected Error: More than 1 customer found with email address '{email_address}'"))
+# FARM TO PEOPLE:
 
-	customer = frappe.get_doc("Customer", customers[0])
-	return customer
+class CustomerExt:
+	"""
+	Extensions to the Customer document, without guerilla patching or editing ERPNext code.
+	"""
+	def __init__(self, doc_customer):
+		self.doc = doc_customer
+
+	def is_anon(self):
+		if self.doc.name.startswith('anon'):
+			return True
+		return False
+
+	@staticmethod
+	def show_customer_balance(customer_name):
+		company = get_default_company()
+		outstanding_based_on_gle = frappe.db.sql("""
+			select sum(debit) - sum(credit)
+			from `tabGL Entry` where party_type = 'Customer'
+			and party = %s and company=%s""", (customer_name, company))
+
+		outstanding_based_on_gle = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0
+		balance_as_string = "{:.2f}".format(outstanding_based_on_gle)
+		msg = f"Balance for customer {customer_name}:<br>$ {balance_as_string}"
+		if outstanding_based_on_gle < 0:
+			msg += " (Credit)"
+		frappe.msgprint(msg)
+
+	@staticmethod
+	def get_customer_by_emailid(email_address, err_on_missing=False):
+		"""
+		Find a Customer based on email address.
+		"""
+		customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name')
+		# Rule: There Can Only Be One
+		if len(customers) == 0:
+			if err_on_missing:
+				frappe.throw(_(f"No customer found with email address = '{email_address}'"))
+			return None
+		if len(customers) > 1:
+			frappe.throw(_(f"Unexpected Error: More than 1 customer found with email address '{email_address}'"))
+
+		customer = frappe.get_doc("Customer", customers[0])
+		return customer
+
+# Exposing the Class static method, so we can call from Javascript.
+@frappe.whitelist()
+def show_customer_balance(customer_name):
+	CustomerExt.show_customer_balance(customer_name)
