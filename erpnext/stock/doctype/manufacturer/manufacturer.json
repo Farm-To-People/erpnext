@@ -2,13 +2,14 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:short_name",
+ "autoname": "naming_series:",
  "creation": "2016-01-17 11:04:52.761731",
  "description": "Manufacturers used in Items",
  "doctype": "DocType",
  "document_type": "Setup",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series",
   "short_name",
   "full_name",
   "disabled",
@@ -103,14 +104,24 @@
   {
    "fieldname": "cb_1",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "MF-.",
+   "reqd": 1,
+   "set_only_once": 1
   }
  ],
  "icon": "fa fa-certificate",
  "links": [],
- "modified": "2021-08-12 10:16:53.511999",
+ "modified": "2021-08-19 18:48:56.480196",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Manufacturer",
+ "name_case": "UPPER CASE",
  "owner": "Administrator",
  "permissions": [
   {

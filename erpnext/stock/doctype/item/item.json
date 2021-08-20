@@ -89,6 +89,7 @@
   "column_break_59",
   "customs_tariff_number",
   "sales_details",
+  "segregation",
   "sales_uom",
   "is_sales_item",
   "sales_uom_website",
@@ -145,9 +146,11 @@
   "hub_category_to_publish",
   "hub_warehouse",
   "synced_with_hub",
+  "sb_ftp",
   "ingredients_ftp",
   "legacy_image_url_ftp",
-  "nutrition_facts_ftp"
+  "nutrition_facts_ftp",
+  "dbp_product_id"
  ],
  "fields": [
   {
@@ -1128,6 +1131,23 @@
    "fieldtype": "Data",
    "label": "Promotional Badge",
    "length": 25
+  },
+  {
+   "fieldname": "sb_ftp",
+   "fieldtype": "Section Break",
+   "label": "Farm To People"
+  },
+  {
+   "fieldname": "dbp_product_id",
+   "fieldtype": "Int",
+   "label": "DBP Product ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "segregation",
+   "fieldtype": "Select",
+   "label": "Segregation",
+   "options": "Bakery\nBoxes\nFrozen\nGrocery\nProduce\nRefrigerated"
   }
  ],
  "has_web_view": 1,
@@ -1137,7 +1157,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-08-13 16:49:44.859796",
+ "modified": "2021-08-19 14:19:28.872731",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
