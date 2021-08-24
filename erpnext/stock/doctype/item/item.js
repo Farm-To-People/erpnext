@@ -26,11 +26,6 @@ frappe.ui.form.on("Item", {
 
 	refresh: function(frm) {
 		if (frm.doc.is_stock_item) {
-			// Begin: FTP
-			frm.add_custom_button(__("Item Sales Controls"), function() {
-				frappe.set_route("Form", "Item Sales Controls", frm.doc.name);
-			}, __( )).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});;
-			// End: FTP
 
 			frm.add_custom_button(__("Stock Balance"), function() {
 				frappe.route_options = {
@@ -52,6 +47,12 @@ frappe.ui.form.on("Item", {
 			}, __("View"));
 		}
 
+		// Begin: FTP
+		frm.add_custom_button(__("Item Sales Controls"), function() {
+			frappe.set_route("Form", "Item Sales Controls", frm.doc.name);
+		}, __( )).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});;
+		// End: FTP
+		
 		// Begin: FTP
 		frm.add_custom_button(__("Update Sanity CMS"), function() {
 			py_update_sanity_cms(frm);
