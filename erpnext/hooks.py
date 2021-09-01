@@ -317,7 +317,7 @@ after_migrate = ["erpnext.setup.install.update_select_perm_after_install"]
 
 scheduler_events = {
 
-	# Farm To People: Disabling this here, instead of trying to Patch-A-Patch.
+	# Farm To People: Disabling a bunch of these, so the Log Files are not flooded with false negatives.
 
 	# "cron": {
 	# 	"0/30 * * * *": [
@@ -332,14 +332,14 @@ scheduler_events = {
 	"hourly": [
 		'erpnext.hr.doctype.daily_work_summary_group.daily_work_summary_group.trigger_emails',
 		"erpnext.accounts.doctype.subscription.subscription.process_all",
-		"erpnext.erpnext_integrations.doctype.amazon_mws_settings.amazon_mws_settings.schedule_get_order_details",
+		# "erpnext.erpnext_integrations.doctype.amazon_mws_settings.amazon_mws_settings.schedule_get_order_details",
 		"erpnext.accounts.doctype.gl_entry.gl_entry.rename_gle_sle_docs",
-		"erpnext.erpnext_integrations.doctype.plaid_settings.plaid_settings.automatic_synchronization",
+		# "erpnext.erpnext_integrations.doctype.plaid_settings.plaid_settings.automatic_synchronization",
 		"erpnext.projects.doctype.project.project.hourly_reminder",
 		"erpnext.projects.doctype.project.project.collect_project_status",
 		"erpnext.hr.doctype.shift_type.shift_type.process_auto_attendance_for_all_shifts",
 		"erpnext.support.doctype.issue.issue.set_service_level_agreement_variance",
-		"erpnext.erpnext_integrations.connectors.shopify_connection.sync_old_orders"
+		# "erpnext.erpnext_integrations.connectors.shopify_connection.sync_old_orders"
 	],
 	"hourly_long": [
 		"erpnext.stock.doctype.repost_item_valuation.repost_item_valuation.repost_entries"

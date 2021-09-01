@@ -77,7 +77,8 @@
   "sb_pauses",
   "pauses",
   "sb_item_preferences",
-  "preferences"
+  "preferences",
+  "disable_postal_code_validation"
  ],
  "fields": [
   {
@@ -187,7 +188,7 @@
    "oldfieldtype": "Link",
    "options": "Territory",
    "print_hide": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fieldname": "tax_id",
@@ -541,6 +542,13 @@
    "fieldname": "opted_into_promotional_emails",
    "fieldtype": "Check",
    "label": "Subscribed to Promotional Emails"
+  },
+  {
+   "default": "0",
+   "description": "This can be used to ship products out of the typical geography.\nIt will disable the Postal Code Validation on Daily Orders.",
+   "fieldname": "disable_postal_code_validation",
+   "fieldtype": "Check",
+   "label": "Disable Zip Code Validation"
   }
  ],
  "icon": "fa fa-user",
@@ -553,7 +561,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2021-08-03 09:37:00.292011",
+ "modified": "2021-09-01 15:22:10.008091",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
