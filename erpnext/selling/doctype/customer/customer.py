@@ -683,3 +683,115 @@ def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, fil
 			'customer': customer,
 			'txt': '%%%s%%' % txt
 		})
+
+# Datahenge: Adding here, so we can reference in Class refactoring below
+def get_ar_balance_per_customer_per_gl(customer_key):
+	"""
+	Get a simple AR balance based on General Ledger transactions.
+	"""
+	company = get_default_company()
+	outstanding_based_on_gle = frappe.db.sql("""
+		select sum(debit) - sum(credit)
+		from `tabGL Entry` where party_type = 'Customer'
+		and party = %s and company=%s""", (customer_key, company))
+
+	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0
+	return balance
+
+# Datahenge
+def value_to_currency_decimal(value):
+	"""
+	Datahenge: As always, surprised we must invent things that should have been standard.
+	"""
+	import decimal
+	from decimal import Decimal
+	# 1.  If the input is a float (let's say from SQL) represent as a String.
+	# 2.  Convert to a Decimal type.
+	# Could alternately return some kind of float like this:  return float(f"{foo:.2f}")
+	decimal.getcontext().prec = 6  # By entering a 6, I'm hoping for something like SQL decimal(18,6)?
+	return Decimal(str(value))
+
+# Datahenge:  This is kind of nonsense.  But it's actually an easy way of extending the standard Class defined above.
+class Customer(Customer):  # pylint: disable=function-redefined
+
+	@staticmethod
+	def get_customer_by_emailid(email_address, err_on_missing=False):
+		"""
+		Find a Customer based on email address.
+		"""
+		customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name')
+		# Rule: There Can Only Be One
+		if len(customers) == 0:
+			if err_on_missing:
+				frappe.throw(_(f"No customer found with email address = '{email_address}'"))
+			return None
+		if len(customers) > 1:
+			frappe.throw(_(f"Unexpected Error: More than 1 customer found with email address '{email_address}'"))
+
+		customer = frappe.get_doc("Customer", customers[0])
+		return customer
+
+	def is_anon(self):
+		if self.name.startswith('anon'):
+			return True
+		return False
+
+	def get_ar_balance_per_gl(self):
+		"""
+		Get a simple AR balance based on General Ledger transactions.
+		"""
+		return get_ar_balance_per_customer_per_gl(self.name)
+
+	def _get_open_ar_transactions(self, debug=False):
+		"""
+		Return a list of Dictionary.
+		"""
+
+		query = """
+		SELECT
+			'Payment Entry' as transaction_type, name, party, payment_type, posting_date, paid_amount, unallocated_amount, reference_no
+		FROM
+			`tabPayment Entry`
+		WHERE
+			party_type = 'Customer'
+		AND unallocated_amount <> 0
+		AND docstatus = 1
+		AND party = %(customer_key)s
+
+		UNION ALL
+
+		SELECT
+			'Invoice' as transaction_type, name, customer, status, posting_date, grand_total, outstanding_amount, ''
+		FROM 
+			`tabSales Invoice`
+		WHERE
+			outstanding_amount <> 0
+		AND docstatus = 1
+		AND customer =  %(customer_key)s
+		"""
+		result = frappe.db.sql(query=query,
+		                       values={"customer_key": self.name},
+							   as_dict=True, debug=debug, explain=debug)
+		return result
+
+	def get_ar_balance_per_transactions(self):
+		transactions = self._get_open_ar_transactions()
+		balance = value_to_currency_decimal(0.00)
+		for row in transactions:
+			if row['transaction_type'] == 'Payment Entry':
+				balance -= value_to_currency_decimal(row['unallocated_amount'])
+			else:
+				balance += value_to_currency_decimal(row['unallocated_amount'])
+		return balance
+
+	@frappe.whitelist()
+	def show_accounts_receivable_summary(self):
+		"""
+		Return a lightly formatted message, showing a Customer's AR Balance.
+		This message does --not-- include a breakdown about Credit Allocations to Daily Orders.
+		"""
+		message = f"Accounts Receivable Summary for Customer: {self.name}\n"
+		message += f"\n\u2022 AR Balance per GL: {self.get_ar_balance_per_gl()}"
+		message += f"\n\u2022 AR Balance per Transactions: {self.get_ar_balance_per_transactions()}"
+		message = message.replace("\n","<br>")
+		return message

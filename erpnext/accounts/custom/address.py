@@ -26,6 +26,7 @@ class ERPNextAddress(Address):
 		"""
 		After Address is updated, update the related 'Primary Address' on Customer.
 		"""
+		super(ERPNextAddress, self).on_update()
 		address_display = get_address_display(self.as_dict())
 		filters = { "customer_primary_address": self.name }
 		customers = frappe.db.get_all("Customer", filters=filters, as_list=True)
