@@ -313,31 +313,6 @@ class Customer(TransactionBase):
 				except frappe.NameError:
 					pass
 
-	def customer_holds_changed(self):
-		"""
-		Try to determine if the Customer Holds child table was modified.
-		"""
-		holds_orig = None
-		if hasattr(self, '_doc_before_save'):
-			holds_orig = self._doc_before_save.pauses
-		holds_current = self.pauses
-
-		if (not holds_orig) and (not holds_current):  # no pauses exist
-			return False
-		if holds_orig and not holds_current:  # rows deleted
-			return True
-		if not holds_orig and holds_current:  # rows added
-			return True
-		if len(holds_orig) != len(holds_current):  # rowcount changed
-			return True
-
-		for idx, row in enumerate(holds_current):
-			# I really, REALLY dislike how -inconsistent- date fields are in Frappe framework.
-			if any_to_date(row.from_date) != any_to_date(holds_orig[idx].from_date):
-				return True
-			if any_to_date(row.to_date) != any_to_date(holds_orig[idx].to_date):
-				return True
-		return False
 
 def create_contact(contact, party_type, party, email):
 	"""Create contact based on given contact name"""
@@ -795,3 +770,35 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		message += f"\n\u2022 AR Balance per Transactions: {self.get_ar_balance_per_transactions()}"
 		message = message.replace("\n","<br>")
 		return message
+
+	def customer_holds_changed(self):
+		"""
+		Try to determine if the Customer Holds child table was modified.
+		"""
+		holds_orig = None
+		if hasattr(self, '_doc_before_save'):
+			holds_orig = self._doc_before_save.pauses
+		holds_current = self.pauses
+
+		if (not holds_orig) and (not holds_current):  # no pauses exist
+			return False
+		if holds_orig and not holds_current:  # rows deleted
+			return True
+		if not holds_orig and holds_current:  # rows added
+			return True
+		if len(holds_orig) != len(holds_current):  # rowcount changed
+			return True
+
+		for idx, row in enumerate(holds_current):
+			# I really, REALLY dislike how -inconsistent- date fields are in Frappe framework.
+			if any_to_date(row.from_date) != any_to_date(holds_orig[idx].from_date):
+				return True
+			if any_to_date(row.to_date) != any_to_date(holds_orig[idx].to_date):
+				return True
+		return False
+
+	# Farm To People
+	@frappe.whitelist()
+	def collect_daily_order_payments(self):
+		from ftp.ftp_module.payments import PaymentProcessor
+		PaymentProcessor(disable_prechecks=True).pay_all_by_customer(self)

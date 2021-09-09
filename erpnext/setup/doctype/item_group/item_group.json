@@ -15,8 +15,6 @@
   "is_group",
   "show_in_website",
   "route",
-  "slideshow",
-  "website_specifications",
   "image",
   "column_break_5",
   "defaults",
@@ -116,15 +114,14 @@
    "description": "Check this if you want to show in website",
    "fieldname": "show_in_website",
    "fieldtype": "Check",
-   "label": "Show in Website",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "Show in Website"
   },
   {
    "depends_on": "show_in_website",
    "fieldname": "route",
    "fieldtype": "Data",
    "label": "Route",
-    "hidden": 1,
    "unique": 1
   },
   {
@@ -137,9 +134,9 @@
    "description": "Show this slideshow at the top of the page",
    "fieldname": "slideshow",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Slideshow",
-   "options": "Website Slideshow",
-   "hidden": 1
+   "options": "Website Slideshow"
   },
   {
    "depends_on": "show_in_website",
@@ -152,9 +149,9 @@
    "depends_on": "show_in_website",
    "fieldname": "website_specifications",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Website Specifications",
-   "options": "Item Website Specification",
-   "hidden": 1
+   "options": "Item Website Specification"
   },
   {
    "fieldname": "lft",
@@ -220,7 +217,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2021-06-23 13:40:30.049650",
+ "modified": "2021-09-07 17:44:55.244625",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",

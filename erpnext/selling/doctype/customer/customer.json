@@ -180,6 +180,7 @@
    "search_index": 1
   },
   {
+   "default": "Undefined",
    "fieldname": "territory",
    "fieldtype": "Link",
    "in_standard_filter": 1,
@@ -561,7 +562,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2021-09-01 15:22:10.008091",
+ "modified": "2021-09-09 12:22:08.724281",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
