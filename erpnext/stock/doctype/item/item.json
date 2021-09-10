@@ -1056,8 +1056,9 @@
   },
   {
    "fieldname": "default_item_manufacturer",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Default Item Manufacturer",
+   "options": "Manufacturer",
    "read_only": 1
   },
   {
@@ -1081,7 +1082,7 @@
    "in_standard_filter": 1,
    "label": "Item Type",
    "length": 30,
-   "options": "Bundle\nFarm Box\nOther\nProduct\nPackaging\nService",
+   "options": "Farm Box\nOther\nProduct\nPackaging\nService",
    "reqd": 1,
    "search_index": 1
   },
@@ -1157,7 +1158,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-08-19 14:19:28.872731",
+ "modified": "2021-09-10 13:12:56.486862",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
