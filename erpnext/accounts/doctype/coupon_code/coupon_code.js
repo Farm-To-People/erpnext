@@ -27,10 +27,10 @@ frappe.ui.form.on('Coupon Code', {
 		if (frm.doc.coupon_type=='Gift Card') {
 			coupon_code=Math.random().toString(12).substring(2, 12).toUpperCase();
 		}
-		else if(frm.doc.coupon_type=='Promotional'){
+		else {
 			coupon_name=coupon_name.replace(/\s/g,'');
 			coupon_code=coupon_name.toUpperCase().slice(0,8);
-		}
+		};
 		frm.doc.coupon_code=coupon_code;
 		frm.refresh_field('coupon_code');
 	},

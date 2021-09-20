@@ -8,14 +8,16 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "coupon_code",
   "coupon_type",
+  "coupon_code_group",
   "customer",
   "column_break_4",
-  "coupon_code",
-  "pricing_rule",
   "add_to_customer_group",
   "apply_shipping_rule",
-  "coupon_code_group",
+  "sb1",
+  "pricing_rule",
+  "multi_coupon_codes",
   "uses",
   "stacks_with_other_coupons",
   "valid_from",
@@ -32,7 +34,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Coupon Type",
-   "options": "Promotional\nGift Card",
+   "options": "Promotional\nGift Card\nMulti-Code",
    "reqd": 1
   },
   {
@@ -57,6 +59,7 @@
    "unique": 1
   },
   {
+   "depends_on": "eval: doc.coupon_type != \"Multi-Code\"",
    "fieldname": "pricing_rule",
    "fieldtype": "Table",
    "label": "Pricing Rule",
@@ -88,7 +91,7 @@
    "default": "0",
    "fieldname": "used",
    "fieldtype": "Int",
-   "label": "Used",
+   "label": "Global Usage",
    "no_copy": 1,
    "read_only": 1
   },
@@ -111,18 +114,21 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval: doc.coupon_type != \"Multi-Code\"",
    "fieldname": "add_to_customer_group",
    "fieldtype": "Link",
    "label": "Add customer to Group",
    "options": "Customer Group"
   },
   {
+   "depends_on": "eval: doc.coupon_type != \"Multi-Code\"",
    "fieldname": "apply_shipping_rule",
    "fieldtype": "Link",
    "label": "Change Shipping Rule to",
    "options": "Shipping Rule"
   },
   {
+   "description": "For reporting purposes.",
    "fieldname": "coupon_code_group",
    "fieldtype": "Link",
    "label": "Coupon Code Group",
@@ -133,10 +139,21 @@
    "fieldname": "stacks_with_other_coupons",
    "fieldtype": "Check",
    "label": "Allow with other Coupon Codes"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval: doc.coupon_type == \"Multi-Code\"",
+   "fieldname": "multi_coupon_codes",
+   "fieldtype": "Table",
+   "label": "Collection of Coupons",
+   "options": "Coupon Code Multi"
   }
  ],
  "links": [],
- "modified": "2021-08-10 15:12:28.776408",
+ "modified": "2021-09-20 13:26:23.476498",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",

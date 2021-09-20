@@ -31,6 +31,10 @@ class CouponCode(Document):
 			self.maximum_use = 1
 			if not self.customer:
 				frappe.throw(_("Please select the customer."))
+		if self.coupon_type == 'Multi-Code':  # Farm To People
+			for code in self.multi_coupon_codes:
+				code.validate()
+
 
 	# DATAHENGE
 	def valid_for_date(self, any_date):

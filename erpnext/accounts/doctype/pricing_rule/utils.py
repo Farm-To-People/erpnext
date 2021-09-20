@@ -15,7 +15,7 @@ from erpnext.stock.doctype.warehouse.warehouse import get_child_warehouses
 from erpnext.stock.get_item_details import get_conversion_factor
 from frappe import _, bold
 from frappe.utils import cint, flt, get_link_to_form, getdate, today, fmt_money
-from frappe.exceptions import ArgumentMissing
+
 
 class MultiplePricingRuleConflict(frappe.ValidationError): pass
 
@@ -476,6 +476,8 @@ def get_qty_amount_data_for_cumulative(pr_doc, doc, items=[]):
 	return [sum_qty, sum_amt]
 
 def apply_pricing_rule_on_transaction(doc):
+	from temporal import any_to_date  # Farm To People
+
 	conditions = "apply_on = 'Transaction'"
 
 	values = {}
@@ -492,8 +494,11 @@ def apply_pricing_rule_on_transaction(doc):
 		# FTP Development CC1
 		if doc.doctype in ['Daily Order', 'Sales Order']:
 			# Remove rules based on Coupon Code matching.
-			pricing_rules = filter_pricing_rules_for_coupon_codes(pricing_rules,
-				doc.coupon_codes, doc.delivery_date)
+			pricing_rules = filter_pricing_rules_for_coupon_codes(
+				pricing_rules,
+				doc.coupon_codes,
+				any_to_date(doc.delivery_date)
+			)
 
 		if not pricing_rules:
 			remove_free_item(doc)
