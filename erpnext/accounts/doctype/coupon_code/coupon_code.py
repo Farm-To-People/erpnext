@@ -35,7 +35,7 @@ class CouponCode(Document):
 	# DATAHENGE
 	def valid_for_date(self, any_date):
 		"""
-		Is this coupon code valie for a particular date?
+		Is coupon code valid for a particular date range?
 		"""
 		if not any_date:
 			raise ValueError("Argument 'any_date' is mandatory for this function.")

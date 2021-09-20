@@ -660,17 +660,21 @@ def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, fil
 		})
 
 # Datahenge: Adding here, so we can reference in Class refactoring below
-def get_ar_balance_per_customer_per_gl(customer_key):
+def get_ar_balance_per_customer_per_gl(customer_key, validate_exists=False):
 	"""
 	Get a simple AR balance based on General Ledger transactions.
 	"""
+
+	if validate_exists and (not frappe.db.exists("Customer", customer_key)):
+		frappe.throw(f"Cannot find Customer with 'name' = '{customer_key}'")
+
 	company = get_default_company()
 	outstanding_based_on_gle = frappe.db.sql("""
 		select sum(debit) - sum(credit)
 		from `tabGL Entry` where party_type = 'Customer'
 		and party = %s and company=%s""", (customer_key, company))
 
-	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0
+	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0.00
 	return balance
 
 # Datahenge

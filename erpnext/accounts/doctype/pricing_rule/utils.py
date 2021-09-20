@@ -343,10 +343,14 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_date):
 	"""
 	Farm To People: Remove any Pricing Rules that aren't applicable, due to Coupon Codes.
+	This should be Standard Functionality, but for reasons unknown, is not.
 	"""
-	# FTP Development CC1
-	if not delivery_date:
-		raise ArgumentMissing("Missing argument 'delivery_date' in call to function.")	
+	import datetime
+	from temporal import validate_datatype
+
+	validate_datatype('pricing_rules', pricing_rules, list, mandatory=True)
+	validate_datatype('delivery_date', delivery_date, datetime.date, mandatory=True)
+
 	rules = []
 	for rule in pricing_rules:
 		# 1. Allow non-coupon Pricing Rules.
@@ -357,8 +361,8 @@ def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_
 		if not coupon_codes:
 			continue
 		# 3. Examine each coupon code
-		for coupon_code_list in coupon_codes:
-			doc_coupon_code = frappe.get_doc("Coupon Code", coupon_code_list.coupon_code)
+		for row in coupon_codes:
+			doc_coupon_code = frappe.get_doc("Coupon Code", row.coupon_code)
 			if not doc_coupon_code.valid_for_date(delivery_date):
 				continue  # coupon code is not valid for this Delivery Date.
 			if doc_coupon_code.pricing_rule == rule.name:

@@ -1485,7 +1485,7 @@
    "fieldname": "coupon_codes",
    "fieldtype": "Table",
    "label": "Coupon Codes",
-   "options": "Coupon Code List"
+   "options": "Coupon Code Set"
   },
   {
    "fieldname": "del_coupon_code",
@@ -1500,7 +1500,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-09 14:53:56.903168",
+ "modified": "2021-09-17 17:32:12.073518",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
