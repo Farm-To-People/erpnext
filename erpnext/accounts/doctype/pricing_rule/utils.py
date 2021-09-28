@@ -17,7 +17,8 @@ from frappe import _, bold
 from frappe.utils import cint, flt, get_link_to_form, getdate, today, fmt_money
 
 
-class MultiplePricingRuleConflict(frappe.ValidationError): pass
+class MultiplePricingRuleConflict(frappe.ValidationError):
+	pass
 
 apply_on_table = {
 	'Item Code': 'items',
@@ -38,7 +39,8 @@ def get_pricing_rules(args, doc=None):
 
 	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
 
-	if not pricing_rules: return []
+	if not pricing_rules:
+		return []
 
 	if apply_multiple_pricing_rules(pricing_rules):
 		pricing_rules = sorted_by_priority(pricing_rules, args, doc)
@@ -81,7 +83,7 @@ def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 				try:
 					if frappe.safe_eval(pricing_rule.condition, None, doc.as_dict()):
 						filtered_pricing_rules.append(pricing_rule)
-				except:
+				except Exception:
 					pass
 			else:
 				filtered_pricing_rules.append(pricing_rule)
@@ -93,7 +95,8 @@ def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 def _get_pricing_rules(apply_on, args, values):
 	apply_on_field = frappe.scrub(apply_on)
 
-	if not args.get(apply_on_field): return []
+	if not args.get(apply_on_field):
+		return []
 
 	child_doc = '`tabPricing Rule {0}`'.format(apply_on)
 
@@ -347,6 +350,7 @@ def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_
 	"""
 	import datetime
 	from temporal import validate_datatype
+	from ftp.ftp_module.doctype.coupon_code_multi.coupon_code_multi import expand_coupon_multicodes
 
 	validate_datatype('pricing_rules', pricing_rules, list, mandatory=True)
 	validate_datatype('delivery_date', delivery_date, datetime.date, mandatory=True)
@@ -361,7 +365,8 @@ def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_
 		if not coupon_codes:
 			continue
 		# 3. Examine each coupon code
-		for row in coupon_codes:
+		unique_codes = expand_coupon_multicodes(coupon_codes)
+		for row in unique_codes:
 			doc_coupon_code = frappe.get_doc("Coupon Code", row.coupon_code)
 			if not doc_coupon_code.valid_for_date(delivery_date):
 				continue  # coupon code is not valid for this Delivery Date.

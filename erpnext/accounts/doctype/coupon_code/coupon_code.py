@@ -14,7 +14,7 @@ class CouponCode(Document):
 
 
 	def before_rename(self, olddn, newdn, merge=False):
-		raise Exception("Coupon Codes cannot be renamed (please see Shelby)")
+		raise Exception("Coupon Codes cannot be renamed (please see Shelby for details)")
 
 	def autoname(self):
 		self.coupon_code = strip(self.coupon_code)
@@ -32,15 +32,20 @@ class CouponCode(Document):
 			if not self.customer:
 				frappe.throw(_("Please select the customer."))
 		if self.coupon_type == 'Multi-Code':  # Farm To People
-			for code in self.multi_coupon_codes:
-				code.validate()
+			self._validate_multi()
 
+	def _validate_multi(self):
+		# Farm To People custom function.
+		if len(self.multi_coupon_codes) < 2:
+			frappe.throw("A coupon code of type 'Multi-Code' must have at least 2 member coupons.")
+		for code in self.multi_coupon_codes:
+			code.validate()
 
-	# DATAHENGE
 	def valid_for_date(self, any_date):
 		"""
 		Is coupon code valid for a particular date range?
 		"""
+		# Farm To People
 		if not any_date:
 			raise ValueError("Argument 'any_date' is mandatory for this function.")
 		if isinstance(any_date, str):

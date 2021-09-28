@@ -432,11 +432,12 @@ def remove_pricing_rules(item_list):
 def set_transaction_type(args):
 	if args.transaction_type:
 		return
-	if args.doctype in ("Opportunity", "Quotation", "Sales Order", "Delivery Note", "Sales Invoice"):
+	# Farm To People: Added Daily Order.
+	if args.doctype in ("Opportunity", "Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "Daily Order"):
 		args.transaction_type = "selling"
 	elif args.doctype in ("Material Request", "Supplier Quotation", "Purchase Order",
 		"Purchase Receipt", "Purchase Invoice"):
-			args.transaction_type = "buying"
+		args.transaction_type = "buying"
 	elif args.customer:
 		args.transaction_type = "selling"
 	else:

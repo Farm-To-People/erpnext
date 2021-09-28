@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_import": 1,
+ "allow_rename": 1,
  "autoname": "field:coupon_code",
  "creation": "2018-01-22 14:34:39.701832",
  "doctype": "DocType",
@@ -15,6 +16,7 @@
   "column_break_4",
   "add_to_customer_group",
   "apply_shipping_rule",
+  "add_credit_to_account",
   "sb1",
   "pricing_rule",
   "multi_coupon_codes",
@@ -35,7 +37,8 @@
    "in_list_view": 1,
    "label": "Coupon Type",
    "options": "Promotional\nGift Card\nMulti-Code",
-   "reqd": 1
+   "reqd": 1,
+   "set_only_once": 1
   },
   {
    "depends_on": "eval: doc.coupon_type == \"Gift Card\"",
@@ -85,7 +88,7 @@
    "depends_on": "eval: doc.coupon_type == \"Promotional\"",
    "fieldname": "maximum_use",
    "fieldtype": "Int",
-   "label": "Maximum Use"
+   "label": "Maximum Global Use"
   },
   {
    "default": "0",
@@ -117,7 +120,7 @@
    "depends_on": "eval: doc.coupon_type != \"Multi-Code\"",
    "fieldname": "add_to_customer_group",
    "fieldtype": "Link",
-   "label": "Add customer to Group",
+   "label": "Add to Customer Group",
    "options": "Customer Group"
   },
   {
@@ -150,10 +153,18 @@
    "fieldtype": "Table",
    "label": "Collection of Coupons",
    "options": "Coupon Code Multi"
+  },
+  {
+   "depends_on": "eval: doc.coupon_type != \"Multi-Code\"",
+   "fieldname": "add_credit_to_account",
+   "fieldtype": "Currency",
+   "label": "Apply Credit Amount to Customer",
+   "non_negative": 1,
+   "precision": "2"
   }
  ],
  "links": [],
- "modified": "2021-09-20 13:26:23.476498",
+ "modified": "2021-09-27 15:31:43.689100",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",
@@ -192,18 +203,6 @@
    "read": 1,
    "report": 1,
    "role": "Sales Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Website Manager",
    "share": 1,
    "write": 1
   }
