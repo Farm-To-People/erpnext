@@ -81,8 +81,7 @@
   "loyalty_points",
   "loyalty_amount",
   "section_break_48",
-  "del_coupon_code",
-  "coupon_codes",
+  "coupon_code_set",
   "apply_discount_on",
   "base_discount_amount",
   "column_break_50",
@@ -267,6 +266,7 @@
   },
   {
    "default": "Today",
+   "description": "* Used to determine Price Rule for order line rates.",
    "fieldname": "transaction_date",
    "fieldtype": "Date",
    "hide_days": 1,
@@ -1482,25 +1482,17 @@
    "label": "Disable Rounded Total"
   },
   {
-   "fieldname": "coupon_codes",
+   "fieldname": "coupon_code_set",
    "fieldtype": "Table",
    "label": "Coupon Codes",
    "options": "Coupon Code Set"
-  },
-  {
-   "fieldname": "del_coupon_code",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Coupon Code",
-   "options": "Coupon Code"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-09-17 17:32:12.073518",
+ "modified": "2021-09-29 20:37:14.438544",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

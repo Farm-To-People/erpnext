@@ -31,7 +31,7 @@ force_item_fields = ("item_group", "brand", "stock_uom", "is_fixed_asset", "item
 
 class AccountsController(TransactionBase):
 	def __init__(self, *args, **kwargs):
-		super(AccountsController, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 	def get_print_settings(self):
 		print_setting_fields = []
@@ -1262,6 +1262,9 @@ def get_taxes_and_charges(master_doctype, master_name):
 
 def validate_conversion_rate(currency, conversion_rate, conversion_rate_label, company):
 	"""common validation for currency and price list currency"""
+
+	if not currency:
+		frappe.throw("Argument 'currency' is mandatory for function 'validate_conversion_rate'")
 
 	company_currency = frappe.get_cached_value('Company',  company,  "default_currency")
 

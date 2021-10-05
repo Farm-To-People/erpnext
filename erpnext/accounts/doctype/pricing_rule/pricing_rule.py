@@ -1,3 +1,4 @@
+""" pricing_rule.py """
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 
 # For license information, please see license.txt
@@ -175,14 +176,30 @@ def apply_pricing_rule(args, doc=None):
 			"transaction_date": "something",
 			"campaign": "something",
 			"sales_partner": "something",
-			"ignore_pricing_rule": "something"
+			"ignore_pricing_rule": "something",
+			"doctype": "something",
+			"coupon_codes":  "to_be_found"
 		}
 	"""
 
-	if isinstance(args, string_types):
+	"""
+	Datahenge:  This function is being called directly by JS code in the ERPNext website.
+	There are 2 callers that matter the most to me:
+
+		1. erpnext/public/js/controllers/transaction.js  (via changing Company, Qty)
+		2. daily_order.js
+
+				We need 'args' to provide a new piece of informatoin:  Coupon Code Set.
+				To accomplish this, need to modify the JS code, and the payload it's sending.
+	"""  # pylint: disable=pointless-string-statement
+
+	if isinstance(args, string_types):  # Convert JSON string to dictionary.
 		args = json.loads(args)
 
-	args = frappe._dict(args)
+	if 'coupon_codes' not in args.keys():
+		print("WARNING: Args is missing key = 'coupon codes'")
+
+	args = frappe._dict(args)  # pylint: disable=protected-access
 
 	if not args.transaction_type:
 		set_transaction_type(args)
@@ -190,9 +207,10 @@ def apply_pricing_rule(args, doc=None):
 	# list of dictionaries
 	out = []
 
-	if args.get("doctype") == "Material Request": return out
+	if args.get("doctype") == "Material Request":
+		return out
 
-	item_list = args.get("items")
+	item_list = args.get("items")  # Sales Order Item, Daily Order Item, etc.
 	args.pop("items")
 
 	set_serial_nos_based_on_fifo = frappe.db.get_single_value("Stock Settings",
@@ -200,8 +218,11 @@ def apply_pricing_rule(args, doc=None):
 
 	for item in item_list:
 		args_copy = copy.deepcopy(args)
-		args_copy.update(item)
-		data = get_pricing_rule_for_item(args_copy, item.get('price_list_rate'), doc=doc)
+		args_copy.update(item)  # Merge the Order Line dictionary with the 'args' dictionary
+
+		# Datahenge Requirements:  The 'args_copy' must contain the Coupon Code Set as a List of String.
+		# Also, removed an unused argument below:
+		data = get_pricing_rule_for_item(args_copy, doc=doc)
 		out.append(data)
 		if not item.get("serial_no") and set_serial_nos_based_on_fifo and not args.get('is_return'):
 			out[0].update(get_serial_no_for_item(args_copy))
@@ -220,9 +241,30 @@ def get_serial_no_for_item(args):
 		item_details.serial_no = get_serial_no(args)
 	return item_details
 
-def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=False):
+
+def get_pricing_rule_for_item(args, doc=None, for_validate=False):
+	"""
+	More accurately: 'get_pricing_rule_for_order_line'
+	"""
+
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_pricing_rules,
 			get_applied_pricing_rules, get_pricing_rule_items, get_product_discount_rule)
+
+	"""
+	Datahenge: Need 'args' (a dictionary) to already have a key 'coupon_codes' at this point in the process flow.
+				Instead of a table, it should probably be a List of Strings.
+
+	However, there are two(2) different process flows, and ways of arriving here:
+
+	1. JAVASCRIPT PATH
+		* 'apply_pricing_rule'
+		* erpnext/accounts/doctype/pricing_rule/pricing_rule.py, Line: 213
+		* Same Module as this comment; just scroll up a bit.
+
+	2. PYTHON SERVERSIDE PATH:
+    	* 'get_item_details'
+    	* erpnext/erpnext/stock/get_item_details.py, Line: 95
+	"""  # pylint: disable=pointless-string-statement
 
 	if isinstance(doc, string_types):
 		doc = json.loads(doc)
@@ -230,10 +272,19 @@ def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=Fa
 	if doc:
 		doc = frappe.get_doc(doc)
 
+	# Datahenge: Begin
+	# Try to extract the Coupon Codes into 'args' as a List of String.
+	if doc and (not args.coupon_codes) and doc.doctype in ['Sales Order', 'Daily Order']:
+		if hasattr(doc, 'coupon_code_set'):
+			args.coupon_codes = []
+			for coupon_code_doc in doc.coupon_code_set:
+				args.coupon_codes.append(coupon_code_doc.coupon_code)
+	# Datahenge: End
+
 	if (args.get('is_free_item') or
 		args.get("parenttype") == "Material Request"): return {}
 
-	item_details = frappe._dict({
+	item_details = frappe._dict({  # pylint: disable=protected-access
 		"doctype": args.doctype,
 		"has_margin": False,
 		"name": args.name,
@@ -279,9 +330,15 @@ def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=Fa
 						if pricing_rule.apply_rule_on_other else frappe.scrub(pricing_rule.get('apply_on')))
 				})
 
-			if pricing_rule.coupon_code_based==1 and args.coupon_code==None:
-				print("Pricing Rule requires Coupon; not found.")
+			# Datahenge: Begin
+			# The code below is a Decision Point, where a Pricing Rule is thrown out, if there
+			# is not a related Coupon Code.  FYI, not sure the original code actually worked correctly.
+			if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
+				# But what if a rule already exists on the Order.  And now then Coupon is deleted?
+				# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
+				item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
 				return item_details
+			# Datahenge: End
 
 			if not pricing_rule.validate_applied_rule:
 				if pricing_rule.price_or_product_discount == "Price":
@@ -297,7 +354,8 @@ def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=Fa
 
 		item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in rules])
 
-		if not doc: return item_details
+		if not doc:
+			return item_details
 
 	elif args.get("pricing_rules"):
 		item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
@@ -306,12 +364,15 @@ def get_pricing_rule_for_item(args, price_list_rate=0, doc=None, for_validate=Fa
 	return item_details
 
 def update_args_for_pricing_rule(args):
+	"""
+	Offical Upstream Function: But I'm unsure the point of it.
+	"""
 	if not (args.item_group and args.brand):
 		try:
 			args.item_group, args.brand = frappe.get_cached_value("Item", args.item_code, ["item_group", "brand"])
 		except TypeError:
 			# invalid item_code
-			return item_details
+			return None
 		if not args.item_group:
 			frappe.throw(_("Item Group not mentioned in item master for item {0}").format(args.item_code))
 
@@ -319,7 +380,7 @@ def update_args_for_pricing_rule(args):
 		if args.customer and not (args.customer_group and args.territory):
 
 			if args.quotation_to and args.quotation_to != 'Customer':
-				customer = frappe._dict()
+				customer = frappe._dict()  # pylint: disable=protected-access
 			else:
 				customer = frappe.get_cached_value("Customer", args.customer, ["customer_group", "territory"])
 
@@ -342,6 +403,8 @@ def get_pricing_rule_details(args, pricing_rule):
 	})
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
+
+	print("DHNOTE: apply_price_discount_rule")
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
 	if ((pricing_rule.margin_type in ['Amount', 'Percentage'] and pricing_rule.currency == args.currency)
@@ -386,6 +449,7 @@ def apply_price_discount_rule(pricing_rule, item_details, args):
 def remove_pricing_rule_for_item(pricing_rules, item_details, item_code=None):
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_applied_pricing_rules,
 		get_pricing_rule_items)
+
 	for d in get_applied_pricing_rules(pricing_rules):
 		if not d or not frappe.db.exists("Pricing Rule", d): continue
 		pricing_rule = frappe.get_cached_doc('Pricing Rule', d)
@@ -465,3 +529,40 @@ def get_item_uoms(doctype, txt, searchfield, start, page_len, filters):
 			'parent': ('in', items),
 			'uom': ("like", "{0}%".format(txt))
 		}, fields = ["distinct uom"], as_list=1)
+
+
+def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
+	"""
+		Arguments:
+			pricing_rule:  		Frappe dictionary
+			coupon_code_list: 	Python List of Strings, representing Coupon Codes.
+	"""
+
+	if pricing_rule.coupon_code_based != 1:
+		return True
+
+	if not coupon_code_list:
+		print(f"Pricing Rule '{pricing_rule.name}' requires a Coupon; but no Coupon was found.")
+		return False
+
+	# Fancy way of esaping for a WHERE IN clause in SQL.
+	coupon_codes = ["%s" % frappe.db.escape(coupon_code) for coupon_code in coupon_code_list]
+
+	query = """ SELECT Code.coupon_code
+		FROM `tabCoupon Code`	AS Code
+		INNER JOIN
+			`tabCoupon Code Pricing Rule` 	CodePricingRule
+		ON
+			CodePricingRule.parenttype = 'Coupon Code'
+		AND CodePricingRule.parent = Code.name
+		AND CodePricingRule.pricing_rule = %(pricing_rule_name)s
+		WHERE coupon_code in ({coupon_codes}) """
+
+	result = frappe.db.sql(query.format(coupon_codes=",".join(coupon_codes)),
+	                       values={"pricing_rule_name": pricing_rule.name},
+						   debug=False, explain=False)
+
+	if (not result) or (not result[0]) or (not result[0][0]):
+		print(f"Pricing Rule '{pricing_rule.name}' requires a Coupon; but no Coupon was found.")
+		return False
+	return True

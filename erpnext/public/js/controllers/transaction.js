@@ -508,6 +508,9 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	item_code: function(doc, cdt, cdn) {
+
+		// This function called when an Order Line's 'item_code' field is added/modified.
+
 		var me = this;
 		var item = frappe.get_doc(cdt, cdn);
 		var update_stock = 0, show_batch_dialog = 0;
@@ -577,8 +580,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 						}
 					},
 
-					callback: function(r) {
-						if(!r.exc) {
+					callback: function(result) {
+						if(!result.exc) {
 							frappe.run_serially([
 								() => {
 									var d = locals[cdt][cdn];
@@ -593,6 +596,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 										me.get_incoming_rate(item, me.frm.posting_date, me.frm.posting_time,
 											me.frm.doc.doctype, me.frm.doc.company);
 									} else {
+										console.log("Triggering 'price_list_rate' on Order Line.");
 										me.frm.script_manager.trigger("price_list_rate", cdt, cdn);
 									}
 								},
@@ -661,15 +665,27 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	price_list_rate: function(doc, cdt, cdn) {
-		var item = frappe.get_doc(cdt, cdn);
-		frappe.model.round_floats_in(item, ["price_list_rate", "discount_percentage"]);
+		//
+		// This function is rarely called "directly" by the touching 'price_list_rate'.
+		// Because that's typically a non-editable field.
+		// Rather this fnction is "triggered" by other JS code.  Look around for something like 'trigger("price_list_rate"'
+		//
+		var order_line = frappe.get_doc(cdt, cdn);
+		frappe.model.round_floats_in(order_line, ["price_list_rate", "discount_percentage"]);
 
 		// check if child doctype is Sales Order Item/Qutation Item and calculate the rate
-		if (in_list(["Quotation Item", "Sales Order Item", "Delivery Note Item", "Sales Invoice Item", "POS Invoice Item", "Purchase Invoice Item", "Purchase Order Item", "Purchase Receipt Item"]), cdt)
-			this.apply_pricing_rule_on_item(item);
+		if (in_list(["Quotation Item", "Sales Order Item", "Delivery Note Item", "Sales Invoice Item",
+		             "POS Invoice Item", "Purchase Invoice Item", "Purchase Order Item", "Purchase Receipt Item"]), cdt)
+		{
+			console.log("Scenario 676.");
+			// NOTE:  Call to poorly-named function.  Does not "apply" any Pricing Rules whatsosever.
+			// Only takes the value of the *current* 'price_list_rate, and copies it into the Order Line's rate.
+			// There's nothing interesting in this call besides that.
+			this.apply_pricing_rule_on_item(order_line);
+		}
 		else
-			item.rate = flt(item.price_list_rate * (1 - item.discount_percentage / 100.0),
-				precision("rate", item));
+			order_line.rate = flt(order_line.price_list_rate * (1 - order_line.discount_percentage / 100.0),
+				precision("rate", order_line));
 
 		this.calculate_taxes_and_totals();
 	},
@@ -1129,7 +1145,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 
 		if(!this.in_apply_price_list) {
-			this.apply_price_list(null, true);
+			this.apply_price_list(null, reset_plc_conversion=true);
 		}
 	},
 
@@ -1174,7 +1190,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 			if (!dont_fetch_price_list_rate &&
 				frappe.meta.has_field(doc.doctype, "price_list_currency")) {
-				this.apply_price_list(item, true);
+				this.apply_price_list(item, reset_plc_conversion=true);
 			}
 			this.calculate_stock_uom_rate(doc, cdt, cdn);
 		}
@@ -1182,7 +1198,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 	batch_no: function(doc, cdt, cdn) {
 		let item = frappe.get_doc(cdt, cdn);
-		this.apply_price_list(item, true);
+		this.apply_price_list(item, reset_plc_conversion=true);
 	},
 
 	toggle_conversion_factor: function(item) {
@@ -1196,6 +1212,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 	qty: function(doc, cdt, cdn) {
 		let item = frappe.get_doc(cdt, cdn);
+
 		this.conversion_factor(doc, cdt, cdn, true);
 		this.calculate_stock_uom_rate(doc, cdt, cdn);
 		this.apply_pricing_rule(item, true);
@@ -1465,7 +1482,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			args: {	args: args, doc: me.frm.doc },
 			callback: function(r) {
 				if (!r.exc && r.message) {
-					me._set_values_for_item_list(r.message);
+					me._set_values_for_item_list(r.message);  // This is how the Price gets updated?
 					if(item) me.set_gross_profit(item);
 					if(me.frm.doc.apply_discount_on) me.frm.trigger("apply_discount_on")
 				}
@@ -1499,7 +1516,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"update_stock": in_list(['Sales Invoice', 'Purchase Invoice'], me.frm.doc.doctype) ? cint(me.frm.doc.update_stock) : 0,
 			"conversion_factor": me.frm.doc.conversion_factor,
 			"pos_profile": me.frm.doc.doctype == 'Sales Invoice' ? me.frm.doc.pos_profile : '',
-			"coupon_code": me.frm.doc.coupon_code
+			// Datahenge: Need to create an Array of 'coupon_code' string
+			"coupon_codes": this._get_coupon_code_list(me.frm.doc.coupon_code_set)
 		};
 	},
 
@@ -1714,6 +1732,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	trigger_price_list_rate: function() {
+
+		console.log("Triggering function 'price_list_rate' in all the child items?")
 		var me  = this;
 
 		this.frm.doc.items.forEach(child_row => {
@@ -1853,8 +1873,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			me.calculate_taxes_and_totals();
 		}
 	},
-
-
 
 	is_recurring: function() {
 		// set default values for recurring documents
@@ -2245,6 +2263,11 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 	},
 
+	// Datahenge: Replaced by a Child Table 'Coupon Code Set'
+	// Also, seems broken because if 'ignore_pricing_rule' was already set to 1?
+	// This code would --force-- it to become zero.
+
+	/*
 	coupon_code: function() {
 		var me = this;
 		frappe.run_serially([
@@ -2254,6 +2277,22 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			() => me.apply_pricing_rule()
 		]);
 	}
+	*/
+
+	_get_coupon_code_list: function(coupon_code_set) {
+		/*
+			Datahenge: Loop through the 'coupon_code_set' child DocType, and create an Array of String.
+		*/
+		var coupon_code_list = [];
+		// As always, the symbol '$' = JQuery.  Way to think it through, Dodge.
+		$.each(coupon_code_set, (idx, row) => {  
+			if (row.name) {
+				coupon_code_list.push(row.coupon_code);
+			}
+		});
+		return coupon_code_list;
+	}
+
 });
 
 erpnext.show_serial_batch_selector = function (frm, d, callback, on_close, show_dialog) {

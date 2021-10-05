@@ -346,7 +346,7 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_date):
 	"""
 	Farm To People: Remove any Pricing Rules that aren't applicable, due to Coupon Codes.
-	This should be Standard Functionality, but for reasons unknown, is not.
+	                This should be Standard Functionality, but for Reasons Unknown, is not.
 	"""
 	import datetime
 	from temporal import validate_datatype
@@ -364,8 +364,9 @@ def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_
 		# 2. If no coupon codes, drop the Pricing Rule.
 		if not coupon_codes:
 			continue
-		# 3. Examine each coupon code
+		# 3. Expand Multi-Codes, and get a unique list of coupons.
 		unique_codes = expand_coupon_multicodes(coupon_codes)
+		# 4. Examine each coupon code
 		for row in unique_codes:
 			doc_coupon_code = frappe.get_doc("Coupon Code", row.coupon_code)
 			if not doc_coupon_code.valid_for_date(delivery_date):
@@ -501,7 +502,7 @@ def apply_pricing_rule_on_transaction(doc):
 			# Remove rules based on Coupon Code matching.
 			pricing_rules = filter_pricing_rules_for_coupon_codes(
 				pricing_rules,
-				doc.coupon_codes,
+				doc.coupon_code_set,  # coupon codes will be expanded automatically
 				any_to_date(doc.delivery_date)
 			)
 

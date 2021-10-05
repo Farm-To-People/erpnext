@@ -1,14 +1,19 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+# pylint: disable=protected-access,pointless-string-statement
+
 from __future__ import unicode_literals
+import json  # , copy
+from six import string_types, iteritems
+
 import frappe
 from frappe import _, throw
 from frappe.utils import flt, cint, add_days, cstr, add_months, getdate
-import json, copy
+from frappe.model.meta import get_field_precision
+
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item, set_transaction_type
 from erpnext.setup.utils import get_exchange_rate
-from frappe.model.meta import get_field_precision
 from erpnext.stock.doctype.batch.batch import get_batch_no
 from erpnext import get_company_currency
 from erpnext.stock.doctype.item.item import get_item_defaults, get_uom_conv_factor
@@ -17,13 +22,18 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from erpnext.stock.doctype.item_manufacturer.item_manufacturer import get_item_manufacturer_part_no
 
-from six import string_types, iteritems
 
-sales_doctypes = ['Quotation', 'Sales Order', 'Delivery Note', 'Sales Invoice', 'POS Invoice']
+
+sales_doctypes = ['Quotation', 'Sales Order', 'Delivery Note', 'Sales Invoice', 'POS Invoice', 'Daily Order']
 purchase_doctypes = ['Material Request', 'Supplier Quotation', 'Purchase Order', 'Purchase Receipt', 'Purchase Invoice']
 
 @frappe.whitelist()
 def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True):
+	"""
+		IMPORTANT function.  Calculates the Item Price when called by JS web page.
+		Seems to be smart-enough to pay attention to dates in Price Lists.
+	"""
+
 	"""
 		args = {
 			"item_code": "",
@@ -46,11 +56,11 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		}
 	"""
 
-	args = process_args(args)
+	args = process_args(args)  # convert args into a frappe._dict
 	for_validate = process_string_args(for_validate)
 	overwrite_warehouse = process_string_args(overwrite_warehouse)
 	item = frappe.get_cached_doc("Item", args.item_code)
-	validate_item_details(args, item)
+	validate_item_details(args, item)  # This step also validates the arguments.
 
 	out = get_basic_details(args, item, overwrite_warehouse)
 
@@ -61,8 +71,12 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		args['bill_date'] = doc.get('bill_date')
 
 	if doc:
-		args['posting_date'] = doc.get('posting_date')
-		args['transaction_date'] = doc.get('transaction_date')
+		# Datahenge: But what if the Document doesn't have a DocField named `posting_date` or `transaction-date`?
+		#            Then respect the args!
+		if doc.get('posting_date'):
+			args['posting_date'] = doc.get('posting_date')
+		if doc.get('transaction_date'):
+			args['transaction_date'] = doc.get('transaction_date')
 
 	get_item_tax_template(args, item, out)
 	out["item_tax_rate"] = get_item_tax_map(args.company, args.get("item_tax_template") if out.get("item_tax_template") is None \
@@ -74,7 +88,6 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 
 	update_party_blanket_order(args, out)
 
-	
 	get_price_list_rate(args, item, out)
 
 	if args.customer and cint(args.is_pos):
@@ -92,8 +105,10 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		if args.get(key) is None:
 			args[key] = value
 
-	data = get_pricing_rule_for_item(args, out.price_list_rate,
-		doc, for_validate=for_validate)
+	# Datahenge:
+	# 1. Removing unused argument
+	# 2. At this point, the 'args' should contain a List of Coupon Code strings.
+	data = get_pricing_rule_for_item(args, doc, for_validate=for_validate)
 
 	out.update(data)
 
@@ -190,7 +205,11 @@ def get_item_code(barcode=None, serial_no=None):
 
 def validate_item_details(args, item):
 	if not args.company:
-		throw(_("Please specify Company"))
+		throw(_("Please specify Company in arguments."))
+
+	if not args.doctype:
+		throw(_("Please include 'doctype' in arguments."))
+
 
 	from erpnext.stock.doctype.item.item import validate_end_of_life
 	validate_end_of_life(item.name, item.end_of_life, item.disabled)
@@ -373,7 +392,7 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 
 	return out
 
-def get_item_warehouse(item, args, overwrite_warehouse, defaults={}):
+def get_item_warehouse(item, args, overwrite_warehouse, defaults=None):
 	if not defaults:
 		defaults = frappe._dict({
 			'item_defaults' : get_item_defaults(item.name, args.company),
@@ -804,7 +823,11 @@ def check_packing_list(price_list_rate_name, desired_qty, item_code):
 	return flag
 
 def validate_conversion_rate(args, meta):
-	from erpnext.controllers.accounts_controller import validate_conversion_rate
+	from erpnext.controllers.accounts_controller import validate_conversion_rate	as accounts_vcr
+
+	# Datahenge: Temporary Workaround
+	if not args.currency:
+		return
 
 	company_currency = frappe.get_cached_value('Company',  args.company,  "default_currency")
 	if (not args.conversion_rate and args.currency==company_currency):
@@ -815,12 +838,13 @@ def validate_conversion_rate(args, meta):
 			company_currency, args.transaction_date, "for_buying") or 1.0
 
 	# validate currency conversion rate
-	validate_conversion_rate(args.currency, args.conversion_rate,
+	accounts_vcr(args.currency, args.conversion_rate,
 		meta.get_label("conversion_rate"), args.company)
 
-	args.conversion_rate = flt(args.conversion_rate,
-		get_field_precision(meta.get_field("conversion_rate"),
-			frappe._dict({"fields": args})))
+
+	field_precision = get_field_precision(meta.get_field("conversion_rate"),
+			                              frappe._dict({"fields": args}))
+	args.conversion_rate = flt(args.conversion_rate, field_precision)
 
 	if args.price_list:
 		if (not args.plc_conversion_rate
@@ -831,7 +855,7 @@ def validate_conversion_rate(args, meta):
 		if not args.get("price_list_currency"):
 			throw(_("Price List Currency not selected"))
 		else:
-			validate_conversion_rate(args.price_list_currency, args.plc_conversion_rate,
+			accounts_vcr(args.price_list_currency, args.plc_conversion_rate,
 				meta.get_label("plc_conversion_rate"), args.company)
 
 			if meta.get_field("plc_conversion_rate"):
@@ -1077,7 +1101,8 @@ def apply_price_list_on_item(args):
 	item_doc = frappe.get_doc("Item", args.item_code)
 	get_price_list_rate(args, item_doc, item_details)
 
-	item_details.update(get_pricing_rule_for_item(args, item_details.price_list_rate))
+	# Datahenge: Removing unused argument
+	item_details.update(get_pricing_rule_for_item(args))
 
 	return item_details
 

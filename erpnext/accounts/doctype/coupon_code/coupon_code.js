@@ -43,5 +43,13 @@ frappe.ui.form.on('Coupon Code', {
 				frappe.set_route("Form", "Pricing Rule", frm.doc.pricing_rule);
 			});
 		}
+
+		// Begin FTP:  Add an anchor link to Coupon Code Usage
+		frm.add_custom_button(__("Coupon Usage"), function() {
+			frappe.set_route("Form", "Coupon Code Usage", {"coupon_code": frm.doc.name});
+		}, __( ))
+		//.addClass("btn-warning").css({'color':'black','font-weight': 'regular'});
+		// End: FTP
 	}
+
 });

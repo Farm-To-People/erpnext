@@ -677,20 +677,7 @@ def get_ar_balance_per_customer_per_gl(customer_key, validate_exists=False):
 	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0.00
 	return balance
 
-# Datahenge
-def value_to_currency_decimal(value):
-	"""
-	Datahenge: As always, surprised we must invent things that should have been standard.
-	"""
-	import decimal
-	from decimal import Decimal
-	# 1.  If the input is a float (let's say from SQL) represent as a String.
-	# 2.  Convert to a Decimal type.
-	# Could alternately return some kind of float like this:  return float(f"{foo:.2f}")
-	decimal.getcontext().prec = 6  # By entering a 6, I'm hoping for something like SQL decimal(18,6)?
-	return Decimal(str(value))
-
-# Datahenge:  This is kind of nonsense.  But it's actually an easy way of extending the standard Class defined above.
+# Datahenge:  This is kind of nonsense.  But it's a rather easy method to extend the standard Customer Class.
 class Customer(Customer):  # pylint: disable=function-redefined
 
 	@staticmethod
@@ -721,9 +708,31 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		return get_ar_balance_per_customer_per_gl(self.name)
 
+	def get_ar_journal_credits(self, debug=False):
+		"""
+			Return information about AR Credits that were issued via Journal Entries.
+		"""
+		query = """
+			SELECT JournalHeader.name, JournalHeader.docstatus, voucher_type, debit - credit AS AR_Adjustment 
+			FROM `tabJournal Entry Account`		AS JournalLine
+			JOIN `tabJournal Entry`		AS JournalHeader
+			ON	JournalHeader.name = JournalLine.parent
+			AND JournalHeader.docstatus = 1   -- posted
+			WHERE JournalLine.account_type = 'Receivable'
+			AND   JournalLine.party_type = 'Customer'
+			AND   JournalLine.party = %(customer_key)s
+		"""
+		result = frappe.db.sql(query=query,
+		                       values={"customer_key": self.name},
+							   as_dict=True, debug=debug, explain=debug)
+		return result
+
 	def _get_open_ar_transactions(self, debug=False):
 		"""
-		Return a list of Dictionary.
+			Get a list of Invoices and Payments that are open.
+
+			Returns:  List of Dictionary.
+			Note: Does not include any Journal Entries that target Accounts Receivable directly.
 		"""
 
 		query = """
@@ -754,13 +763,15 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		return result
 
 	def get_ar_balance_per_transactions(self):
+		from ftp.ftp_module.generics import value_to_currency  # deliberate late import, because it's cross-module
+
 		transactions = self._get_open_ar_transactions()
-		balance = value_to_currency_decimal(0.00)
+		balance = value_to_currency(0.00)
 		for row in transactions:
 			if row['transaction_type'] == 'Payment Entry':
-				balance -= value_to_currency_decimal(row['unallocated_amount'])
+				balance -= value_to_currency(row['unallocated_amount'])
 			else:
-				balance += value_to_currency_decimal(row['unallocated_amount'])
+				balance += value_to_currency(row['unallocated_amount'])
 		return balance
 
 	@frappe.whitelist()

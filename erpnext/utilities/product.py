@@ -8,6 +8,7 @@ from frappe.utils import cint, fmt_money, flt, nowdate, getdate
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_for_item
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 
+
 def get_qty_in_stock(item_code, item_warehouse_field, warehouse=None):
 	in_stock, stock_qty = 0, ''
 	template_item_code, is_stock_item = frappe.db.get_value("Item", item_code, ["variant_of", "is_stock_item"])
@@ -30,7 +31,10 @@ def get_qty_in_stock(item_code, item_warehouse_field, warehouse=None):
 			stock_qty = adjust_qty_for_expired_items(item_code, stock_qty, warehouse)
 			in_stock = stock_qty[0][0] > 0 and 1 or 0
 
-	return frappe._dict({"in_stock": in_stock, "stock_qty": stock_qty, "is_stock_item": is_stock_item})
+	# pylint: disable=protected-access
+	return frappe._dict({"in_stock": in_stock,
+	                     "stock_qty": stock_qty,
+						 "is_stock_item": is_stock_item})
 
 
 def adjust_qty_for_expired_items(item_code, stock_qty, warehouse):
@@ -67,6 +71,12 @@ def qty_from_all_warehouses(batch_info):
 
 	return qty
 
+#
+# Datahenge:
+#
+# This function is rather inaccurate.  It does not take into consideration the From and To Dates of basic Item Price.
+# Unfortunately, it's being called by 'erpnext.selling.doctype.sales_order.sales_order'
+#
 def get_price(item_code, price_list, customer_group, company, qty=1):
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
@@ -79,7 +89,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 				filters={"price_list": price_list, "item_code": template_item_code})
 
 		if price:
-			pricing_rule = get_pricing_rule_for_item(frappe._dict({
+			pricing_rule = get_pricing_rule_for_item(frappe._dict({  # pylint: disable=protected-access
 				"item_code": item_code,
 				"qty": qty,
 				"stock_qty": qty,

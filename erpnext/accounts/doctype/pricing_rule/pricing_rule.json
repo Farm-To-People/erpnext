@@ -13,6 +13,7 @@
   "apply_on",
   "price_or_product_discount",
   "warehouse",
+  "limit_to_origin",
   "column_break_7",
   "items",
   "item_groups",
@@ -172,6 +173,7 @@
    "default": "0",
    "fieldname": "coupon_code_based",
    "fieldtype": "Check",
+   "in_list_view": 1,
    "label": "Coupon Code Based"
   },
   {
@@ -570,12 +572,20 @@
    "fieldname": "is_recursive",
    "fieldtype": "Check",
    "label": "Is Recursive"
+  },
+  {
+   "default": "All",
+   "fieldname": "limit_to_origin",
+   "fieldtype": "Select",
+   "label": "Limit to Origin",
+   "options": "All\nALC\nSubscription",
+   "reqd": 1
   }
  ],
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2021-03-06 22:01:24.840422",
+ "modified": "2021-10-04 17:09:33.652743",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",

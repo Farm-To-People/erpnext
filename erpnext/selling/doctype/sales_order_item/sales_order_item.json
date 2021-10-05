@@ -145,13 +145,14 @@
    "label": "Description"
   },
   {
+   "fetch_from": "item_code.item_name",
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Small Text",
    "print_width": "300px",
-   "reqd": 1,
+   "reqd_in_database": 1,
    "width": "300px"
   },
   {
@@ -794,7 +795,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-02-23 01:15:05.803091",
+ "modified": "2021-09-29 20:26:23.764946",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",
