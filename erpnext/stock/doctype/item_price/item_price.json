@@ -108,6 +108,7 @@
    "depends_on": "eval:doc.selling == 1",
    "fieldname": "customer",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Customer",
    "options": "Customer"
   },
@@ -217,7 +218,7 @@
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-09-29 20:32:47.877975",
+ "modified": "2021-10-05 17:58:11.999039",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",

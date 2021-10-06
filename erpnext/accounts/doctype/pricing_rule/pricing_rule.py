@@ -545,22 +545,25 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
 		print(f"Pricing Rule '{pricing_rule.name}' requires a Coupon; but no Coupon was found.")
 		return False
 
-	# Fancy way of esaping for a WHERE IN clause in SQL.
-	coupon_codes = ["%s" % frappe.db.escape(coupon_code) for coupon_code in coupon_code_list]
+	# Fancy way of esaping for a 'WHERE IN' clause in SQL.
+	# coupon_codes = ["%s" % frappe.db.escape(coupon_code) for coupon_code in coupon_code_list]
 
-	query = """ SELECT Code.coupon_code
+	# This is some REALLY screwed up syntax for escaping SQL 'WHERE IN'.  But it appears
+	# to be prolific throughout ERPNext.
+	coupon_codes = coupon_code_list
+	result = frappe.db.sql(""" SELECT Code.coupon_code
 		FROM `tabCoupon Code`	AS Code
 		INNER JOIN
 			`tabCoupon Code Pricing Rule` 	CodePricingRule
 		ON
 			CodePricingRule.parenttype = 'Coupon Code'
 		AND CodePricingRule.parent = Code.name
-		AND CodePricingRule.pricing_rule = %(pricing_rule_name)s
-		WHERE coupon_code in ({coupon_codes}) """
+		AND CodePricingRule.pricing_rule = %s
+		WHERE coupon_code in (%s) """ %
+		('%s', ', '.join(['%s'] * len(coupon_codes))),
+		values=tuple([pricing_rule.name] + coupon_codes),
+		debug=True, explain=True)
 
-	result = frappe.db.sql(query.format(coupon_codes=",".join(coupon_codes)),
-	                       values={"pricing_rule_name": pricing_rule.name},
-						   debug=False, explain=False)
 
 	if (not result) or (not result[0]) or (not result[0][0]):
 		print(f"Pricing Rule '{pricing_rule.name}' requires a Coupon; but no Coupon was found.")

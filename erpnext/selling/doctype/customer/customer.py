@@ -792,7 +792,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		holds_orig = None
 		if hasattr(self, '_doc_before_save'):
-			holds_orig = self._doc_before_save.pauses
+			if self._doc_before_save:
+				holds_orig = self._doc_before_save.pauses
 		holds_current = self.pauses
 
 		if (not holds_orig) and (not holds_current):  # no pauses exist
