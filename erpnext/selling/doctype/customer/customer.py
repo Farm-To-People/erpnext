@@ -680,6 +680,17 @@ def get_ar_balance_per_customer_per_gl(customer_key, validate_exists=False):
 # Datahenge:  This is kind of nonsense.  But it's a rather easy method to extend the standard Customer Class.
 class Customer(Customer):  # pylint: disable=function-redefined
 
+	def on_change(self):
+		# FTP: If customer's name changed, then update Web Subscription names
+		# Datahenge: This is why 1) We shouldn't store DocType attributes in secondary tables.
+		#            And also 2) Why ERPNext really needs the concept of 'Display Methods'
+		if self.has_value_changed('customer_name'):
+			statement = """ UPDATE `tabWeb Subscription`
+			SET customer_name = %(customer_name)s
+			WHERE customer = %(customer_id)s
+			"""
+			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
+
 	@staticmethod
 	def get_customer_by_emailid(email_address, err_on_missing=False):
 		"""
