@@ -4,16 +4,15 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe
-import json
 import copy
+import json
 import re
+from six import string_types
 
+import frappe
 from frappe import throw, _
 from frappe.utils import flt, cint, getdate
 from frappe.model.document import Document
-
-from six import string_types
 
 apply_on_dict = {"Item Code": "items",
 	"Item Group": "item_groups", "Brand": "brands"}
@@ -542,7 +541,7 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
 		return True
 
 	if not coupon_code_list:
-		print(f"Pricing Rule '{pricing_rule.name}' requires a Coupon; but no Coupon was found.")
+		# print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
 		return False
 
 	# Fancy way of esaping for a 'WHERE IN' clause in SQL.
@@ -562,10 +561,10 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
 		WHERE coupon_code in (%s) """ %
 		('%s', ', '.join(['%s'] * len(coupon_codes))),
 		values=tuple([pricing_rule.name] + coupon_codes),
-		debug=True, explain=True)
+		debug=False, explain=False)
 
 
 	if (not result) or (not result[0]) or (not result[0][0]):
-		print(f"Pricing Rule '{pricing_rule.name}' requires a Coupon; but no Coupon was found.")
+		# print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
 		return False
 	return True

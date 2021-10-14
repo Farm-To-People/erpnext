@@ -4,14 +4,20 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe, erpnext
+import frappe
+import erpnext
 from frappe import _, msgprint, throw
 from frappe.utils import flt, fmt_money
 from frappe.model.document import Document
 
-class OverlappingConditionError(frappe.ValidationError): pass
-class FromGreaterThanToError(frappe.ValidationError): pass
-class ManyBlankToValuesError(frappe.ValidationError): pass
+class OverlappingConditionError(frappe.ValidationError):
+	pass
+
+class FromGreaterThanToError(frappe.ValidationError):
+	pass
+
+class ManyBlankToValuesError(frappe.ValidationError):
+	pass
 
 class ShippingRule(Document):
 	def validate(self):
@@ -31,23 +37,23 @@ class ShippingRule(Document):
 		#
 		if bool(self.is_default_rule) is True:
 			statement = """ UPDATE `tabShipping Rule` SET is_default_rule = 0 WHERE name <> %(rule_name)s """
-			frappe.db.sql(statement, values={'rule_name': self.name}, debug=True, explain=True)
+			frappe.db.sql(statement, values={'rule_name': self.name}, debug=False, explain=False)
 
 
 	def validate_from_to_values(self):
 		zero_to_values = []
 
-		for d in self.get("conditions"):
-			self.round_floats_in(d)
+		for condition in self.get("conditions"):
+			self.round_floats_in(condition)
 
 			# values cannot be negative
-			self.validate_value("from_value", ">=", 0.0, d)
-			self.validate_value("to_value", ">=", 0.0, d)
+			self.validate_value("from_value", ">=", 0.0, condition)
+			self.validate_value("to_value", ">=", 0.0, condition)
 
-			if not d.to_value:
-				zero_to_values.append(d)
-			elif d.from_value >= d.to_value:
-				throw(_("From value must be less than to value in row {0}").format(d.idx), FromGreaterThanToError)
+			if not condition.to_value:
+				zero_to_values.append(condition)
+			elif condition.from_value >= condition.to_value:
+				throw(_("From value must be less than to value in row {0}").format(condition.idx), FromGreaterThanToError)
 
 		# check if more than two or more rows has To Value = 0
 		if len(zero_to_values) >= 2:
@@ -173,7 +179,7 @@ class ShippingRule(Document):
 
 def get_default_shipping_rule_id():
 	"""
-	Return the ID of the default Shipping Rule.
+	Datahenge: Return the ID of the default Shipping Rule.
 	"""
 	filters = { "is_default_rule": 1 }
 	rule = frappe.get_list("Shipping Rule", filters=filters, pluck='name', ignore_permissions=True)

@@ -14,20 +14,24 @@
   "coupon_code_group",
   "customer",
   "column_break_4",
+  "description",
+  "sb_pricing_rule",
+  "pricing_rule",
+  "sb_custom_behavior",
   "add_to_customer_group",
   "apply_shipping_rule",
+  "cb4",
   "add_credit_to_account",
+  "stacks_with_other_coupons",
   "sb1",
-  "pricing_rule",
   "multi_coupon_codes",
   "uses",
-  "stacks_with_other_coupons",
   "valid_from",
-  "valid_upto",
   "maximum_use",
   "used",
   "column_break_11",
-  "description",
+  "valid_upto",
+  "maximum_use_per_customer",
   "amended_from"
  ],
  "fields": [
@@ -104,7 +108,7 @@
   },
   {
    "fieldname": "description",
-   "fieldtype": "Text Editor",
+   "fieldtype": "Small Text",
    "label": "Coupon Description"
   },
   {
@@ -161,10 +165,30 @@
    "label": "Apply Credit Amount to Customer",
    "non_negative": 1,
    "precision": "2"
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "maximum_use_per_customer",
+   "fieldtype": "Int",
+   "label": "Max Use per Customer",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "sb_pricing_rule",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sb_custom_behavior",
+   "fieldtype": "Section Break",
+   "label": "Custom Behaviors"
   }
  ],
  "links": [],
- "modified": "2021-09-27 15:31:43.689100",
+ "modified": "2021-10-11 14:45:44.454507",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",

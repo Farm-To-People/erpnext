@@ -38,11 +38,16 @@ frappe.ui.form.on('Coupon Code', {
 		frm.refresh_field('coupon_code');
 	},
 	refresh: function(frm) {
+
+		// Datahenge: No longer possible, because 1 Coupon Code has many Pricing Rules.
+
+		/*
 		if (frm.doc.pricing_rule) {
 			frm.add_custom_button(__("Add/Edit Coupon Conditions"), function(){
 				frappe.set_route("Form", "Pricing Rule", frm.doc.pricing_rule);
 			});
 		}
+		*/
 
 		// Begin FTP:  Add an anchor link to Coupon Code Usage
 		frm.add_custom_button(__("Coupon Usage"), function() {

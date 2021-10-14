@@ -645,6 +645,7 @@ def make_address(args, is_primary_address=1):
 
 	return address
 
+# NOTE: Datahenge: This Frappe script looks incorrect.  Doesn't even filter on Boolean 'is_primary_contact'
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, filters):
@@ -677,8 +678,11 @@ def get_ar_balance_per_customer_per_gl(customer_key, validate_exists=False):
 	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0.00
 	return balance
 
-# Datahenge:  This is kind of nonsense.  But it's a rather easy method to extend the standard Customer Class.
 class Customer(Customer):  # pylint: disable=function-redefined
+
+	# Datahenge:  This is kind of nonsense, extending a class from itself.
+	# However, it's a rather nice technique for extend the standard Customer Class without
+	# intermingles the code above, which will make Git Diff more difficult to reconcile.
 
 	def on_change(self):
 		# FTP: If customer's name changed, then update Web Subscription names
@@ -690,6 +694,20 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			WHERE customer = %(customer_id)s
 			"""
 			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
+
+	def before_insert(self):
+		"""
+		Built-in controller.
+		"""
+		if not self.referral_code:
+			self.set_referral_code()
+
+	def before_validate(self):
+		"""
+		Built-in controller.
+		"""
+		if not self.referral_code:
+			self.set_referral_code()
 
 	@staticmethod
 	def get_customer_by_emailid(email_address, err_on_missing=False):
@@ -829,3 +847,16 @@ class Customer(Customer):  # pylint: disable=function-redefined
 	def collect_daily_order_payments(self):
 		from ftp.ftp_module.payments import PaymentProcessor
 		PaymentProcessor(disable_prechecks=True).pay_all_by_customer(self)
+
+	@frappe.whitelist()
+	def set_referral_code(self, force_save=False):
+		"""
+		Generate and set a new referral code for this Customer.
+		"""
+		from ftp.utilities.referral_code import generate_code
+		self.referral_code = generate_code()
+
+		if force_save:
+			# Typically used when called from JavaScript, to force an immediate save on the Customer record.
+			self.save()
+		return self.referral_code  # used by JS callback.

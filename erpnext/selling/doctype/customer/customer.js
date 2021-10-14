@@ -93,7 +93,7 @@ frappe.ui.form.on("Customer", {
 	customer_primary_contact: function(frm){
 		if(!frm.doc.customer_primary_contact){
 			frm.set_value("mobile_no", "");
-			// Farm To People: Do Not reset email_id
+			// Farm To People: Do NOT reset email_id.  It's now a fixed value on Customer table.
 			// frm.set_value("email_id", "");
 		}
 	},

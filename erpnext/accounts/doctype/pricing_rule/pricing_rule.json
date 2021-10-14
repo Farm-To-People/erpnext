@@ -21,6 +21,10 @@
   "mixed_conditions",
   "is_cumulative",
   "coupon_code_based",
+  "sb_usage",
+  "first_n_orders",
+  "cb_usage",
+  "every_nth_order",
   "section_break_18",
   "apply_rule_on_other",
   "column_break_17",
@@ -580,12 +584,32 @@
    "label": "Limit to Origin",
    "options": "All\nALC\nSubscription",
    "reqd": 1
+  },
+  {
+   "fieldname": "first_n_orders",
+   "fieldtype": "Int",
+   "label": "First N Orders"
+  },
+  {
+   "fieldname": "every_nth_order",
+   "fieldtype": "Int",
+   "label": "Every Nth Order"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_usage",
+   "fieldtype": "Section Break",
+   "label": "Usage"
+  },
+  {
+   "fieldname": "cb_usage",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2021-10-04 17:09:33.652743",
+ "modified": "2021-10-11 16:10:56.221219",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",
