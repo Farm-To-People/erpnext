@@ -1001,7 +1001,7 @@ class PaymentEntry(AccountsController):
 
 def validate_inclusive_tax(tax, doc):
 	def _on_previous_row_error(row_range):
-		throw(_("To include tax in row {0} in Item rate, taxes in rows {1} must also be included").format(tax.idx, row_range))
+		frappe.throw(_("To include tax in row {0} in Item rate, taxes in rows {1} must also be included").format(tax.idx, row_range))
 
 	if cint(getattr(tax, "included_in_paid_amount", None)):
 		if tax.charge_type == "Actual":

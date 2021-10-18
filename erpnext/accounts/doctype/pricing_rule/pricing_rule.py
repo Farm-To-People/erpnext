@@ -32,6 +32,7 @@ class PricingRule(Document):
 		self.validate_price_list_with_currency()
 		self.validate_dates()
 		self.validate_condition()
+		self.validate_nth()  # Farm To People
 
 		if not self.margin_type: self.margin_rate_or_amount = 0.0
 
@@ -155,6 +156,18 @@ class PricingRule(Document):
 		if self.condition and ("=" in self.condition) and re.match(r'[\w\.:_]+\s*={1}\s*[\w\.@\'"]+', self.condition):
 			frappe.throw(_("Invalid condition expression"))
 
+	def validate_nth(self):
+		"""
+		Farm To People validation.
+		"""
+		if (self.nth_order_only) and (self.first_n_orders):
+			frappe.throw(_("Can only choose one of 'Apply to N-th Order Only' 'First N Orders'"))
+
+		if (self.nth_order_only) and (self.first_n_orders) and (self.nth_order_only > self.first_n_orders):
+			frappe.throw(_("Value of Nth Order Only cannot exceed value of First N Orders."))
+
+
+
 #--------------------------------------------------------------------------------
 
 @frappe.whitelist()
@@ -243,15 +256,15 @@ def get_serial_no_for_item(args):
 
 def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 	"""
-	More accurately: 'get_pricing_rule_for_order_line'
+	Datahenge: A more-accurate function name would be 'get_pricing_rule_for_order_line()'
 	"""
 
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_pricing_rules,
 			get_applied_pricing_rules, get_pricing_rule_items, get_product_discount_rule)
 
 	"""
-	Datahenge: Need 'args' (a dictionary) to already have a key 'coupon_codes' at this point in the process flow.
-				Instead of a table, it should probably be a List of Strings.
+	Datahenge: Expect 'args' (a dictionary) to already have a key 'coupon_codes' at this point in the process flow.
+	           But instead of a table, it should be a List of Strings.
 
 	However, there are two(2) different process flows, and ways of arriving here:
 
@@ -271,14 +284,16 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 	if doc:
 		doc = frappe.get_doc(doc)
 
-	# Datahenge: Begin
-	# Try to extract the Coupon Codes into 'args' as a List of String.
+	print(f"Function get_pricing_rule_for_item() called via DocType '{doc.doctype}'', with name '{doc.name}'")
+
+	# ------------------------
+	# Datahenge: Try to extract the Coupon Codes, and write to 'args' as a List of String.
 	if doc and (not args.coupon_codes) and doc.doctype in ['Sales Order', 'Daily Order']:
 		if hasattr(doc, 'coupon_code_set'):
 			args.coupon_codes = []
 			for coupon_code_doc in doc.coupon_code_set:
 				args.coupon_codes.append(coupon_code_doc.coupon_code)
-	# Datahenge: End
+	# ------------------------
 
 	if (args.get('is_free_item') or
 		args.get("parenttype") == "Material Request"): return {}
@@ -308,7 +323,39 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 		rules = []
 
 		for pricing_rule in pricing_rules:
-			if not pricing_rule: continue
+			if not pricing_rule:
+				continue
+
+			# ------------------------------------
+			# Farm To People: Nth Order
+			# print("\n* Checking for Nth order conditions...")
+			if bool(pricing_rule.nth_order_only) and doc.doctype in ['Daily Order','Daily Order Item']:
+				# print(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.")
+				# Find the Daily Order parent document.
+				if doc.doctype == 'Daily Order':
+					doc_daily_order = doc.doctype
+				else:
+					doc_daily_order = doc.get_parent_doc()
+				# Create a list of all non-cancelled Daily Orders
+				nth_order_list = create_nth_order_list(customer_id=doc_daily_order.customer,
+				                                       daily_order=doc_daily_order)
+
+				order_position = next((index for (index, d) in enumerate(nth_order_list)
+				                       if d["name"] == doc_daily_order.name), None) + 1
+
+				# print(f"* Relative position of Daily Order '{doc_daily_order.name}' = {order_position}")
+				# Case 1:  Fewer orders exist than the Nth Order.
+				if len(nth_order_list) < pricing_rule.nth_order_only:
+					# print(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc_daily_order.name} is not the {pricing_rule.nth_order_only}th order")
+					continue
+				# Case 2:  Is this the Nth?
+				elif nth_order_list[pricing_rule.nth_order_only - 1]['name'] != doc_daily_order.name:
+					# print(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc_daily_order.name} is not the {pricing_rule.nth_order_only}th order")
+					continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
+				else:
+					print(f"* Applying an Nth Order pricing rule to Daily Order {doc_daily_order.name}")
+
+			# ------------------------------------
 
 			if isinstance(pricing_rule, string_types):
 				pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
@@ -403,7 +450,7 @@ def get_pricing_rule_details(args, pricing_rule):
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
 
-	print("DHNOTE: apply_price_discount_rule")
+	print("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...")
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
 	if ((pricing_rule.margin_type in ['Amount', 'Percentage'] and pricing_rule.currency == args.currency)
@@ -450,7 +497,8 @@ def remove_pricing_rule_for_item(pricing_rules, item_details, item_code=None):
 		get_pricing_rule_items)
 
 	for d in get_applied_pricing_rules(pricing_rules):
-		if not d or not frappe.db.exists("Pricing Rule", d): continue
+		if not d or not frappe.db.exists("Pricing Rule", d):
+			continue
 		pricing_rule = frappe.get_cached_doc('Pricing Rule', d)
 
 		if pricing_rule.price_or_product_discount == 'Price':
@@ -568,3 +616,26 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
 		# print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
 		return False
 	return True
+
+
+def create_nth_order_list(customer_id, daily_order=None):
+	"""
+	Farm To People:  Return a list of Daily Orders, filtered, and sorted by Delivery Date ascending.
+	"""
+	from temporal import validate_datatype
+	from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder
+
+	validate_datatype("customer_id", customer_id, str, mandatory=True)
+	validate_datatype("daily_order", daily_order, DailyOrder, mandatory=False)
+
+	fields=['name', 'delivery_date', 'status_delivery']
+	filters={ "status_delivery": ["not in", ['Paused', 'Skipped', 'Cancelled']],
+	           "customer": customer_id
+	}
+	orders = frappe.get_list("Daily Order", filters=filters, fields=fields)
+
+	if daily_order and daily_order not in [ foo['name'] for foo in orders ]:
+		orders.append({"name": daily_order.name, "delivery_date": daily_order.delivery_date})
+
+	ret = sorted(orders, key=lambda k: k['delivery_date'])
+	return ret

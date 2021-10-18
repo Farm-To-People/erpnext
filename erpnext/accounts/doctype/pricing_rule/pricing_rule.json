@@ -24,7 +24,7 @@
   "sb_usage",
   "first_n_orders",
   "cb_usage",
-  "every_nth_order",
+  "nth_order_only",
   "section_break_18",
   "apply_rule_on_other",
   "column_break_17",
@@ -591,11 +591,6 @@
    "label": "First N Orders"
   },
   {
-   "fieldname": "every_nth_order",
-   "fieldtype": "Int",
-   "label": "Every Nth Order"
-  },
-  {
    "collapsible": 1,
    "fieldname": "sb_usage",
    "fieldtype": "Section Break",
@@ -604,12 +599,17 @@
   {
    "fieldname": "cb_usage",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "nth_order_only",
+   "fieldtype": "Int",
+   "label": "Apply to N-th Order Only"
   }
  ],
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2021-10-11 16:10:56.221219",
+ "modified": "2021-10-15 12:57:04.494316",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",
