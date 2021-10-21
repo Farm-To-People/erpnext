@@ -30,9 +30,15 @@ purchase_doctypes = ['Material Request', 'Supplier Quotation', 'Purchase Order',
 @frappe.whitelist()
 def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True):
 	"""
-		IMPORTANT function.  Calculates the Item Price when called by JS web page.
-		Seems to be smart-enough to pay attention to dates in Price Lists.
+		* Caller: JavaScript code on the web page.
+		* Purpose: Calculates the Item Prices
 	"""
+
+	# ----------------
+	# Datahenge: VERY IMPORTANT function.
+	# * Appears to be smart-enough to consider From-To dates in Price Lists.
+	# * For daily and sales orders, the arguments should contain a key 'coupon_codes'.  Have to modify the JS caller.
+	# ----------------
 
 	"""
 		args = {
@@ -106,8 +112,8 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 			args[key] = value
 
 	# Datahenge:
-	# 1. Removing unused argument
-	# 2. At this point, the 'args' should contain a List of Coupon Code strings.
+	# 1. Removing an unused argument in this call.
+	# 2. The 'args' should contain a key 'coupon_codes' that is a List of String.
 	data = get_pricing_rule_for_item(args, doc, for_validate=for_validate)
 
 	out.update(data)

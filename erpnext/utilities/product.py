@@ -71,13 +71,14 @@ def qty_from_all_warehouses(batch_info):
 
 	return qty
 
-#
-# Datahenge:
-#
-# This function is rather inaccurate.  It does not take into consideration the From and To Dates of basic Item Price.
-# Unfortunately, it's being called by 'erpnext.selling.doctype.sales_order.sales_order'
-#
+
 def get_price(item_code, price_list, customer_group, company, qty=1):
+	"""
+	Datahenge:  This function is rather inaccurate.
+	It does not take into consideration From and To Dates of 'Item Price'.
+	Unfortunately, it's being called by 'erpnext.selling.doctype.sales_order.sales_order'
+	"""
+
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
 	if price_list:
@@ -89,7 +90,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 				filters={"price_list": price_list, "item_code": template_item_code})
 
 		if price:
-			pricing_rule = get_pricing_rule_for_item(frappe._dict({  # pylint: disable=protected-access
+			pricing_rule = get_pricing_rule_for_item(args=frappe._dict({  # pylint: disable=protected-access
 				"item_code": item_code,
 				"qty": qty,
 				"stock_qty": qty,
@@ -100,7 +101,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 				"conversion_rate": 1,
 				"for_shopping_cart": True,
 				"currency": frappe.db.get_value("Price List", price_list, "currency")
-			}))
+			}), doc=None)
 
 			if pricing_rule:
 				if pricing_rule.pricing_rule_for == "Discount Percentage":

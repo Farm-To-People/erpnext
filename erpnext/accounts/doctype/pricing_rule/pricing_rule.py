@@ -14,6 +14,18 @@ from frappe import throw, _
 from frappe.utils import flt, cint, getdate
 from frappe.model.document import Document
 
+# Temporal App
+from temporal import validate_datatype
+
+# ----------------
+# Datahenge
+DEBUG_MODE = True
+
+def dprint(msg):
+	if DEBUG_MODE:
+		print(msg)
+# ----------------
+
 apply_on_dict = {"Item Code": "items",
 	"Item Group": "item_groups", "Brand": "brands"}
 
@@ -173,6 +185,12 @@ class PricingRule(Document):
 @frappe.whitelist()
 def apply_pricing_rule(args, doc=None):
 	"""
+		Arguments:
+			args:	String
+			doc:	String
+
+		Example of args:
+
 		args = {
 			"items": [{"doctype": "", "name": "", "item_code": "", "brand": "", "item_group": ""}, ...],
 			"customer": "something",
@@ -194,36 +212,36 @@ def apply_pricing_rule(args, doc=None):
 		}
 	"""
 
-	"""
-	Datahenge:  This function is being called directly by JS code in the ERPNext website.
-	There are 2 callers that matter the most to me:
+	# ---------------
+	# Datahenge:	This function is called directly by JS code on the ERPNext website.
+	#
+	# There are 2 callers that matter the most to me:
+	#
+	#	1. erpnext/public/js/controllers/transaction.js  (via changing Company, Qty)
+	#	2. daily_order.js
+	#
+	#	I need 'args' to provide a new piece of information:  Coupon Code Set.
+	#	To accomplish this, I should modify the JS code, and add Coupon Code Set to it's payload.
+	# ---------------
 
-		1. erpnext/public/js/controllers/transaction.js  (via changing Company, Qty)
-		2. daily_order.js
-
-				We need 'args' to provide a new piece of informatoin:  Coupon Code Set.
-				To accomplish this, need to modify the JS code, and the payload it's sending.
-	"""  # pylint: disable=pointless-string-statement
-
-	if isinstance(args, string_types):  # Convert JSON string to dictionary.
-		args = json.loads(args)
-
-	if 'coupon_codes' not in args.keys():
-		print("WARNING: Args is missing key = 'coupon codes'")
-
+	if isinstance(args, string_types):
+		args = json.loads(args)  # Convert 'args' from JSON string to Python Dictionary.
 	args = frappe._dict(args)  # pylint: disable=protected-access
 
 	if not args.transaction_type:
 		set_transaction_type(args)
 
-	# list of dictionaries
-	out = []
+	out = []  # list of dictionary
 
 	if args.get("doctype") == "Material Request":
 		return out
 
+	# Extract the "items" into their own variable.
 	item_list = args.get("items")  # Sales Order Item, Daily Order Item, etc.
-	args.pop("items")
+	item_list2 = args.pop("items")
+
+	if item_list != item_list2:
+		frappe.throw("DEBUG: Item Lists are not equal.")
 
 	set_serial_nos_based_on_fifo = frappe.db.get_single_value("Stock Settings",
 		"automatically_set_serial_nos_based_on_fifo")
@@ -241,6 +259,8 @@ def apply_pricing_rule(args, doc=None):
 
 	return out
 
+#--------------------------------------------------------------------------------
+
 def get_serial_no_for_item(args):
 	from erpnext.stock.get_item_details import get_serial_no
 
@@ -254,9 +274,10 @@ def get_serial_no_for_item(args):
 	return item_details
 
 
-def get_pricing_rule_for_item(args, doc=None, for_validate=False):
+def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: disable=too-many-branches,too-many-statements
 	"""
-	Datahenge: A more-accurate function name would be 'get_pricing_rule_for_order_line()'
+	Datahenge: 	A more-accurate function name would be 'get_pricing_rule_for_order_lines()'
+				This function is EXTREMELY IMPORTANT.
 	"""
 
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_pricing_rules,
@@ -272,28 +293,68 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 		* 'apply_pricing_rule'
 		* erpnext/accounts/doctype/pricing_rule/pricing_rule.py, Line: 213
 		* Same Module as this comment; just scroll up a bit.
+		* Argument 'doc' is a JSON string.
 
 	2. PYTHON SERVERSIDE PATH:
     	* 'get_item_details'
     	* erpnext/erpnext/stock/get_item_details.py, Line: 95
+		* Argument 'doc' is a Frappe Class.
+
+	One big challenge/problem is Inconsistent Argument Types.
+
+	When called from a Sales Order:
+	* 'args' is a Dictionary of Sales Order, Sales Order Item, Coupon Codes, Price Lists.
+	* 'doc' is the SalesOrder document.
+
 	"""  # pylint: disable=pointless-string-statement
 
-	if isinstance(doc, string_types):
-		doc = json.loads(doc)
+	# ----------------
+	# 1. Validate and modify function arguments.
+	# ----------------
+	validate_datatype('args', args, dict, mandatory=True)
 
-	if doc:
+	if isinstance(doc, string_types):
+		# The argument 'doc' is a string (assumption is that it's a JSON string)
+		doc = json.loads(doc)  # convert JSON string to a Python Dictionary.
+
+	if doc:  # Convert 'doc' to a Frappe document.
 		doc = frappe.get_doc(doc)
 
-	print(f"Function get_pricing_rule_for_item() called via DocType '{doc.doctype}'', with name '{doc.name}'")
+	if doc.doctype in ['Daily Order', 'Sales Order'] and 'coupon_codes' not in args.keys():
+		dprint(args)
+		frappe.throw("Argument 'args' is missing an expected key: 'coupon_codes'")
 
-	# ------------------------
-	# Datahenge: Try to extract the Coupon Codes, and write to 'args' as a List of String.
+	# DH: The metadata key 'istable' is one of the more-ridiculous naming conventions in Frappe Framework.
+	#     Because -every- Document is a table.  What they actually meant was 'is_child_table'
+	#    :eyeroll:
+	if bool(frappe.get_doc('DocType', doc.doctype).istable):
+		frappe.throw("Invalid call to 'get_pricing_rule_for_item()'.  Cannot pass a Child Document.")
+
+	# ----------------
+	# 2. Debugging output
+	# ----------------
+
+	dprint("\n*****************PRICING RULE.py*************************")
+	frappe.print_caller()
+	dprint("1. Function Arguments")
+	dprint(f"\targs : a Dictionary with {len(args.keys())} keys.")
+	dprint(f"\tdoc : a Document of type {type(doc)}")
+
+	# TODO: What should 'args' actually consist of?
+	dprint(f"Value of Args:\n{args}")
+
+	# ----------------
+	# 3. Datahenge: Try to extract the Coupon Codes, and write to 'args' as a List of String.
+	# ----------------
 	if doc and (not args.coupon_codes) and doc.doctype in ['Sales Order', 'Daily Order']:
 		if hasattr(doc, 'coupon_code_set'):
 			args.coupon_codes = []
 			for coupon_code_doc in doc.coupon_code_set:
 				args.coupon_codes.append(coupon_code_doc.coupon_code)
-	# ------------------------
+
+	# ----------------
+	# standard code
+	# ----------------
 
 	if (args.get('is_free_item') or
 		args.get("parenttype") == "Material Request"): return {}
@@ -308,7 +369,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 		"child_docname": args.get('child_docname')
 	})
 
+	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules, 
+	#                       then return the price information for all Lines.
 	if args.ignore_pricing_rule or not args.item_code:
+		dprint(f"* Automatic Pricing is disabling for Order Line {doc.name}")
 		if frappe.db.exists(args.doctype, args.name) and args.get("pricing_rules"):
 			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
 				item_details, args.get('item_code'))
@@ -316,96 +380,129 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 
 	update_args_for_pricing_rule(args)
 
-	pricing_rules = (get_applied_pricing_rules(args.get('pricing_rules'))
-		if for_validate and args.get("pricing_rules") else get_pricing_rules(args, doc))
+	if for_validate and args.get("pricing_rules"):
+		pricing_rules = (get_applied_pricing_rules(args.get('pricing_rules')))
+	else:
+		dprint("5. get_pricing_rules()")
+		pricing_rules = (get_pricing_rules(args, doc))  # get --potential-- pricing rules
 
-	if pricing_rules:
-		rules = []
+	validate_datatype("pricing_rules", pricing_rules, list)
+	dprint(f"\n2. There are {len(pricing_rules)} Potential Pricing Rules.\n")
 
-		for pricing_rule in pricing_rules:
-			if not pricing_rule:
-				continue
-
-			# ------------------------------------
-			# Farm To People: Nth Order
-			# print("\n* Checking for Nth order conditions...")
-			if bool(pricing_rule.nth_order_only) and doc.doctype in ['Daily Order','Daily Order Item']:
-				# print(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.")
-				# Find the Daily Order parent document.
-				if doc.doctype == 'Daily Order':
-					doc_daily_order = doc.doctype
-				else:
-					doc_daily_order = doc.get_parent_doc()
-				# Create a list of all non-cancelled Daily Orders
-				nth_order_list = create_nth_order_list(customer_id=doc_daily_order.customer,
-				                                       daily_order=doc_daily_order)
-
-				order_position = next((index for (index, d) in enumerate(nth_order_list)
-				                       if d["name"] == doc_daily_order.name), None) + 1
-
-				# print(f"* Relative position of Daily Order '{doc_daily_order.name}' = {order_position}")
-				# Case 1:  Fewer orders exist than the Nth Order.
-				if len(nth_order_list) < pricing_rule.nth_order_only:
-					# print(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc_daily_order.name} is not the {pricing_rule.nth_order_only}th order")
-					continue
-				# Case 2:  Is this the Nth?
-				elif nth_order_list[pricing_rule.nth_order_only - 1]['name'] != doc_daily_order.name:
-					# print(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc_daily_order.name} is not the {pricing_rule.nth_order_only}th order")
-					continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
-				else:
-					print(f"* Applying an Nth Order pricing rule to Daily Order {doc_daily_order.name}")
-
-			# ------------------------------------
-
-			if isinstance(pricing_rule, string_types):
-				pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
-				pricing_rule.apply_rule_on_other_items = get_pricing_rule_items(pricing_rule)
-
-			if pricing_rule.get('suggestion'): continue
-
-			item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0)
-			item_details.price_or_product_discount = pricing_rule.get("price_or_product_discount")
-
-			rules.append(get_pricing_rule_details(args, pricing_rule))
-
-			if pricing_rule.mixed_conditions or pricing_rule.apply_rule_on_other:
-				item_details.update({
-					'apply_rule_on_other_items': json.dumps(pricing_rule.apply_rule_on_other_items),
-					'price_or_product_discount': pricing_rule.price_or_product_discount,
-					'apply_rule_on': (frappe.scrub(pricing_rule.apply_rule_on_other)
-						if pricing_rule.apply_rule_on_other else frappe.scrub(pricing_rule.get('apply_on')))
-				})
-
-			# Datahenge: Begin
-			# The code below is a Decision Point, where a Pricing Rule is thrown out, if there
-			# is not a related Coupon Code.  FYI, not sure the original code actually worked correctly.
-			if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
-				# But what if a rule already exists on the Order.  And now then Coupon is deleted?
-				# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
-				item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
-				return item_details
-			# Datahenge: End
-
-			if not pricing_rule.validate_applied_rule:
-				if pricing_rule.price_or_product_discount == "Price":
-					apply_price_discount_rule(pricing_rule, item_details, args)
-				else:
-					get_product_discount_rule(pricing_rule, item_details, args, doc)
-
-		if not item_details.get("has_margin"):
-			item_details.margin_type = None
-			item_details.margin_rate_or_amount = 0.0
-
-		item_details.has_pricing_rule = 1
-
-		item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in rules])
-
-		if not doc:
-			return item_details
-
-	elif args.get("pricing_rules"):
+	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.
+	if not pricing_rules and args.get("pricing_rules"):
+		dprint("Arguments contain 'pricing_rules' that must be removed from the Order.")
 		item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
-			item_details, args.get('item_code'))
+			                                        item_details,
+													args.get('item_code'))
+		return item_details
+
+	applied_rules = []
+	for pricing_rule in pricing_rules:
+
+		# For each --potential-- Pricing Rule, determine if it's actually applicable or not.
+		if not pricing_rule:
+			frappe.throw("Unexpected Condition: No pricing rules found while looping.")
+			# continue
+
+		if isinstance(pricing_rule, str):
+			dprint(f"Evaluating Pricing Rule '{pricing_rule}' ...")
+		elif isinstance(pricing_rule, dict):
+			dprint(f"Evaluating Pricing Rule '{pricing_rule['name']}' ...")
+		else:
+			frappe.throw(f"Unexpected type '{type(pricing_rule)}' for variable 'pricing_rule'")
+
+		# This variable's type may be String (name of a Pricing Rule) or Dictionary (values of a Pricing Rule)
+		if isinstance(pricing_rule, string_types):
+			pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
+			pricing_rule.apply_rule_on_other_items = get_pricing_rule_items(pricing_rule)
+
+		# Skip if it's only a suggestion? (no idea how that works)
+		if pricing_rule.get('suggestion'):
+			continue
+
+		# ------------------------------------
+		# Farm To People: Nth Order
+		# ------------------------------------
+		if doc and doc.doctype == 'Daily Order' and bool(pricing_rule.nth_order_only):
+			dprint(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.")
+
+			# Create a list of all non-cancelled Daily Orders
+			nth_order_list = create_nth_order_list(customer_id=doc.customer,
+													daily_order=doc)
+
+			#order_position = next((index for (index, d) in enumerate(nth_order_list)
+			#                       if d["name"] == doc_daily_order.name), None) + 1
+			# print(f"* Relative position of Daily Order '{doc_daily_order.name}' = {order_position}")
+
+			# Case 1:  Fewer orders exist than the Nth Order.
+			if len(nth_order_list) < pricing_rule.nth_order_only:
+				dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order")
+				continue
+			# Case 2:  Is this the Nth?
+			elif nth_order_list[pricing_rule.nth_order_only - 1]['name'] != doc.name:
+				dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order")
+				continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
+			else:
+				print(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}")
+		# ------------------------------------
+
+		# ------------------------------------
+		# Farm To People: Pricing Rule based on Order Line's Origin Code.
+		# ------------------------------------
+		if (pricing_rule.limit_to_origin != "All") and (doc.doctype == 'Daily Order Item'):
+			if pricing_rule.limit_to_origin == 'ALC' and doc.origin_code != 'A la carte':
+				continue
+			if pricing_rule.limit_to_origin == 'Subscription' and doc.origin_code != 'Subscription':
+				continue
+		# ------------------------------------
+
+		item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0)
+		item_details.price_or_product_discount = pricing_rule.get("price_or_product_discount")
+
+		applied_rules.append(get_pricing_rule_details(args, pricing_rule))
+
+		if pricing_rule.mixed_conditions or pricing_rule.apply_rule_on_other:
+			item_details.update({
+				'apply_rule_on_other_items': json.dumps(pricing_rule.apply_rule_on_other_items),
+				'price_or_product_discount': pricing_rule.price_or_product_discount,
+				'apply_rule_on': (frappe.scrub(pricing_rule.apply_rule_on_other)
+					if pricing_rule.apply_rule_on_other else frappe.scrub(pricing_rule.get('apply_on')))
+			})
+
+		# ------------------------------------
+		# Farm To People: Pricing Rule based on Coupon Codes.
+		#
+		# Standard code never accomplished this.  Coupon Codes, if they worked at all, only worked with ERPNext Website stuff.
+		# ------------------------------------
+		if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
+			# But what if a rule already exists on the Order.  And now then Coupon is deleted?
+			# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
+			dprint(f"Removing Pricing Rule '{pricing_rule['name']}' from order, because of missing Coupon Code.")
+			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
+			return item_details
+		# ------------------------------------
+
+		if not pricing_rule.validate_applied_rule:
+			if pricing_rule.price_or_product_discount == "Price":
+				dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Price' ...")
+				apply_price_discount_rule(pricing_rule, item_details, args)
+			else:
+				dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Product' ...")
+				get_product_discount_rule(pricing_rule, item_details, args, doc)
+	# end of for loop
+
+	dprint(f"Price Loops completed.  Rules applied = {applied_rules}")
+
+	if not item_details.get("has_margin"):
+		item_details.margin_type = None
+		item_details.margin_rate_or_amount = 0.0
+
+	item_details.has_pricing_rule = 1
+	item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in applied_rules])
+
+	dprint(f"Final Results:\n{item_details}")
+	dprint("\n************* END PRICING*****************************\n")
 
 	return item_details
 

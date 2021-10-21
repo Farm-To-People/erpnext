@@ -576,7 +576,9 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 							cost_center: item.cost_center,
 							tax_category: me.frm.doc.tax_category,
 							item_tax_template: item.item_tax_template,
-							child_docname: item.name
+							child_docname: item.name,
+							// Datahenge: Need to create an Array of 'coupon_code' string
+							coupon_codes: me._get_coupon_code_list(me.frm.doc.coupon_code_set)
 						}
 					},
 

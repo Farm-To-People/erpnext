@@ -1006,7 +1006,7 @@ def validate_inclusive_tax(tax, doc):
 	if cint(getattr(tax, "included_in_paid_amount", None)):
 		if tax.charge_type == "Actual":
 			# inclusive tax cannot be of type Actual
-			throw(_("Charge of type 'Actual' in row {0} cannot be included in Item Rate or Paid Amount").format(tax.idx))
+			frappe.throw(_("Charge of type 'Actual' in row {0} cannot be included in Item Rate or Paid Amount").format(tax.idx))
 		elif tax.charge_type == "On Previous Row Amount" and \
 				not cint(doc.get("taxes")[cint(tax.row_id) - 1].included_in_paid_amount):
 			# referred row should also be inclusive
