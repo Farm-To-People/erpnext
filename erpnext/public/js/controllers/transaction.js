@@ -670,7 +670,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		//
 		// This function is rarely called "directly" by the touching 'price_list_rate'.
 		// Because that's typically a non-editable field.
-		// Rather this fnction is "triggered" by other JS code.  Look around for something like 'trigger("price_list_rate"'
+		// Rather this function is "triggered" by other JS code.  Look around for something like 'trigger("price_list_rate"'
 		//
 		var order_line = frappe.get_doc(cdt, cdn);
 		frappe.model.round_floats_in(order_line, ["price_list_rate", "discount_percentage"]);
@@ -679,7 +679,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		if (in_list(["Quotation Item", "Sales Order Item", "Delivery Note Item", "Sales Invoice Item",
 		             "POS Invoice Item", "Purchase Invoice Item", "Purchase Order Item", "Purchase Receipt Item"]), cdt)
 		{
-			console.log("Scenario 676.");
+			console.log("Scenario 682.");
 			// NOTE:  Call to poorly-named function.  Does not "apply" any Pricing Rules whatsosever.
 			// Only takes the value of the *current* 'price_list_rate, and copies it into the Order Line's rate.
 			// There's nothing interesting in this call besides that.

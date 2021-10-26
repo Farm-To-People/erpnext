@@ -71,7 +71,7 @@
   "section_break_40",
   "taxes_and_charges",
   "taxes",
-  "sec_tax_breakup",
+  "sec_tax_breakdown",
   "other_charges_calculation",
   "section_break_43",
   "base_total_taxes_and_charges",
@@ -738,14 +738,6 @@
    "oldfieldname": "other_charges",
    "oldfieldtype": "Table",
    "options": "Sales Taxes and Charges"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "sec_tax_breakup",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Tax Breakup"
   },
   {
    "fieldname": "other_charges_calculation",
@@ -1486,13 +1478,21 @@
    "fieldtype": "Table",
    "label": "Coupon Codes",
    "options": "Coupon Code Set"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sec_tax_breakdown",
+   "fieldtype": "Section Break",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "Tax Breakdown"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-09-29 20:37:14.438544",
+ "modified": "2021-10-24 16:57:13.354344",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

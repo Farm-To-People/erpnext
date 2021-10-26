@@ -30,7 +30,8 @@ purchase_doctypes = ['Material Request', 'Supplier Quotation', 'Purchase Order',
 @frappe.whitelist()
 def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True):
 	"""
-		* Caller: JavaScript code on the web page.
+		* Callers:
+			* JavaScript code on web pages like Sales Order.
 		* Purpose: Calculates the Item Prices
 	"""
 
@@ -64,6 +65,9 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 
 	args = process_args(args)  # convert args into a frappe._dict
 	for_validate = process_string_args(for_validate)
+
+	if not args.item_code:
+		raise ValueError(f"Argument 'args.item_code' is mandatory.")
 	overwrite_warehouse = process_string_args(overwrite_warehouse)
 	item = frappe.get_cached_doc("Item", args.item_code)
 	validate_item_details(args, item)  # This step also validates the arguments.
@@ -216,7 +220,6 @@ def validate_item_details(args, item):
 	if not args.doctype:
 		throw(_("Please include 'doctype' in arguments."))
 
-
 	from erpnext.stock.doctype.item.item import validate_end_of_life
 	validate_end_of_life(item.name, item.end_of_life, item.disabled)
 
@@ -360,13 +363,13 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 		out.last_purchase_rate = item_last_purchase_rate(args.name, args.conversion_rate, item.name, out.conversion_factor)
 
 	# if default specified in item is for another company, fetch from company
-	for d in [
+	for val in [
 		["Account", "income_account", "default_income_account"],
 		["Account", "expense_account", "default_expense_account"],
 		["Cost Center", "cost_center", "cost_center"],
 		["Warehouse", "warehouse", ""]]:
-			if not out[d[1]]:
-				out[d[1]] = frappe.get_cached_value('Company',  args.company,  d[2]) if d[2] else None
+			if not out[val[1]]:
+				out[val[1]] = frappe.get_cached_value('Company',  args.company,  val[2]) if val[2] else None
 
 	for fieldname in ("item_name", "item_group", "barcodes", "brand", "stock_uom"):
 		out[fieldname] = item.get(fieldname)
@@ -501,7 +504,8 @@ def get_item_tax_template(args, item, out):
 			"item_tax_template": None
 		}
 	"""
-	item_tax_template = args.get("item_tax_template")
+	# Datahenge: Commenting this out.  It literally gets redefined the very next line.
+	# item_tax_template = args.get("item_tax_template")
 	item_tax_template = _get_item_tax_template(args, item.taxes, out)
 
 	if not item_tax_template:

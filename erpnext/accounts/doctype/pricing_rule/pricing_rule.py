@@ -14,9 +14,6 @@ from frappe import throw, _
 from frappe.utils import flt, cint, getdate
 from frappe.model.document import Document
 
-# Temporal App
-from temporal import validate_datatype
-
 # ----------------
 # Datahenge
 DEBUG_MODE = True
@@ -275,19 +272,28 @@ def get_serial_no_for_item(args):
 
 
 def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: disable=too-many-branches,too-many-statements
+	#
+	# Datahenge:	A more-accurate function name would be 'get_pricing_rules_for_order_lines()'
+	#  				This function is EXTREMELY IMPORTANT.
+	#
 	"""
-	Datahenge: 	A more-accurate function name would be 'get_pricing_rule_for_order_lines()'
-				This function is EXTREMELY IMPORTANT.
+	Arguments:
+		args: A Python Dictionary.
+		doc:  A parent DocType such as Sales Order, Daily Order, Purchase Order.
+
+	Returns:
+		New dictionary 'item_details'
 	"""
 
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_pricing_rules,
 			get_applied_pricing_rules, get_pricing_rule_items, get_product_discount_rule)
 
 	"""
-	Datahenge: Expect 'args' (a dictionary) to already have a key 'coupon_codes' at this point in the process flow.
-	           But instead of a table, it should be a List of Strings.
+	Datahenge Notes:
 
-	However, there are two(2) different process flows, and ways of arriving here:
+	Argument 'args' (a dictionary) should have a key 'coupon_codes', which is a List of Strings.
+
+	There are two(2) different process flows, and ways of arriving here:
 
 	1. JAVASCRIPT PATH
 		* 'apply_pricing_rule'
@@ -297,37 +303,40 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 	2. PYTHON SERVERSIDE PATH:
     	* 'get_item_details'
-    	* erpnext/erpnext/stock/get_item_details.py, Line: 95
+    	* erpnext/erpnext/stock/get_item_details.py, Line: 121
 		* Argument 'doc' is a Frappe Class.
+		* Quite a lot of 'get_item_details' is building the 'args', prior to arriving here.
 
-	One big challenge/problem is Inconsistent Argument Types.
+	A huge challenge/problem with this function is Inconsistent Argument Types.  What is args?
 
 	When called from a Sales Order:
-	* 'args' is a Dictionary of Sales Order, Sales Order Item, Coupon Codes, Price Lists.
-	* 'doc' is the SalesOrder document.
+	  * 'args' is a Dictionary of Sales Order, Sales Order Item, Coupon Codes, Price Lists.
+	  * 'doc' is the SalesOrder document.
 
 	"""  # pylint: disable=pointless-string-statement
 
 	# ----------------
 	# 1. Validate and modify function arguments.
 	# ----------------
+	from temporal import validate_datatype  # Late import from across Python modules.
+
+	# args
 	validate_datatype('args', args, dict, mandatory=True)
+	args = frappe._dict(args)  # pylint: disable=protected-access
 
-	if isinstance(doc, string_types):
-		# The argument 'doc' is a string (assumption is that it's a JSON string)
+	# doc
+	if doc and isinstance(doc, string_types):  # argument 'doc' is a string (assumption is that it's a JSON string)
 		doc = json.loads(doc)  # convert JSON string to a Python Dictionary.
-
-	if doc:  # Convert 'doc' to a Frappe document.
+	if doc:  # Convert 'doc' to a Frappe Dictionary
 		doc = frappe.get_doc(doc)
 
-	if doc.doctype in ['Daily Order', 'Sales Order'] and 'coupon_codes' not in args.keys():
-		dprint(args)
+	if doc and doc.doctype in ['Daily Order', 'Sales Order'] and 'coupon_codes' not in args.keys():
 		frappe.throw("Argument 'args' is missing an expected key: 'coupon_codes'")
 
 	# DH: The metadata key 'istable' is one of the more-ridiculous naming conventions in Frappe Framework.
 	#     Because -every- Document is a table.  What they actually meant was 'is_child_table'
 	#    :eyeroll:
-	if bool(frappe.get_doc('DocType', doc.doctype).istable):
+	if doc and bool(frappe.get_doc('DocType', doc.doctype).istable):
 		frappe.throw("Invalid call to 'get_pricing_rule_for_item()'.  Cannot pass a Child Document.")
 
 	# ----------------
@@ -335,20 +344,17 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# ----------------
 
 	dprint("\n*****************PRICING RULE.py*************************")
-	frappe.print_caller()
-	dprint("1. Function Arguments")
-	dprint(f"\targs : a Dictionary with {len(args.keys())} keys.")
-	dprint(f"\tdoc : a Document of type {type(doc)}")
-
-	# TODO: What should 'args' actually consist of?
-	dprint(f"Value of Args:\n{args}")
+	# frappe.print_caller()
+	# dprint("1. Function Arguments")
+	# dprint(f"\targs : a Dictionary with {len(args.keys())} keys.")
+	# dprint(f"\tdoc : a Document of type {type(doc)}")
 
 	# ----------------
 	# 3. Datahenge: Try to extract the Coupon Codes, and write to 'args' as a List of String.
 	# ----------------
-	if doc and (not args.coupon_codes) and doc.doctype in ['Sales Order', 'Daily Order']:
+	if doc and (not args['coupon_codes']) and doc.doctype in ['Sales Order', 'Daily Order']:
 		if hasattr(doc, 'coupon_code_set'):
-			args.coupon_codes = []
+			args['coupon_codes'] = []
 			for coupon_code_doc in doc.coupon_code_set:
 				args.coupon_codes.append(coupon_code_doc.coupon_code)
 
@@ -369,10 +375,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		"child_docname": args.get('child_docname')
 	})
 
-	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules, 
+	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules,
 	#                       then return the price information for all Lines.
 	if args.ignore_pricing_rule or not args.item_code:
-		dprint(f"* Automatic Pricing is disabling for Order Line {doc.name}")
+		dprint(f"* Automatic Pricing is disabled for Order Line {doc.name}")
 		if frappe.db.exists(args.doctype, args.name) and args.get("pricing_rules"):
 			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
 				item_details, args.get('item_code'))
@@ -385,10 +391,9 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	else:
 		dprint("5. get_pricing_rules()")
 		pricing_rules = (get_pricing_rules(args, doc))  # get --potential-- pricing rules
-
 	validate_datatype("pricing_rules", pricing_rules, list)
-	dprint(f"\n2. There are {len(pricing_rules)} Potential Pricing Rules.\n")
 
+	dprint(f"\n2. There are {len(pricing_rules)} Potential Pricing Rules.\n")
 	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.
 	if not pricing_rules and args.get("pricing_rules"):
 		dprint("Arguments contain 'pricing_rules' that must be removed from the Order.")
@@ -419,6 +424,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 		# Skip if it's only a suggestion? (no idea how that works)
 		if pricing_rule.get('suggestion'):
+			print("Skipping Pricing Rule, because it's only a suggestion?")
 			continue
 
 		# ------------------------------------
@@ -675,22 +681,21 @@ def get_item_uoms(doctype, txt, searchfield, start, page_len, filters):
 		}, fields = ["distinct uom"], as_list=1)
 
 
-def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
+def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list, verbose=False):
 	"""
 		Arguments:
 			pricing_rule:  		Frappe dictionary
 			coupon_code_list: 	Python List of Strings, representing Coupon Codes.
 	"""
 
+	from temporal import validate_datatype  # Late import from across Python modules.
+	validate_datatype('coupon_code_list', coupon_code_list, list, mandatory=False)
+
 	if pricing_rule.coupon_code_based != 1:
 		return True
 
 	if not coupon_code_list:
-		# print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
-		return False
-
-	# Fancy way of esaping for a 'WHERE IN' clause in SQL.
-	# coupon_codes = ["%s" % frappe.db.escape(coupon_code) for coupon_code in coupon_code_list]
+		return False	# no coupons provided, so no matches are possible.
 
 	# This is some REALLY screwed up syntax for escaping SQL 'WHERE IN'.  But it appears
 	# to be prolific throughout ERPNext.
@@ -708,9 +713,9 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list):
 		values=tuple([pricing_rule.name] + coupon_codes),
 		debug=False, explain=False)
 
-
 	if (not result) or (not result[0]) or (not result[0][0]):
-		# print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
+		if verbose:
+			print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
 		return False
 	return True
 

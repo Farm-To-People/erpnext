@@ -93,6 +93,16 @@ def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 	return filtered_pricing_rules
 
 def _get_pricing_rules(apply_on, args, values):
+	"""
+	args:	a frappe.dict() class
+	"""
+
+	# Datahenge: Let's add some validation:
+	if not apply_on or apply_on not in ['Brand', 'Detail', 'Item Code', 'Item Group']:
+		raise Exception("Missing valid argument 'apply_on' in function '_get_pricing_rules()'")
+	if not args.transaction_type:
+		raise ValueError("Missing mandatory args key = 'transaction_type'")
+
 	apply_on_field = frappe.scrub(apply_on)
 
 	if not args.get(apply_on_field):
