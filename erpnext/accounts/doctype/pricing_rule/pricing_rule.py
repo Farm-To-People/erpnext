@@ -162,7 +162,7 @@ class PricingRule(Document):
 			frappe.throw(_("Valid from date must be less than valid upto date"))
 
 	def validate_condition(self):
-		if self.condition and ("=" in self.condition) and re.match(r'[\w\.:_]+\s*={1}\s*[\w\.@\'"]+', self.condition):
+		if self.condition and ("=" in self.condition) and re.match("""[\w\.:_]+\s*={1}\s*[\w\.@'"]+""", self.condition):
 			frappe.throw(_("Invalid condition expression"))
 
 	def validate_nth(self):
@@ -174,8 +174,6 @@ class PricingRule(Document):
 
 		if (self.nth_order_only) and (self.first_n_orders) and (self.nth_order_only > self.first_n_orders):
 			frappe.throw(_("Value of Nth Order Only cannot exceed value of First N Orders."))
-
-
 
 #--------------------------------------------------------------------------------
 
@@ -205,7 +203,7 @@ def apply_pricing_rule(args, doc=None):
 			"sales_partner": "something",
 			"ignore_pricing_rule": "something",
 			"doctype": "something",
-			"coupon_codes":  "to_be_found"
+			"coupon_codes":  "something"
 		}
 	"""
 
@@ -221,32 +219,32 @@ def apply_pricing_rule(args, doc=None):
 	#	To accomplish this, I should modify the JS code, and add Coupon Code Set to it's payload.
 	# ---------------
 
+	# Convert 'args' from JSON string to Python Dictionary.
 	if isinstance(args, string_types):
-		args = json.loads(args)  # Convert 'args' from JSON string to Python Dictionary.
-	args = frappe._dict(args)  # pylint: disable=protected-access
+		args = json.loads(args)
+
+	args = frappe._dict(args)
 
 	if not args.transaction_type:
 		set_transaction_type(args)
 
-	out = []  # list of dictionary
+	# list of dictionaries
+	out = []
 
-	if args.get("doctype") == "Material Request":
-		return out
+	if args.get("doctype") == "Material Request": return out
 
 	# Extract the "items" into their own variable.
-	item_list = args.get("items")  # Sales Order Item, Daily Order Item, etc.
-	item_list2 = args.pop("items")
-
-	if item_list != item_list2:
-		frappe.throw("DEBUG: Item Lists are not equal.")
+	# Sales Order Item, Daily Order Item, etc.
+	item_list = args.get("items")
+	args.pop("items")  # DH: could have just done this on line above
 
 	set_serial_nos_based_on_fifo = frappe.db.get_single_value("Stock Settings",
 		"automatically_set_serial_nos_based_on_fifo")
 
 	for item in item_list:
 		args_copy = copy.deepcopy(args)
-		args_copy.update(item)  # Merge the Order Line dictionary with the 'args' dictionary
-
+		# Next, merge the Order Line dictionary (item) into the 'args' dictionary
+		args_copy.update(item)
 		# Datahenge Requirements:  The 'args_copy' must contain the Coupon Code Set as a List of String.
 		# Also, removed an unused argument below:
 		data = get_pricing_rule_for_item(args_copy, doc=doc)
@@ -255,8 +253,6 @@ def apply_pricing_rule(args, doc=None):
 			out[0].update(get_serial_no_for_item(args_copy))
 
 	return out
-
-#--------------------------------------------------------------------------------
 
 def get_serial_no_for_item(args):
 	from erpnext.stock.get_item_details import get_serial_no
@@ -269,7 +265,6 @@ def get_serial_no_for_item(args):
 	if args.get("parenttype") in ("Sales Invoice", "Delivery Note") and flt(args.stock_qty) > 0:
 		item_details.serial_no = get_serial_no(args)
 	return item_details
-
 
 def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: disable=too-many-branches,too-many-statements
 	#
@@ -365,11 +360,11 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	if (args.get('is_free_item') or
 		args.get("parenttype") == "Material Request"): return {}
 
-	item_details = frappe._dict({  # pylint: disable=protected-access
+	item_details = frappe._dict({
 		"doctype": args.doctype,
 		"has_margin": False,
 		"name": args.name,
-		"free_item_data": [],
+		"free_item_data": [],  # not sure why this is here.
 		"parent": args.parent,
 		"parenttype": args.parenttype,
 		"child_docname": args.get('child_docname')
@@ -386,11 +381,9 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 	update_args_for_pricing_rule(args)
 
-	if for_validate and args.get("pricing_rules"):
-		pricing_rules = (get_applied_pricing_rules(args.get('pricing_rules')))
-	else:
-		dprint("5. get_pricing_rules()")
-		pricing_rules = (get_pricing_rules(args, doc))  # get --potential-- pricing rules
+	# DH: Confusing way of writing this, but leaving it alone for now:
+	pricing_rules = (get_applied_pricing_rules(args.get('pricing_rules'))
+		if for_validate and args.get("pricing_rules") else get_pricing_rules(args, doc))
 	validate_datatype("pricing_rules", pricing_rules, list)
 
 	dprint(f"\n2. There are {len(pricing_rules)} Potential Pricing Rules.\n")
@@ -402,7 +395,8 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 													args.get('item_code'))
 		return item_details
 
-	applied_rules = []
+	applied_rules = []  # originally named 'rules' in standard code.
+
 	for pricing_rule in pricing_rules:
 
 		# For each --potential-- Pricing Rule, determine if it's actually applicable or not.
@@ -521,7 +515,7 @@ def update_args_for_pricing_rule(args):
 			args.item_group, args.brand = frappe.get_cached_value("Item", args.item_code, ["item_group", "brand"])
 		except TypeError:
 			# invalid item_code
-			return None
+			return None  # DH: original function returned a variable that didn't exist.
 		if not args.item_group:
 			frappe.throw(_("Item Group not mentioned in item master for item {0}").format(args.item_code))
 
@@ -529,7 +523,7 @@ def update_args_for_pricing_rule(args):
 		if args.customer and not (args.customer_group and args.territory):
 
 			if args.quotation_to and args.quotation_to != 'Customer':
-				customer = frappe._dict()  # pylint: disable=protected-access
+				customer = frappe._dict()
 			else:
 				customer = frappe.get_cached_value("Customer", args.customer, ["customer_group", "territory"])
 
@@ -552,7 +546,6 @@ def get_pricing_rule_details(args, pricing_rule):
 	})
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
-
 	print("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...")
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
@@ -598,10 +591,8 @@ def apply_price_discount_rule(pricing_rule, item_details, args):
 def remove_pricing_rule_for_item(pricing_rules, item_details, item_code=None):
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_applied_pricing_rules,
 		get_pricing_rule_items)
-
 	for d in get_applied_pricing_rules(pricing_rules):
-		if not d or not frappe.db.exists("Pricing Rule", d):
-			continue
+		if not d or not frappe.db.exists("Pricing Rule", d): continue
 		pricing_rule = frappe.get_cached_doc('Pricing Rule', d)
 
 		if pricing_rule.price_or_product_discount == 'Price':
