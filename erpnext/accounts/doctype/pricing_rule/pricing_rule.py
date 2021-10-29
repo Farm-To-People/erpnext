@@ -14,14 +14,15 @@ from frappe import throw, _
 from frappe.utils import flt, cint, getdate
 from frappe.model.document import Document
 
-# ----------------
-# Datahenge
-DEBUG_MODE = True
+# pylint: disable=protected-access
+
+# ---- Datahenge ----
+DEBUG_MODE = False
 
 def dprint(msg):
 	if DEBUG_MODE:
 		print(msg)
-# ----------------
+# ------__-----------
 
 apply_on_dict = {"Item Code": "items",
 	"Item Group": "item_groups", "Brand": "brands"}
@@ -162,7 +163,7 @@ class PricingRule(Document):
 			frappe.throw(_("Valid from date must be less than valid upto date"))
 
 	def validate_condition(self):
-		if self.condition and ("=" in self.condition) and re.match("""[\w\.:_]+\s*={1}\s*[\w\.@'"]+""", self.condition):
+		if self.condition and ("=" in self.condition) and re.match(r"""[\w\.:_]+\s*={1}\s*[\w\.@'"]+""", self.condition):
 			frappe.throw(_("Invalid condition expression"))
 
 	def validate_nth(self):
@@ -386,7 +387,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		if for_validate and args.get("pricing_rules") else get_pricing_rules(args, doc))
 	validate_datatype("pricing_rules", pricing_rules, list)
 
-	dprint(f"\n2. There are {len(pricing_rules)} Potential Pricing Rules.\n")
+	dprint(f"\nThere are {len(pricing_rules)} Potential Pricing Rules.\n")
 	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.
 	if not pricing_rules and args.get("pricing_rules"):
 		dprint("Arguments contain 'pricing_rules' that must be removed from the Order.")
@@ -502,7 +503,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in applied_rules])
 
 	dprint(f"Final Results:\n{item_details}")
-	dprint("\n************* END PRICING*****************************\n")
+	dprint("\n**************** END PRICING************************\n")
 
 	return item_details
 
@@ -660,7 +661,7 @@ def make_pricing_rule(doctype, docname):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def get_item_uoms(doctype, txt, searchfield, start, page_len, filters):
+def get_item_uoms(txt, filters):  # DH: Removing unused arguments
 	items = [filters.get('value')]
 	if filters.get('apply_on') != 'Item Code':
 		field = frappe.scrub(filters.get('apply_on'))
