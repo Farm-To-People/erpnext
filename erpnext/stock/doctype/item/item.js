@@ -47,17 +47,6 @@ frappe.ui.form.on("Item", {
 			}, __("View"));
 		}
 
-		// Begin: FTP
-		frm.add_custom_button(__("Item Sales Controls"), function() {
-			frappe.set_route("Form", "Item Sales Controls", frm.doc.name);
-		}, __( )).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});;
-		// End: FTP
-		
-		// Begin: FTP
-		frm.add_custom_button(__("Update Sanity CMS"), function() {
-			py_update_sanity_cms(frm);
-		});
-
 		if (frm.doc.is_fixed_asset) {
 			frm.trigger('is_fixed_asset');
 			frm.trigger('auto_create_assets');
@@ -820,7 +809,7 @@ frappe.ui.form.on("UOM Conversion Detail", {
 function py_update_sanity_cms(frm) {
 	frappe.msgprint("Transmitted request to Sanity.  Please standby...")
 	frappe.call({
-		method: "ftp.doc_extensions.post_ndjson_to_sanity",
+		method: "ftp.utilities.doc_extensions.post_ndjson_to_sanity",
 		args: {
 			"item_code": frm.doc.item_code
 		},
