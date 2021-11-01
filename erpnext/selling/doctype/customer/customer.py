@@ -682,7 +682,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 
 	# Datahenge:  This is kind of nonsense, extending a class from itself.
 	# However, it's a rather nice technique for extend the standard Customer Class without
-	# intermingles the code above, which will make Git Diff more difficult to reconcile.
+	# intermingles the code above, which does make Git Diff more difficult to reconcile.
 
 	def on_change(self):
 		# FTP: If customer's name changed, then update Web Subscription names
@@ -696,16 +696,10 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
 
 	def before_insert(self):
-		"""
-		Built-in controller.
-		"""
 		if not self.referral_code:
 			self.set_referral_code()
 
 	def before_validate(self):
-		"""
-		Built-in controller.
-		"""
 		if not self.referral_code:
 			self.set_referral_code()
 
@@ -717,6 +711,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.
+		super().on_update()
 		self.on_update_children(child_docfield_name='pauses')
 
 	@staticmethod
