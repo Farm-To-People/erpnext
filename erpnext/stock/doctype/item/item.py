@@ -82,6 +82,8 @@ class Item(WebsiteGenerator):
 		if self.opening_stock:
 			self.set_opening_stock()
 
+		self.create_item_sales_controls()
+
 	def validate(self):
 		super(Item, self).validate()
 
@@ -163,6 +165,7 @@ class Item(WebsiteGenerator):
 				"currency": erpnext.get_default_currency(),
 				"price_list_rate": self.standard_rate
 			})
+			item_price.uom = self.stock_uom  # Datahenge: Ensure the default Sales Price is in stocking Unit of Measure.
 			item_price.insert()
 
 	def set_opening_stock(self):
@@ -1045,6 +1048,15 @@ class Item(WebsiteGenerator):
 						price_list_name = frappe.db.get_value('Price List', {'buying': 1})
 						make_item_price(item, price_list_name, item_price)
 
+	def create_item_sales_controls(self):
+		"""
+		During creation of new Item, also create a record for Item Sales Controls.
+		"""
+		new_doc = frappe.new_doc("Item Sales Controls")
+		new_doc.item_code = self.item_code
+		new_doc.insert()
+
+
 def make_item_price(item, price_list_name, item_price):
 	frappe.get_doc({
 		'doctype': 'Item Price',
@@ -1062,7 +1074,6 @@ def get_timeline_data(doctype, name):
 							group by posting_date""", name)
 
 	return dict(items)
-
 
 
 def validate_end_of_life(item_code, end_of_life=None, disabled=None):

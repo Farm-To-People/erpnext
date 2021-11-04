@@ -55,7 +55,8 @@
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
-   "options": "UOM"
+   "options": "UOM",
+   "reqd": 1
   },
   {
    "default": "0",
@@ -218,7 +219,7 @@
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-10-05 17:58:11.999039",
+ "modified": "2021-11-02 18:57:15.211406",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
