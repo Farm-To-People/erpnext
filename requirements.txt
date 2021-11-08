@@ -1,5 +1,4 @@
 gocardless-pro~=1.22.0
-googlemaps==3.1.1
 pandas~=1.1.5
 plaid-python~=7.2.1
 pycountry~=20.7.3
@@ -27,6 +26,3 @@ WooCommerce==2.1.1
 # TaxJar has an API for sales tax.  Seems like a modern Avalara
 # Tweepy: Library for Twitter API
 # WooCommerce: Built on Wordpress, alternative to Shopify.
-
-
->>>>>>> official/version-13
