@@ -18,6 +18,7 @@
   "email_id",
   "customer_type",
   "image",
+  "has_special_pricing",
   "column_break0",
   "customer_group",
   "territory",
@@ -582,6 +583,12 @@
    "fieldname": "heading_contacts",
    "fieldtype": "Heading",
    "label": "Contacts"
+  },
+  {
+   "default": "0",
+   "fieldname": "has_special_pricing",
+   "fieldtype": "Check",
+   "label": "Has Special Pricing"
   }
  ],
  "icon": "fa fa-user",
@@ -594,7 +601,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2021-10-14 13:07:56.674912",
+ "modified": "2021-11-15 16:09:48.364189",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
