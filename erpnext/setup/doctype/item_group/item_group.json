@@ -114,8 +114,10 @@
    "description": "Check this if you want to show in website",
    "fieldname": "show_in_website",
    "fieldtype": "Check",
+   "hidden": 1,
    "in_list_view": 1,
-   "label": "Show in Website"
+   "label": "Show in Website",
+   "read_only": 1
   },
   {
    "depends_on": "show_in_website",
@@ -217,7 +219,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2021-09-07 17:44:55.244625",
+ "modified": "2021-12-03 13:36:00.805627",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",

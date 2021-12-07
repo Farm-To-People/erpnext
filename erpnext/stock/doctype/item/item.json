@@ -888,7 +888,9 @@
    "depends_on": "eval:!doc.variant_of",
    "fieldname": "show_in_website",
    "fieldtype": "Check",
-   "label": "Include in Sanity?",
+   "hidden": 1,
+   "label": "Show in Website",
+   "read_only": 1,
    "search_index": 1
   },
   {
@@ -896,7 +898,9 @@
    "depends_on": "variant_of",
    "fieldname": "show_variant_in_website",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Show in Website (Variant)",
+   "read_only": 1,
    "search_index": 1
   },
   {
@@ -1177,7 +1181,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-11-03 20:01:53.985597",
+ "modified": "2021-12-06 20:01:34.697980",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

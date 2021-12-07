@@ -284,6 +284,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_pricing_rules,
 			get_applied_pricing_rules, get_pricing_rule_items, get_product_discount_rule)
 
+	# pylint: disable=pointless-string-statement
 	"""
 	Datahenge Notes:
 
@@ -308,8 +309,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	When called from a Sales Order:
 	  * 'args' is a Dictionary of Sales Order, Sales Order Item, Coupon Codes, Price Lists.
 	  * 'doc' is the SalesOrder document.
-
-	"""  # pylint: disable=pointless-string-statement
+	"""
 
 	# ----------------
 	# 1. Validate and modify function arguments.
@@ -348,7 +348,9 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# ----------------
 	# 3. Datahenge: Try to extract the Coupon Codes, and write to 'args' as a List of String.
 	# ----------------
-	if doc and (not args['coupon_codes']) and doc.doctype in ['Sales Order', 'Daily Order']:
+	if doc and doc.doctype in ['Sales Order', 'Daily Order'] and \
+		(('coupon_codes' not in args) or (not args['coupon_codes'])):
+
 		if hasattr(doc, 'coupon_code_set'):
 			args['coupon_codes'] = []
 			for coupon_code_doc in doc.coupon_code_set:
