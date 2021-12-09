@@ -706,7 +706,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 	def after_insert(self):
 		from ftp.utilities.mandrill import send_welcome_to_ftp
 		super().after_insert()
-		send_welcome_to_ftp(self.name)  # Farm to People + Mandrill welcome email via Redis Queue.
+		if not self.is_anon():
+			send_welcome_to_ftp(self.name)  # Farm to People + Mandrill welcome email via Redis Queue.
 
 
 	def on_update(self):
