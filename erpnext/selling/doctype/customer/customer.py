@@ -678,6 +678,29 @@ def get_ar_balance_per_customer_per_gl(customer_key, validate_exists=False):
 	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0.00
 	return balance
 
+
+@frappe.whitelist()
+def get_customer_phone_number(customer_key):
+	"""
+	Get a customer's Phone Number from their Primary Contact.
+	"""
+
+	query = """SELECT `tabContact`.phone
+		FROM `tabContact`
+		INNER JOIN `tabDynamic Link`
+		ON `tabDynamic Link`.parent = `tabContact`.name
+		AND `tabDynamic Link`.link_doctype = 'Customer'
+		AND `tabDynamic Link`.link_name = %(customer_key)s
+		WHERE `tabContact`.is_primary_contact = 1
+		"""
+
+	result = frappe.db.sql(query, values={"customer_key": customer_key})
+	if (not result) or (not result[0]):
+		return None
+
+	return result[0][0]
+
+
 class Customer(Customer):  # pylint: disable=function-redefined
 
 	# Datahenge:  This is kind of nonsense, extending a class from itself.
