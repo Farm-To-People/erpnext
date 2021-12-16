@@ -13,7 +13,16 @@ class ItemPriceDuplicateItem(frappe.ValidationError):
 
 class ItemPrice(Document):
 
+	def before_validate(self):
+		# Farm to People Rule : No Customer-Specific Pricing allows in Item Price table.
+		self.customer = None
+
 	def validate(self):
+		# FTP Rules
+		# 1. Allow smart date overlapping (specific ranges > empties)
+		# 2. Specific ranges can never overlap other specific ranges.
+		# 3. Empties can never overlap other empties.
+
 		self.validate_item()
 		self.validate_dates()
 		self.update_price_list_details()
