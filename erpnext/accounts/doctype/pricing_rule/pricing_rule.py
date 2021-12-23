@@ -22,7 +22,7 @@ DEBUG_MODE = False
 def dprint(msg):
 	if DEBUG_MODE:
 		print(msg)
-# ------__-----------
+# -------------------
 
 apply_on_dict = {"Item Code": "items",
 	"Item Group": "item_groups", "Brand": "brands"}

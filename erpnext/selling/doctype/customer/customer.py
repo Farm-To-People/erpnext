@@ -700,6 +700,16 @@ def get_customer_phone_number(customer_key):
 
 	return result[0][0]
 
+def is_customer_anon(customer_key_or_doc):
+	"""
+	Return a boolean indicating if Customer is anonymous, or not.
+	"""
+	if isinstance(customer_key_or_doc, str):
+		customer_key = frappe.db.get_value('Customer',  customer_key_or_doc,  'name')
+		return bool(customer_key.startswith('anon'))
+
+	return bool(customer_key_or_doc.name.startswith('anon'))
+
 
 class Customer(Customer):  # pylint: disable=function-redefined
 
@@ -756,9 +766,11 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		return customer
 
 	def is_anon(self):
-		if self.name.startswith('anon'):
-			return True
-		return False
+		"""
+		Returns a boolean if customer is anonymous.
+		"""
+		return is_customer_anon(self)
+
 
 	def get_ar_balance_per_gl(self):
 		"""

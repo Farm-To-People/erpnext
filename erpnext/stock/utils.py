@@ -390,3 +390,14 @@ def is_reposting_item_valuation_in_progress():
 		{'docstatus': 1, 'status': ['in', ['Queued','In Progress']]})
 	if reposting_in_progress:
 		frappe.msgprint(_("Item valuation reposting in progress. Report might show incorrect item valuation."), alert=1)
+
+
+# --------
+# Datahenge
+# --------
+
+def allow_negative_stock(item_or_item_code, warehouse_id):
+	"""
+	Instead of a global setting, let's decide whether Negative Stock is Allowed on a case-by-case basis.
+	"""
+	

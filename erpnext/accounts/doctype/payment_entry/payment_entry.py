@@ -20,10 +20,6 @@ from erpnext.controllers.accounts_controller import AccountsController, get_supp
 from erpnext.accounts.doctype.invoice_discounting.invoice_discounting import get_party_account_based_on_invoice_discounting
 from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category import get_party_tax_withholding_details
 
-# FTP and Pinstripe
-from ftp.ftp_module.generics import Result
-from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment
-
 from erpnext.controllers.accounts_controller import validate_taxes_and_charges
 
 class InvalidPaymentEntry(ValidationError):
@@ -75,6 +71,9 @@ class PaymentEntry(AccountsController):
 		self.set_status()
 
 	def on_submit(self):
+		# FTP and Pinstripe
+		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
+
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
 
@@ -101,6 +100,8 @@ class PaymentEntry(AccountsController):
 		"""
 
 	def can_cancel(self):
+		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
+
 		 # We can never cancel a Payment Entry that references Stripe;
 		 # Instead, the solution is to create a second, opposite Payment Entry.
 		if self.mode_of_payment == 'Stripe':

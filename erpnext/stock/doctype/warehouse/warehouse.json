@@ -36,7 +36,9 @@
   "tree_details",
   "lft",
   "rgt",
-  "old_parent"
+  "old_parent",
+  "sb_custom",
+  "allow_negative_stock"
  ],
  "fields": [
   {
@@ -239,13 +241,29 @@
    "fieldtype": "Link",
    "label": "Default In-Transit Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "description": "Custom fields for FTP",
+   "fieldname": "sb_custom",
+   "fieldtype": "Section Break",
+   "label": "Custom"
+  },
+  {
+   "default": "Use Global",
+   "description": "Standard ERP only supports this setting at a Global level.  This is an attempt allow a Warehouse to override that decision.",
+   "fieldname": "allow_negative_stock",
+   "fieldtype": "Select",
+   "label": "Allow Negative Stock",
+   "options": "No\nYes\nUse Global",
+   "reqd": 1,
+   "reqd_in_database": 1
   }
  ],
  "icon": "fa fa-building",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2021-04-09 19:54:56.263965",
+ "modified": "2021-12-17 14:26:29.863729",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Warehouse",
