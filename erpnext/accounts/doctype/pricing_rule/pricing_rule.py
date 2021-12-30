@@ -549,7 +549,7 @@ def get_pricing_rule_details(args, pricing_rule):
 	})
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
-	print("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...")
+	dprint("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...")
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
 	if ((pricing_rule.margin_type in ['Amount', 'Percentage'] and pricing_rule.currency == args.currency)
