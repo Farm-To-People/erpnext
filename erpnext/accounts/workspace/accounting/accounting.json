@@ -1,11 +1,6 @@
 {
  "category": "Modules",
- "charts": [
-  {
-   "chart_name": "Profit and Loss",
-   "label": "Profit and Loss"
-  }
- ],
+ "charts": [],
  "creation": "2020-03-02 15:41:59.515192",
  "developer_mode_only": 0,
  "disable_user_customization": 0,
@@ -682,135 +677,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Goods and Services Tax (GST India)",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Card Break"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "GST Settings",
-   "link_to": "GST Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "GST HSN Code",
-   "link_to": "GST HSN Code",
-   "link_type": "DocType",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "GSTR-1",
-   "link_to": "GSTR-1",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "GSTR-2",
-   "link_to": "GSTR-2",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "GSTR 3B Report",
-   "link_to": "GSTR 3B Report",
-   "link_type": "DocType",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "GST Sales Register",
-   "link_to": "GST Sales Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "GST Purchase Register",
-   "link_to": "GST Purchase Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "GST Itemised Sales Register",
-   "link_to": "GST Itemised Sales Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "GST Itemised Purchase Register",
-   "link_to": "GST Itemised Purchase Register",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "C-Form",
-   "link_to": "C-Form",
-   "link_type": "DocType",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Lower Deduction Certificate",
-   "link_to": "Lower Deduction Certificate",
-   "link_type": "DocType",
-   "onboard": 0,
-   "only_for": "India",
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Share Management",
    "onboard": 0,
    "type": "Card Break"
@@ -1064,7 +930,7 @@
    "type": "Link"
   }
  ],
- "modified": "2021-06-10 03:17:31.427945",
+ "modified": "2021-12-30 14:20:47.587676",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounting",
