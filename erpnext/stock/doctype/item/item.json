@@ -20,6 +20,7 @@
   "item_group",
   "item_type",
   "farmbox_type",
+  "farmbox_can_customize",
   "stock_uom",
   "column_break0",
   "disabled",
@@ -1172,6 +1173,12 @@
    "fieldname": "sb_misc",
    "fieldtype": "Section Break",
    "label": "Misc"
+  },
+  {
+   "default": "1",
+   "fieldname": "farmbox_can_customize",
+   "fieldtype": "Check",
+   "label": "Farmbox Can Be Customized"
   }
  ],
  "has_web_view": 1,
@@ -1181,7 +1188,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2021-12-06 20:01:34.697980",
+ "modified": "2022-01-07 13:38:23.523874",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
