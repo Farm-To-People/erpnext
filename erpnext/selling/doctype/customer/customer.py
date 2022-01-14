@@ -901,3 +901,35 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			# Typically used when called from JavaScript, to force an immediate save on the Customer record.
 			self.save()
 		return self.referral_code  # used by JS callback.
+
+	def get_default_shipping_address_key(self):
+		"""
+		Get the primary key ('name') of the Address document for this Customer, that is the primary Shipping Address.
+		"""
+
+		query = """	SELECT Address.name FROM tabAddress		AS Address
+		JOIN `tabDynamic Link`	AS Link
+		ON	Link.link_doctype = 'Customer'
+		AND Link.link_name = %(customer_key)s
+		AND Link.parenttype = 'Address'
+		AND Link.parent = Address.name
+		WHERE
+			Address.address_type = 'Shipping'
+		ORDER BY is_shipping_address DESC
+		LIMIT 1;
+		"""
+
+		# Important to return the results as a List and Dictionary.
+		query_result = frappe.db.sql(query, values={'customer_key': self.name}, as_list=False, as_dict=False)
+		if (not query_result) or (not query_result[0]):
+			return None
+		return query_result[0][0]
+
+	def get_default_shipping_address_doc(self):
+		"""
+		Get the Address Document for this Customer, that is the primary Shipping Address.
+		"""
+		address_key = self.get_default_shipping_address_key()
+		if not address_key:
+			return None
+		return frappe.get_doc("Address", address_key)
