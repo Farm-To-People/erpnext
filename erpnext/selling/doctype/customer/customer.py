@@ -733,6 +733,12 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			self.set_referral_code()
 
 	def before_validate(self):
+		# https://github.com/Farm-To-People/app_ftp/issues/37
+		self.customer_name = self.customer_name.strip() if self.customer_name else None
+		self.first_name = self.first_name.strip() if self.first_name else None
+		self.last_name = self.last_name.strip() if self.last_name else None
+		self.email_id = self.email_id.strip()
+
 		if not self.referral_code:
 			self.set_referral_code()
 
