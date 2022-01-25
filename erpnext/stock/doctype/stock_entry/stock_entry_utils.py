@@ -26,6 +26,8 @@ def make_stock_entry(**args):
 	:do_not_submit: Optional flag
 	'''
 
+	# Datahenge: Adding a 'uom' argument.
+
 	def process_serial_numbers(serial_nos_list):
 		serial_nos_list = [
 			'\n'.join(serial_num['serial_no'] for serial_num in serial_nos_list if serial_num.serial_no)
@@ -127,7 +129,8 @@ def make_stock_entry(**args):
 		"serial_no": args.serial_no,
 		'batch_no': args.batch_no,
 		'cost_center': args.cost_center,
-		'expense_account': args.expense_account
+		'expense_account': args.expense_account,
+		'uom': args.uom
 	})
 
 	s.set_stock_entry_type()

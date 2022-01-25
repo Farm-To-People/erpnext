@@ -57,9 +57,103 @@ frappe.ui.form.on("Purchase Order", {
 
 	refresh: function(frm) {
 		frm.trigger('get_materials_from_supplier');
+
+		if (frm.doc.status == 0 ) {
+			/* FTP: Hide the Submit Button:  We have 2 custom ways of submitting at FTP */
+			$('.primary-action').prop('hidden', true);
+		}
+		else {
+			$('.primary-action').prop('hidden', false);
+		}
+
+		let me = this;
+
+		// Datahenge:
+		if (frm.doc.docstatus == 0) {
+
+			// Custom Submit button #1
+			frm.page.add_action_item(__('Submit'), function() {
+				frappe.call({
+					method: "submit",
+					doc: frm.doc,
+					callback: function(r) {
+						if (r.message) {
+							frappe.msgprint(__("{0} Result submittted", [r.message]));
+						}
+						frm.reload_doc();
+					}
+				});
+	
+			});
+	
+			// Custom Submit button #2
+			frm.page.add_action_item(__('Submit & Email'), function() {
+				new frappe.views.CommunicationComposer({
+					doc: frm.doc,
+					frm: frm,
+					subject: __(frm.meta.name) + ': ' + frm.docname,
+					recipients: frm.doc.email || frm.doc.email_id || frm.doc.contact_email,
+					attach_document_print: true,
+					message: "This is the message",
+					real_name: frm.doc.real_name || frm.doc.contact_display || frm.doc.contact_name
+				});
+			});
+
+			if (frm.doc.supplier) {
+				// FTP: Add 1 line for each Item with a matching Default Supplier.
+				frm.add_custom_button(__('Supplier'), () => {
+					frappe.call({
+						method: "erpnext.buying.doctype.purchase_order.purchase_order.get_suppliers_default_items",
+						args: { "supplier_id": frm.doc.supplier},
+						callback: function(r) {
+							if (r.message) {
+								frappe.msgprint(__("Added new PO lines; please update Quantity and Rates."));
+								let possible_new_lines = r.message;  // array of objects from the Python function
+								possible_new_lines.forEach(function (row, index) {
+
+									// console.log(row);
+
+									// Does this row already exist?
+									let existing_rows = frm.doc.items;
+									console.log(existing_rows);
+
+									// Create a new Purchase Order Line:
+									var new_order_line = cur_frm.add_child("items");
+									new_order_line.item_code = row['item_code'];
+									new_order_line.uom = row['purchase_uom'];
+									new_order_line.item_name = row['item_name'];
+									new_order_line.conversion_factor = row['conversion_factor']
+									new_order_line.schedule_date = frm.doc.schedule_date;
+									cur_frm.refresh_fields("items");  // Important to refresh that portion of the page!
+								});
+							}
+						}
+					});
+				}, __("Get Items From"));
+			}
+		}  // end of if docstatus == 0
+
+		// FTP: Add the ability to reverse a Submit.
+		if (frm.doc.docstatus == 1) {
+			frm.add_custom_button(__('Reverse Submit'), () => {
+				frappe.call({
+					method: "reverse_submit_ftp",
+					doc: frm.doc,
+					callback: function(r) {
+						if (r.message) {
+							frappe.msgprint(__("{0}", [r.message]));
+						}
+						frm.reload_doc();
+					}
+				});
+			}, __("Status"));
+		}
+
+	// end of refresh()
 	},
 
 	get_materials_from_supplier: function(frm) {
+		/* DH: This OOTB function is used as part of raw material subcontracting with a Supplier. */
 		let po_details = [];
 
 		if (frm.doc.supplied_items && (frm.doc.per_received == 100 || frm.doc.status === 'Closed')) {
@@ -246,6 +340,8 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 	},
 
 	// Begin: Datahenge LLC
+
+	/*
 	get_items_from_daily_orders: function() {
 		erpnext.utils.map_current_doc({
 			method: "ftp.ftp_module.doctype.daily_order.to_purchase_order.make_purchase_order_based_on_supplier",
@@ -267,6 +363,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		});
 	},	
 	// End: Datahenge LLC
+	*/
 
 	validate: function() {
 		set_schedule_date(this.frm);
@@ -431,6 +528,10 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 	},
 
 	add_from_mappers: function() {
+		/* DH Notes:
+			* The code for "Get Items From: Product Bundle" is defined in 'buying.js', not here.
+			* This function cannot consolidate multiple Material Request Lines into a Single PO line.
+		*/
 		var me = this;
 		this.frm.add_custom_button(__('Material Request'),
 			function() {
@@ -453,6 +554,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			}, __("Get Items From"));
 
 		this.frm.add_custom_button(__('Supplier Quotation'),
+			/* Datahenge:  This function cannot consolidate multiple Supplier Quotation Lines into a Single PO line. */
 			function() {
 				erpnext.utils.map_current_doc({
 					method: "erpnext.buying.doctype.supplier_quotation.supplier_quotation.make_purchase_order",

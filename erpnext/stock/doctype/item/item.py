@@ -31,7 +31,7 @@ class StockExistsForTemplate(frappe.ValidationError):
 class InvalidBarcode(frappe.ValidationError):
 	pass
 
-
+# Seriously...it inherits WebSiteGenerator?
 class Item(WebsiteGenerator):
 	website = frappe._dict(
 		page_title_field="item_name",
@@ -71,7 +71,9 @@ class Item(WebsiteGenerator):
 	def before_insert(self):
 		if not self.description:
 			self.description = self.item_name
-
+		# Datahenge:  Explicit is Better Than Implicit.
+		if not self.valuation_method:
+			self.valuation_method = frappe.db.get_single_value("Stock Settings", "valuation_method")
 
 	def after_insert(self):
 		'''set opening stock and item price'''
@@ -192,9 +194,11 @@ class Item(WebsiteGenerator):
 				default_warehouse = frappe.db.get_value('Warehouse',
 					{'warehouse_name': _('Stores'), 'company': default.company})
 
+			# Datahenge: Adding 'uom' argument.  Otherwise, the Stock Journal fails to post entirely.
 			if default_warehouse:
 				stock_entry = make_stock_entry(item_code=self.name, target=default_warehouse, qty=self.opening_stock,
-					rate=self.valuation_rate, company=default.company, posting_date=getdate(), posting_time=nowtime())
+					rate=self.valuation_rate, company=default.company, posting_date=getdate(), posting_time=nowtime(),
+					uom=self.stock_uom)
 
 				stock_entry.add_comment("Comment", _("Opening Stock"))
 

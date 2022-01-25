@@ -54,6 +54,7 @@ class PurchaseOrder(BuyingController):
 		self.validate_supplier()
 		self.validate_schedule_date()
 		validate_for_items(self)
+		self.validate_children(child_docfield_name='items')  # Datahenge: See custom controller on 'document.py'
 		self.check_on_hold_or_closed_status()
 
 		self.validate_uom_is_integer("uom", "qty")
@@ -303,13 +304,15 @@ class PurchaseOrder(BuyingController):
 
 		def method1():
 			# Option 1:  Update every PO line indiscriminately.
-			items = list(set([d.item_code for d in self.get("items")]))
-			if not items:
+			item_codes = list(set([d.item_code for d in self.get("items")]))
+			if not item_codes:
 				return
-			for item_code in items:
-				repopulate_redis_for_item(item_code)
+			for item_code in item_codes:
+				is_sales_item = frappe.db.get_value("Item", item_code, "is_sales_item")
+				if is_sales_item:
+					repopulate_redis_for_item(item_code)
 
-		def method2():
+		def method2():  # pylint: disable=unused-variable
 			# Option 2: Try to detect changes (stock_qty, new_line, delivery_date, FTP parms)
 			for idx, purchase_line in enumerate(self.items):
 				line_orig = self.get_doc_before_save().get("items")[idx]
@@ -372,6 +375,28 @@ class PurchaseOrder(BuyingController):
 			self.db_set("per_received", flt(received_qty/total_qty) * 100, update_modified=False)
 		else:
 			self.db_set("per_received", 0, update_modified=False)
+
+
+	def has_activity_ftp(self):
+		"""
+		Returns a boolean True if the purchase order has activity (receipts, invoices)
+		"""
+
+	@frappe.whitelist()
+	def reverse_submit_ftp(self):
+		"""
+		Change a Purchase Order from 'Submitted' to 'Draft'.
+		"""
+		# This function is called via JavaScript on 'purchase_order.js'
+		if self.status != "To Receive and Bill":
+			frappe.throw(_("Purchase Order can only be reset to 'Draft' when status is 'To Receive and Bill'"))
+		frappe.db.set_value("Purchase Order", self.name, "docstatus", 0)
+		self.reload()
+
+# ----------------------------------------
+# 			END CONTROLLER METHODS
+# ----------------------------------------
+
 
 def item_last_purchase_rate(name, conversion_rate, item_code, conversion_factor= 1.0):
 	"""get last purchase rate for an item"""
@@ -610,6 +635,9 @@ def make_inter_company_sales_order(source_name, target_doc=None):
 
 @frappe.whitelist()
 def get_materials_from_supplier(purchase_order, po_details):
+	"""
+	DH: This function is used as part of raw material subcontracting with a Supplier.
+	"""
 	if isinstance(po_details, str):
 		po_details = json.loads(po_details)
 
@@ -662,3 +690,33 @@ def add_items_in_ste(ste_doc, row, qty, po_details, batch_no=None):
 		'subcontracted_item': row.item_details['main_item_code'],
 		'serial_no': '\n'.join(row.serial_no) if row.serial_no else ''
 	})
+
+
+@frappe.whitelist()
+def get_suppliers_default_items(supplier_id):
+	"""
+	Datahenge: Used by JS when filling-up a Purchase Order with 1 line for every Item a supplier provides.
+	"""
+	from erpnext.stock.get_item_details import get_conversion_factor
+
+	filters = { "parenttype": "Item", "default_supplier": supplier_id }
+	results = frappe.get_all("Item Default", filters=filters, fields=["parent"])
+	item_names = [ result['parent'] for result in results]
+
+	result = []
+	for item_code in item_names:
+		item_data = frappe.db.get_values('Item', filters={"name": item_code}, fieldname=["purchase_uom", "item_name"], as_dict=True)
+		if item_data:
+			item_data = item_data[0]
+		else:
+			print(f"WARNING: No data found for Item = '{item_code}'")
+			continue
+		item_data['item_code'] = item_code
+
+		# If there is a purchase UOM, try to calculate the Conversion Factor.
+		if item_data['purchase_uom']:
+			conversion_factor = get_conversion_factor(item_code=item_code, uom=item_data['purchase_uom'])['conversion_factor']
+			item_data['conversion_factor'] = conversion_factor
+
+		result.append(item_data)
+	return result
