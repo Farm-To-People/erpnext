@@ -66,8 +66,6 @@ frappe.ui.form.on("Purchase Order", {
 			$('.primary-action').prop('hidden', false);
 		}
 
-		let me = this;
-
 		// Datahenge:
 		if (frm.doc.docstatus == 0) {
 
@@ -130,6 +128,9 @@ frappe.ui.form.on("Purchase Order", {
 						}
 					});
 				}, __("Get Items From"));
+
+				// FTP: Add lines based on Daily Order's where this is the default Supplier of the Item.
+				frm.add_custom_button(__('Daily Orders'), () => frm.create_lines_from_daily_orders(frm), __("Get Items From"));
 			}
 		}  // end of if docstatus == 0
 
@@ -153,7 +154,10 @@ frappe.ui.form.on("Purchase Order", {
 	},
 
 	get_materials_from_supplier: function(frm) {
-		/* DH: This OOTB function is used as part of raw material subcontracting with a Supplier. */
+		/*
+			DH: This is an OOTB function, used as part of raw material subcontracting with a Supplier.
+				Not the same thing as FTP's function that gets Items with a default Supplier.
+		*/
 		let po_details = [];
 
 		if (frm.doc.supplied_items && (frm.doc.per_received == 100 || frm.doc.status === 'Closed')) {
@@ -180,7 +184,24 @@ frappe.ui.form.on("Purchase Order", {
 				});
 			}, __('Create'));
 		}
+	},
+
+	create_lines_from_daily_orders: function(frm) {
+		
+		console.log("foo");
+		frappe.msgprint("foo bar baz");
+		let po_details = [];
+
+		if (frm.doc.supplied_items && (frm.doc.per_received == 100 || frm.doc.status === 'Closed')) {
+			frm.doc.supplied_items.forEach(d => {
+				if (d.total_supplied_qty && d.total_supplied_qty != d.consumed_qty) {
+					po_details.push(d.name)
+				}
+			});
+		}
+
 	}
+
 });
 
 frappe.ui.form.on("Purchase Order Item", {

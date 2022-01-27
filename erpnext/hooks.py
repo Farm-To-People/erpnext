@@ -252,9 +252,6 @@ doc_events = {
 	"Website Settings": {
 		"validate": "erpnext.portal.doctype.products_settings.products_settings.home_page_is_products"
 	},
-	"Tax Category": {
-		"validate": "erpnext.regional.india.utils.validate_tax_category"
-	},
 	"Sales Invoice": {
 		"on_submit": [
 			"erpnext.regional.create_transaction_log",
@@ -266,32 +263,10 @@ doc_events = {
 			"erpnext.erpnext_integrations.taxjar_integration.delete_transaction"
 		],
 		"on_trash": "erpnext.regional.check_deletion_permission",
-		"validate": [
-			"erpnext.regional.india.utils.validate_document_name",
-			"erpnext.regional.india.utils.update_taxable_values"
-		]
-	},
-	"Purchase Invoice": {
-		"validate": [
-			"erpnext.regional.india.utils.validate_reverse_charge_transaction",
-			"erpnext.regional.india.utils.update_itc_availed_fields",
-			"erpnext.regional.united_arab_emirates.utils.update_grand_total_for_rcm",
-			"erpnext.regional.united_arab_emirates.utils.validate_returns",
-			"erpnext.regional.india.utils.update_taxable_values"
-		]
 	},
 	"Payment Entry": {
 		"on_submit": ["erpnext.regional.create_transaction_log", "erpnext.accounts.doctype.payment_request.payment_request.update_payment_req_status", "erpnext.accounts.doctype.dunning.dunning.resolve_dunning"],
 		"on_trash": "erpnext.regional.check_deletion_permission"
-	},
-	'Address': {
-		'validate': ['erpnext.regional.india.utils.validate_gstin_for_india', 'erpnext.regional.italy.utils.set_state_code', 'erpnext.regional.india.utils.update_gst_category']
-	},
-	'Supplier': {
-		'validate': 'erpnext.regional.india.utils.validate_pan_for_india'
-	},
-	('Sales Invoice', 'Sales Order', 'Delivery Note', 'Purchase Invoice', 'Purchase Order', 'Purchase Receipt'): {
-		'validate': ['erpnext.regional.india.utils.set_place_of_supply']
 	},
 	"Contact": {
 		"on_trash": "erpnext.support.doctype.issue.issue.update_issue",
@@ -425,32 +400,8 @@ accounting_dimension_doctypes = ["GL Entry", "Sales Invoice", "Purchase Invoice"
 ]
 
 regional_overrides = {
-	'France': {
-		'erpnext.tests.test_regional.test_method': 'erpnext.regional.france.utils.test_method'
-	},
-	'India': {
-		'erpnext.tests.test_regional.test_method': 'erpnext.regional.india.utils.test_method',
-		'erpnext.controllers.taxes_and_totals.get_itemised_tax_breakup_header': 'erpnext.regional.india.utils.get_itemised_tax_breakup_header',
-		'erpnext.controllers.taxes_and_totals.get_itemised_tax_breakup_data': 'erpnext.regional.india.utils.get_itemised_tax_breakup_data',
-		'erpnext.accounts.party.get_regional_address_details': 'erpnext.regional.india.utils.get_regional_address_details',
-		'erpnext.controllers.taxes_and_totals.get_regional_round_off_accounts': 'erpnext.regional.india.utils.get_regional_round_off_accounts',
-		'erpnext.hr.utils.calculate_annual_eligible_hra_exemption': 'erpnext.regional.india.utils.calculate_annual_eligible_hra_exemption',
-		'erpnext.hr.utils.calculate_hra_exemption_for_period': 'erpnext.regional.india.utils.calculate_hra_exemption_for_period',
-		'erpnext.controllers.accounts_controller.validate_einvoice_fields': 'erpnext.regional.india.e_invoice.utils.validate_einvoice_fields',
-		'erpnext.assets.doctype.asset.asset.get_depreciation_amount': 'erpnext.regional.india.utils.get_depreciation_amount'
-	},
-	'United Arab Emirates': {
-		'erpnext.controllers.taxes_and_totals.update_itemised_tax_data': 'erpnext.regional.united_arab_emirates.utils.update_itemised_tax_data',
-		'erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_regional_gl_entries': 'erpnext.regional.united_arab_emirates.utils.make_regional_gl_entries',
-	},
-	'Saudi Arabia': {
-		'erpnext.controllers.taxes_and_totals.update_itemised_tax_data': 'erpnext.regional.united_arab_emirates.utils.update_itemised_tax_data'
-	},
-	'Italy': {
-		'erpnext.controllers.taxes_and_totals.update_itemised_tax_data': 'erpnext.regional.italy.utils.update_itemised_tax_data',
-		'erpnext.controllers.accounts_controller.validate_regional': 'erpnext.regional.italy.utils.sales_invoice_validate',
-	}
 }
+
 user_privacy_documents = [
 	{
 		'doctype': 'Lead',
