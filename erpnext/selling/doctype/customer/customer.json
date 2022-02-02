@@ -59,6 +59,7 @@
   "column_break1",
   "heading_contacts",
   "contact_html",
+  "packing_notes_ftp",
   "default_receivable_accounts",
   "accounts",
   "credit_limit_section",
@@ -589,6 +590,11 @@
    "fieldname": "has_special_pricing",
    "fieldtype": "Check",
    "label": "Has Special Pricing"
+  },
+  {
+   "fieldname": "packing_notes_ftp",
+   "fieldtype": "Small Text",
+   "label": "Packing Notes"
   }
  ],
  "icon": "fa fa-user",
@@ -601,7 +607,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2021-11-15 16:09:48.364189",
+ "modified": "2022-02-01 14:55:49.227642",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
