@@ -58,18 +58,12 @@ frappe.ui.form.on("Purchase Order", {
 	refresh: function(frm) {
 		frm.trigger('get_materials_from_supplier');
 
-		if (frm.doc.status == 0 ) {
-			/* FTP: Hide the Submit Button:  We have 2 custom ways of submitting at FTP */
-			$('.primary-action').prop('hidden', true);
-		}
-		else {
-			$('.primary-action').prop('hidden', false);
-		}
+		/* FTP: Hide the standard Submit Button: */
+		$('.primary-action').prop('hidden', true);
 
-		// Datahenge:
 		if (frm.doc.docstatus == 0) {
 
-			// Custom Submit button #1
+			// Document is in Draft.  Need to create first custom Submit button:
 			frm.page.add_action_item(__('Submit'), function() {
 				frappe.call({
 					method: "submit",
@@ -78,14 +72,13 @@ frappe.ui.form.on("Purchase Order", {
 						if (r.message) {
 							frappe.msgprint(__("{0} Result submittted", [r.message]));
 						}
-						frm.reload_doc();
+						cur_frm.reload_doc();
 					}
 				});
-	
 			});
-	
+
 			// Custom Submit button #2
-			frm.page.add_action_item(__('Submit & Email'), function() {
+			frm.page.add_action_item(__('Email & Submit'), function() {
 				new frappe.views.CommunicationComposer({
 					doc: frm.doc,
 					frm: frm,
@@ -98,7 +91,9 @@ frappe.ui.form.on("Purchase Order", {
 			});
 
 			if (frm.doc.supplier) {
-				// FTP: Add 1 line for each Item with a matching Default Supplier.
+				/* FTP: Add 'Supplier' to 'Get Items From'
+				   Result is 1 PO line for each Item with a matching Default Supplier.
+				*/
 				frm.add_custom_button(__('Supplier'), () => {
 					frappe.call({
 						method: "erpnext.buying.doctype.purchase_order.purchase_order.get_suppliers_default_items",
@@ -136,6 +131,9 @@ frappe.ui.form.on("Purchase Order", {
 
 		// FTP: Add the ability to reverse a Submit.
 		if (frm.doc.docstatus == 1) {
+
+			cur_frm.set_df_property("Submit", "hidden", true);  // Try to hide the custom Submit button.
+
 			frm.add_custom_button(__('Reverse Submit'), () => {
 				frappe.call({
 					method: "reverse_submit_ftp",
@@ -144,7 +142,7 @@ frappe.ui.form.on("Purchase Order", {
 						if (r.message) {
 							frappe.msgprint(__("{0}", [r.message]));
 						}
-						frm.reload_doc();
+						frm.reload_doc();  // Because the docstatus changed.
 					}
 				});
 			}, __("Status"));
