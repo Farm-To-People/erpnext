@@ -79,6 +79,13 @@ class Bin(Document):
 		self.set_projected_qty()
 		self.db_update()
 
+		# Datahenge: This seems a fine place to intercept the Standard Code, and update
+		#            the Redis Availability.  The record for tabBin was just updated.
+		# print(f"Updating Redis Availability for Item '{self.item_code}' ...")
+		from ftp.ftp_invent import repopulate_redis_for_item
+		repopulate_redis_for_item(self.item_code)
+
+
 	def set_projected_qty(self):
 		self.projected_qty = (flt(self.actual_qty) + flt(self.ordered_qty)
 			+ flt(self.indented_qty) + flt(self.planned_qty) - flt(self.reserved_qty)

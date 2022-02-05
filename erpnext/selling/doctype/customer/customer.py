@@ -17,9 +17,6 @@ from frappe.model.rename_doc import update_linked_doctypes
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils.user import get_users_with_role
 
-# Temporal
-from temporal import any_to_date
-
 class Customer(TransactionBase):
 	def get_feed(self):
 		return self.customer_name
@@ -866,6 +863,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Try to determine if the Customer Holds child table was modified.
 		"""
+		from temporal import any_to_date
+
 		holds_orig = None
 		if hasattr(self, '_doc_before_save'):
 			if self._doc_before_save:
