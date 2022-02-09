@@ -82,9 +82,17 @@ class Bin(Document):
 		# Datahenge: This seems a fine place to intercept the Standard Code, and update
 		#            the Redis Availability.  The record for tabBin was just updated.
 		# print(f"Updating Redis Availability for Item '{self.item_code}' ...")
-		from ftp.ftp_invent import repopulate_redis_for_item
-		repopulate_redis_for_item(self.item_code)
 
+		# Option 1: Instantly.
+		# from ftp.ftp_invent import repopulate_redis_for_item
+		# repopulate_redis_for_item(self.item_code)
+
+		# Option 2: Enqueued.
+		frappe.enqueue(
+			method="ftp.ftp_invent.repopulate_redis_for_item",
+			queue='short',
+			item_code=self.item_code
+		)
 
 	def set_projected_qty(self):
 		self.projected_qty = (flt(self.actual_qty) + flt(self.ordered_qty)

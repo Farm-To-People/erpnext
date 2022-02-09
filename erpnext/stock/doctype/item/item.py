@@ -128,6 +128,14 @@ class Item(WebsiteGenerator):
 		self.update_show_in_website()
 		self.validate_item_tax_net_rate_range()
 
+		if (self.item_type == 'Farm Box') and (self.farmbox_type == ""):
+			raise ValueError(f"Item {self.name} cannot have a blank value for Farmbox Type.")
+
+		# FTP: Validate the 'farmbox_can_customize' flag:
+		if bool(self.farmbox_can_customize) is True:
+			if self.item_type != 'Farm Box':
+				raise ValueError(f"Item {self.name} cannot have 'farmbox_can_customize' set to True, when Item Type is not 'Farm Box'")
+
 		if not self.is_new():
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
 			self.old_website_item_groups = frappe.db.sql_list("""select item_group
