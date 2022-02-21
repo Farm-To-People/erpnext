@@ -513,13 +513,16 @@ class PaymentEntry(AccountsController):
 	def set_amounts_after_tax(self):
 		applicable_tax = 0
 		base_applicable_tax = 0
-		for tax in self.get('taxes'):
-			if not tax.included_in_paid_amount:
-				amount = -1 * tax.tax_amount if tax.add_deduct_tax == 'Deduct' else tax.tax_amount
-				base_amount = -1 * tax.base_tax_amount if tax.add_deduct_tax == 'Deduct' else tax.base_tax_amount
 
-				applicable_tax += amount
-				base_applicable_tax += base_amount
+		# Datahenge: Prevent NoneType error by checking if taxes exist, before trying to iterate:
+		if self.get('taxes'):
+			for tax in self.get('taxes'):
+				if not tax.included_in_paid_amount:
+					amount = -1 * tax.tax_amount if tax.add_deduct_tax == 'Deduct' else tax.tax_amount
+					base_amount = -1 * tax.base_tax_amount if tax.add_deduct_tax == 'Deduct' else tax.base_tax_amount
+
+					applicable_tax += amount
+					base_applicable_tax += base_amount
 
 		self.paid_amount_after_tax = flt(flt(self.paid_amount) + flt(applicable_tax),
 			self.precision("paid_amount_after_tax"))
