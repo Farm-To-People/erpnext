@@ -930,6 +930,10 @@ class PaymentEntry(AccountsController):
 		self.total_taxes_and_charges = 0.0
 		self.base_total_taxes_and_charges = 0.0
 
+		# Datahenge: If no tax tables, skip all logic below.
+		if not self.get('taxes'):
+			return
+
 		actual_tax_dict = dict([[tax.idx, flt(tax.tax_amount, tax.precision("tax_amount"))]
 			for tax in self.get("taxes") if tax.charge_type == "Actual"])
 
