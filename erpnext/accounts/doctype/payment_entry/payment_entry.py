@@ -514,15 +514,13 @@ class PaymentEntry(AccountsController):
 		applicable_tax = 0
 		base_applicable_tax = 0
 
-		# Datahenge: Prevent NoneType error by checking if taxes exist, before trying to iterate:
-		if self.get('taxes'):
-			for tax in self.get('taxes'):
-				if not tax.included_in_paid_amount:
-					amount = -1 * tax.tax_amount if tax.add_deduct_tax == 'Deduct' else tax.tax_amount
-					base_amount = -1 * tax.base_tax_amount if tax.add_deduct_tax == 'Deduct' else tax.base_tax_amount
+		for tax in self.get('taxes'):
+			if not tax.included_in_paid_amount:
+				amount = -1 * tax.tax_amount if tax.add_deduct_tax == 'Deduct' else tax.tax_amount
+				base_amount = -1 * tax.base_tax_amount if tax.add_deduct_tax == 'Deduct' else tax.base_tax_amount
 
-					applicable_tax += amount
-					base_applicable_tax += base_amount
+				applicable_tax += amount
+				base_applicable_tax += base_amount
 
 		self.paid_amount_after_tax = flt(flt(self.paid_amount) + flt(applicable_tax),
 			self.precision("paid_amount_after_tax"))
@@ -890,52 +888,42 @@ class PaymentEntry(AccountsController):
 		return self.source_exchange_rate if self.payment_type=="Receive" else self.target_exchange_rate
 
 	def initialize_taxes(self):
-		# FTP : ERPNext bug? What if the child table Taxes doesn't exist on the Order?  Then skip this block of code.
-		if hasattr(self, "taxes") and self.get("taxes"):
-			for tax in self.get("taxes"):
-				validate_taxes_and_charges(tax)
-				validate_inclusive_tax(tax, self)
+		for tax in self.get("taxes"):
+			validate_taxes_and_charges(tax)
+			validate_inclusive_tax(tax, self)
 
-				tax_fields = ["total", "tax_fraction_for_current_item", "grand_total_fraction_for_current_item"]
+			tax_fields = ["total", "tax_fraction_for_current_item", "grand_total_fraction_for_current_item"]
 
-				if tax.charge_type != "Actual":
-					tax_fields.append("tax_amount")
+			if tax.charge_type != "Actual":
+				tax_fields.append("tax_amount")
 
-				for fieldname in tax_fields:
-					tax.set(fieldname, 0.0)
+			for fieldname in tax_fields:
+				tax.set(fieldname, 0.0)
 
 		self.paid_amount_after_tax = self.paid_amount
 
 	def determine_exclusive_rate(self):
-		# FTP : ERPNext bug? What if the child table Taxes doesn't exist on the Order?  Then skip this block of code.
-		if hasattr(self, "taxes") and self.get("taxes"):	
-			if not any((cint(tax.included_in_paid_amount) for tax in self.get("taxes"))):
-				return
+		if not any((cint(tax.included_in_paid_amount) for tax in self.get("taxes"))):
+			return
 
 		cumulated_tax_fraction = 0
 
-		# FTP : ERPNext bug? What if the child table Taxes doesn't exist on the Order?  Then skip this block of code.
-		if hasattr(self, "taxes") and self.get("taxes"):
-			for i, tax in enumerate(self.get("taxes")):
-				tax.tax_fraction_for_current_item = self.get_current_tax_fraction(tax)
-				if i==0:
-					tax.grand_total_fraction_for_current_item = 1 + tax.tax_fraction_for_current_item
-				else:
-					tax.grand_total_fraction_for_current_item = \
-						self.get("taxes")[i-1].grand_total_fraction_for_current_item \
-						+ tax.tax_fraction_for_current_item
+		for i, tax in enumerate(self.get("taxes")):
+			tax.tax_fraction_for_current_item = self.get_current_tax_fraction(tax)
+			if i==0:
+				tax.grand_total_fraction_for_current_item = 1 + tax.tax_fraction_for_current_item
+			else:
+				tax.grand_total_fraction_for_current_item = \
+					self.get("taxes")[i-1].grand_total_fraction_for_current_item \
+					+ tax.tax_fraction_for_current_item
 
-				cumulated_tax_fraction += tax.tax_fraction_for_current_item
+			cumulated_tax_fraction += tax.tax_fraction_for_current_item
 
 		self.paid_amount_after_tax = flt(self.paid_amount/(1+cumulated_tax_fraction))
 
 	def calculate_taxes(self):
 		self.total_taxes_and_charges = 0.0
 		self.base_total_taxes_and_charges = 0.0
-
-		# Datahenge: If no tax tables, skip all logic below.
-		if not self.get('taxes'):
-			return
 
 		actual_tax_dict = dict([[tax.idx, flt(tax.tax_amount, tax.precision("tax_amount"))]
 			for tax in self.get("taxes") if tax.charge_type == "Actual"])
