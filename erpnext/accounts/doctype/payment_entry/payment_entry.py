@@ -904,20 +904,25 @@ class PaymentEntry(AccountsController):
 		self.paid_amount_after_tax = self.paid_amount
 
 	def determine_exclusive_rate(self):
-		if not any((cint(tax.included_in_paid_amount) for tax in self.get("taxes"))):
-			return
+		# FTP : ERPNext bug? What if the child table Taxes doesn't exist on the Order?  Then skip this block of code.
+		if hasattr(self, "taxes") and self.get("taxes"):	
+			if not any((cint(tax.included_in_paid_amount) for tax in self.get("taxes"))):
+				return
 
 		cumulated_tax_fraction = 0
-		for i, tax in enumerate(self.get("taxes")):
-			tax.tax_fraction_for_current_item = self.get_current_tax_fraction(tax)
-			if i==0:
-				tax.grand_total_fraction_for_current_item = 1 + tax.tax_fraction_for_current_item
-			else:
-				tax.grand_total_fraction_for_current_item = \
-					self.get("taxes")[i-1].grand_total_fraction_for_current_item \
-					+ tax.tax_fraction_for_current_item
 
-			cumulated_tax_fraction += tax.tax_fraction_for_current_item
+		# FTP : ERPNext bug? What if the child table Taxes doesn't exist on the Order?  Then skip this block of code.
+		if hasattr(self, "taxes") and self.get("taxes"):
+			for i, tax in enumerate(self.get("taxes")):
+				tax.tax_fraction_for_current_item = self.get_current_tax_fraction(tax)
+				if i==0:
+					tax.grand_total_fraction_for_current_item = 1 + tax.tax_fraction_for_current_item
+				else:
+					tax.grand_total_fraction_for_current_item = \
+						self.get("taxes")[i-1].grand_total_fraction_for_current_item \
+						+ tax.tax_fraction_for_current_item
+
+				cumulated_tax_fraction += tax.tax_fraction_for_current_item
 
 		self.paid_amount_after_tax = flt(self.paid_amount/(1+cumulated_tax_fraction))
 
