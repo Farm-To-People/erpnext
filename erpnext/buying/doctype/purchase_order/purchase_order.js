@@ -56,14 +56,15 @@ frappe.ui.form.on("Purchase Order", {
 	},
 
 	refresh: function(frm) {
-		frm.trigger('get_materials_from_supplier');
+		frm.trigger('get_materials_from_supplier');  // Datahenge: This is the Standard ERPNext function, not the Farm to People function.
 
 		/* FTP: Hide the standard Submit Button: */
-		$('.primary-action').prop('hidden', true);
+		// $('.primary-action').prop('hidden', true);
 
 		if (frm.doc.docstatus == 0) {
 
 			// Document is in Draft.  Need to create first custom Submit button:
+			/*
 			frm.page.add_action_item(__('Submit'), function() {
 				frappe.call({
 					method: "submit",
@@ -76,19 +77,21 @@ frappe.ui.form.on("Purchase Order", {
 					}
 				});
 			});
+			*/
 
 			// Custom Submit button #2
-			frm.page.add_action_item(__('Email & Submit'), function() {
-				new frappe.views.CommunicationComposer({
-					doc: frm.doc,
-					frm: frm,
-					subject: __(frm.meta.name) + ': ' + frm.docname,
-					recipients: frm.doc.email || frm.doc.email_id || frm.doc.contact_email,
-					attach_document_print: true,
-					message: "This is the message",
-					real_name: frm.doc.real_name || frm.doc.contact_display || frm.doc.contact_name
+			frm.add_custom_button(__('Email & Submit'),
+				function() {
+					new frappe.views.CommunicationComposer({
+						doc: frm.doc,
+						frm: frm,
+						subject: __(frm.meta.name) + ': ' + frm.docname,
+						recipients: frm.doc.email || frm.doc.email_id || frm.doc.contact_email,
+						attach_document_print: true,
+						message: "This is the message",
+						real_name: frm.doc.real_name || frm.doc.contact_display || frm.doc.contact_name
+					});
 				});
-			});
 
 			if (frm.doc.supplier) {
 				/* FTP: Add 'Supplier' to 'Get Items From'
@@ -125,7 +128,9 @@ frappe.ui.form.on("Purchase Order", {
 				}, __("Get Items From"));
 
 				// FTP: Add lines based on Daily Order's where this is the default Supplier of the Item.
-				frm.add_custom_button(__('Daily Orders'), () => frm.create_lines_from_daily_orders(frm), __("Get Items From"));
+				frm.add_custom_button(__('Daily Orders'), 
+				                      () => frm.trigger('create_lines_from_daily_orders'),
+									  __("Get Items From"));
 			}
 		}  // end of if docstatus == 0
 
@@ -153,8 +158,9 @@ frappe.ui.form.on("Purchase Order", {
 
 	get_materials_from_supplier: function(frm) {
 		/*
-			DH: This is an OOTB function, used as part of raw material subcontracting with a Supplier.
-				Not the same thing as FTP's function that gets Items with a default Supplier.
+			Datahenge: WARNING, the code below is an Out-Of-The-Box function. 
+			           It's used as part of Raw Material subcontracting with a Supplier.
+				       It is --not-- the same as FTP's function that gets all Item Codes who have a default Supplier.
 		*/
 		let po_details = [];
 
@@ -185,19 +191,59 @@ frappe.ui.form.on("Purchase Order", {
 	},
 
 	create_lines_from_daily_orders: function(frm) {
-		
-		console.log("foo");
-		frappe.msgprint("foo bar baz");
-		let po_details = [];
 
-		if (frm.doc.supplied_items && (frm.doc.per_received == 100 || frm.doc.status === 'Closed')) {
-			frm.doc.supplied_items.forEach(d => {
-				if (d.total_supplied_qty && d.total_supplied_qty != d.consumed_qty) {
-					po_details.push(d.name)
+		// First, open a Dialog Box with a date range.
+		let me = this;
+		let mydialog = new frappe.ui.Dialog({
+			title: __('Add PO lines based on Daily Orders'),
+			fields: [
+				{
+					"fieldname": "delivery_date_from",
+					"label" : __("Date From"),
+					"fieldtype": "Date",
+					"reqd": 1,
+				},
+				{
+					"fieldname": "delivery_date_to",
+					"label" : __("Date To"),
+					"fieldtype": "Date",
+					"reqd": 1,
 				}
-			});
-		}
+			],
+			primary_action: function() {
+				let dialog_args = mydialog.get_values();
 
+				frappe.call({
+					method: "erpnext.buying.doctype.purchase_order.purchase_order.get_purchase_lines_based_on_sales",
+					args: {
+						delivery_date_from: dialog_args.delivery_date_from,
+						delivery_date_to: dialog_args.delivery_date_to
+					},
+					callback: function(r) {
+						if (r.message) {
+							let number_of_rows = r.message.length;
+							r.message.forEach(row => {
+								// console.log(row);
+								// Create a new Purchase Order Line:
+								let new_order_line = frm.add_child("items");
+								new_order_line.item_code = row['item_code'];
+								new_order_line.item_name = row['item_name'];
+								new_order_line.uom = row['uom'];
+								new_order_line.qty = row['quantity'];
+								new_order_line.conversion_factor = 1;
+								new_order_line.schedule_date = frm.doc.schedule_date;
+							});
+							
+							frm.refresh_fields("items");  // Important to refresh that portion of the page!
+							frm.save();
+							frappe.msgprint(__("Added {0} new lines to the Purchase Order.", [number_of_rows]));
+							mydialog.hide();						
+						}
+					}
+				});
+			}
+		});
+		mydialog.show();
 	}
 
 });

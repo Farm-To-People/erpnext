@@ -429,7 +429,7 @@ def close_or_unclose_purchase_orders(names, status):
 					po.update_status("Draft")
 			po.update_blanket_order()
 
-	frappe.local.message_log = []
+	frappe.local.message_log = []  # pylint: disable=assigning-non-slot
 
 def set_missing_values(source, target):
 	target.ignore_pricing_rule = 1
@@ -691,11 +691,13 @@ def add_items_in_ste(ste_doc, row, qty, po_details, batch_no=None):
 		'serial_no': '\n'.join(row.serial_no) if row.serial_no else ''
 	})
 
+# Farm To People:
 
 @frappe.whitelist()
 def get_suppliers_default_items(supplier_id):
 	"""
-	Datahenge: Used by JS when filling-up a Purchase Order with 1 line for every Item a supplier provides.
+	Used by JavaScript when adding lines to a Purchase Order.
+	One line for every Item's default supplier.
 	"""
 	from erpnext.stock.get_item_details import get_conversion_factor
 
@@ -720,3 +722,43 @@ def get_suppliers_default_items(supplier_id):
 
 		result.append(item_data)
 	return result
+
+
+@frappe.whitelist()
+def get_purchase_lines_based_on_sales(delivery_date_from, delivery_date_to):
+	"""
+	Given a date range, find all Daily Orders, aggregate by Item Code, and return a List of Dictionary.
+	"""
+
+	query = """ SELECT
+		 OrderLine.item_code			AS item_code
+		,tabItem.item_name
+		,OrderLine.uom_sales			AS uom
+		,SUM(OrderLine.qty_sales_unit)	AS quantity
+
+	FROM 	
+		`tabDaily Order Item`	AS OrderLine
+
+	INNER JOIN
+		tabItem
+	ON
+		tabItem.name = OrderLine.item_code
+	AND tabItem.item_type not in ('Farm Box')
+
+	INNER JOIN
+		`tabDaily Order`	AS OrderHeader
+	ON
+		OrderHeader.name = OrderLine.parent
+	AND OrderHeader.status_delivery not in ('Cancelled')
+
+	WHERE
+		OrderLine.delivery_date between %(date_from)s and %(date_to)s
+	GROUP BY
+		 OrderLine.item_code
+		,tabItem.item_name
+		,OrderLine.uom_sales
+	"""
+
+	result = frappe.db.sql(query, values={"date_from": delivery_date_from, "date_to": delivery_date_to}, as_dict=True)
+
+	return result  # returns the List of Dictionary to JavaScript caller.

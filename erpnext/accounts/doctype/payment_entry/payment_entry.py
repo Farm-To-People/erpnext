@@ -887,17 +887,19 @@ class PaymentEntry(AccountsController):
 		return self.source_exchange_rate if self.payment_type=="Receive" else self.target_exchange_rate
 
 	def initialize_taxes(self):
-		for tax in self.get("taxes"):
-			validate_taxes_and_charges(tax)
-			validate_inclusive_tax(tax, self)
+		# FTP : ERPNext bug? What if the child table Taxes doesn't exist on the Order?  Then skip this block of code.
+		if hasattr(self, "taxes") and self.get("taxes"):
+			for tax in self.get("taxes"):
+				validate_taxes_and_charges(tax)
+				validate_inclusive_tax(tax, self)
 
-			tax_fields = ["total", "tax_fraction_for_current_item", "grand_total_fraction_for_current_item"]
+				tax_fields = ["total", "tax_fraction_for_current_item", "grand_total_fraction_for_current_item"]
 
-			if tax.charge_type != "Actual":
-				tax_fields.append("tax_amount")
+				if tax.charge_type != "Actual":
+					tax_fields.append("tax_amount")
 
-			for fieldname in tax_fields:
-				tax.set(fieldname, 0.0)
+				for fieldname in tax_fields:
+					tax.set(fieldname, 0.0)
 
 		self.paid_amount_after_tax = self.paid_amount
 
