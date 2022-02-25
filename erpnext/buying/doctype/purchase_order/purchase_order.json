@@ -21,6 +21,7 @@
   "schedule_date",
   "order_confirmation_no",
   "order_confirmation_date",
+  "stock_use_date",
   "amended_from",
   "get_items_section",
   "get_items_from_open_material_requests",
@@ -230,7 +231,6 @@
    "search_index": 1
   },
   {
-   "allow_on_submit": 1,
    "fieldname": "schedule_date",
    "fieldtype": "Date",
    "label": "Required By"
@@ -244,7 +244,6 @@
   },
   {
    "allow_on_submit": 1,
-   "depends_on": "eval:doc.order_confirmation_no",
    "fieldname": "order_confirmation_date",
    "fieldtype": "Date",
    "label": "Order Confirmation Date"
@@ -1149,13 +1148,19 @@
    "fieldname": "email_status",
    "fieldtype": "Data",
    "label": "Email Status"
+  },
+  {
+   "fetch_from": "order_confirmation_date",
+   "fieldname": "stock_use_date",
+   "fieldtype": "Date",
+   "label": "Stock Use Date"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-23 14:23:21.842532",
+ "modified": "2022-02-23 18:31:42.966802",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",

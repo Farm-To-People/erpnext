@@ -6,6 +6,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from temporal import MIN_DATE, MAX_DATE, any_to_date
 
 class ItemPriceDuplicateItem(frappe.ValidationError):
 	pass
@@ -14,20 +15,23 @@ class ItemPriceDuplicateItem(frappe.ValidationError):
 class ItemPrice(Document):
 
 	def before_validate(self):
-		# Farm to People Rule : No Customer-Specific Pricing allows in Item Price table.
+		# Farm to People Rule : No Customer-Specific Pricing allowed in Item Price table.
 		self.customer = None
 
 	def validate(self):
-		# FTP Rules
+		# FTP Rules for choosing which Price:
 		# 1. Allow smart date overlapping (specific ranges > empties)
 		# 2. Specific ranges can never overlap other specific ranges.
-		# 3. Empties can never overlap other empties.
+		# 3. Empties can never overlap other empties.  This is handled by check_duplicates()
 
 		self.validate_item()
 		self.validate_dates()
 		self.update_price_list_details()
 		self.update_item_details()
 		self.check_duplicates()
+		overlaps = self.check_overlaps_ftp()
+		if overlaps[0]:
+			raise ValueError(f"Overlap with related Item Price name '{overlaps[0]}', date range {overlaps[1]} to {overlaps[2]}")
 
 	def validate_item(self):
 		if not frappe.db.exists("Item", self.item_code):
@@ -92,3 +96,25 @@ class ItemPrice(Document):
 		if self.buying and not self.selling:
 			# if only buying then remove customer
 			self.customer = None
+
+	def check_overlaps_ftp(self):
+		# NOTE: Need to use MIN_DATE and MAX_DATE to replace NULL values in the table.
+		filters = { "item_code": self.item_code,
+		            "name": ["!=", self.name]}
+		fields = [ "name", "item_code", "valid_from", "valid_upto" ]
+
+		related_lines = frappe.get_list("Item Price", filters=filters, fields=fields)
+
+		this_valid_from = any_to_date(self.valid_from or MIN_DATE)
+		this_valid_upto = any_to_date(self.valid_upto or MAX_DATE)
+
+		for line in related_lines:
+			related_valid_from = line.valid_from or MIN_DATE
+			related_valid_upto = line.valid_upto or MAX_DATE
+
+			overlaps = this_valid_from <= related_valid_upto and \
+				       this_valid_upto >= related_valid_from
+			if overlaps:
+				return line.name, line.valid_from, line.valid_upto
+
+		return None, None, None
