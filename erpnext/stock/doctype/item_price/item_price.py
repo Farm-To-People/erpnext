@@ -29,9 +29,7 @@ class ItemPrice(Document):
 		self.update_price_list_details()
 		self.update_item_details()
 		self.check_duplicates()
-		overlaps = self.check_overlaps_ftp()
-		if overlaps[0]:
-			raise ValueError(f"Overlap with related Item Price name '{overlaps[0]}', date range {overlaps[1]} to {overlaps[2]}")
+		self.check_overlaps_ftp()
 
 	def validate_item(self):
 		if not frappe.db.exists("Item", self.item_code):
@@ -98,12 +96,23 @@ class ItemPrice(Document):
 			self.customer = None
 
 	def check_overlaps_ftp(self):
+		overlapping_prices = self.get_overlapping_prices_ftp()
+		if overlapping_prices[0]:
+			raise ValueError(f"Overlap with related Item Price name '{overlapping_prices[0]}'<br>Date range: {overlapping_prices[1]} to {overlapping_prices[2]}")
+
+	def get_overlapping_prices_ftp(self):
 		# NOTE: Need to use MIN_DATE and MAX_DATE to replace NULL values in the table.
 		filters = { "item_code": self.item_code,
-		            "name": ["!=", self.name]}
-		fields = [ "name", "item_code", "valid_from", "valid_upto" ]
+		            "name": ["!=", self.name]
+		}
 
+		if self.customer:
+			filters['customer'] = self.customer
+
+		fields = [ "name", "item_code", "valid_from", "valid_upto" ]
 		related_lines = frappe.get_list("Item Price", filters=filters, fields=fields)
+
+		# print(related_lines)
 
 		this_valid_from = any_to_date(self.valid_from or MIN_DATE)
 		this_valid_upto = any_to_date(self.valid_upto or MAX_DATE)

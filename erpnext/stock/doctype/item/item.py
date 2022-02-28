@@ -3,9 +3,11 @@
 
 import itertools
 import json
-import erpnext
-import frappe
 import copy
+
+import frappe
+import erpnext
+
 from erpnext.controllers.item_variant import (ItemVariantExistsError,
 		copy_attributes_to_variant, get_variant, make_variant_item_code, validate_item_variant_attributes)
 from erpnext.setup.doctype.item_group.item_group import (get_parent_item_groups, invalidate_cache_for)
@@ -88,6 +90,10 @@ class Item(WebsiteGenerator):
 
 	def validate(self):
 		super(Item, self).validate()
+
+		# FTP : Do not allow pipes (|) in the Item Codes.  Pipes are used as key separators in Redis Inventory database.
+		if '|' in self.item_code:
+			raise Exception("The pipe character '|' is forbidden anywhere in the 'item_code' DocField.")
 
 		if not self.item_name:
 			self.item_name = self.item_code
