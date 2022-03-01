@@ -246,6 +246,15 @@ frappe.ui.form.on("Purchase Order", {
 		mydialog.show();
 	}
 
+
+	,order_confirmation_date: function(frm) {
+		// Farm To People: Update the "Stock Use Date" whenever the Order Confirmation Date is updated.
+		frappe.db.get_single_value("Buying Settings", "stock_use_days_offset").then(val => {
+			let new_stock_use_date = frappe.datetime.add_days(frm.doc.order_confirmation_date, val);
+			frm.set_value("stock_use_date", new_stock_use_date );
+		})
+	}
+
 });
 
 frappe.ui.form.on("Purchase Order Item", {

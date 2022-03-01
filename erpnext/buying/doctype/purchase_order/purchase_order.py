@@ -2,6 +2,8 @@
 # License: GNU General Public License v3. See license.txt
 
 from __future__ import unicode_literals
+from datetime import timedelta
+
 import frappe
 import json
 from frappe.utils import cstr, flt, cint
@@ -19,6 +21,8 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category import get_party_tax_withholding_details
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (validate_inter_company_party,
 	update_linked_doc, unlink_inter_company_doc)
+from temporal import any_to_date
+
 
 form_grid_templates = {
 	"items": "templates/form_grid/item_grid.html"
@@ -42,6 +46,14 @@ class PurchaseOrder(BuyingController):
 	def onload(self):
 		supplier_tds = frappe.db.get_value("Supplier", self.supplier, "tax_withholding_category")
 		self.set_onload("supplier_tds", supplier_tds)
+
+	def before_validate(self):
+		if self.order_confirmation_date:
+			if not self.stock_use_date:
+				offset = frappe.db.get_single_value("Buying Settings", "stock_use_days_offset")
+				self.stock_use_date = any_to_date(self.order_confirmation_date) + timedelta(days=offset)
+		else:
+			self.stock_use_date = None
 
 	def validate(self):
 		super(PurchaseOrder, self).validate()

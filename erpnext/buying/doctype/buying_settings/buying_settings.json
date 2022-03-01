@@ -20,7 +20,9 @@
   "subcontract",
   "backflush_raw_materials_of_subcontract_based_on",
   "column_break_11",
-  "over_transfer_allowance"
+  "over_transfer_allowance",
+  "sb_ftp",
+  "stock_use_days_offset"
  ],
  "fields": [
   {
@@ -116,6 +118,18 @@
    "fieldname": "bill_for_rejected_quantity_in_purchase_invoice",
    "fieldtype": "Check",
    "label": "Bill for Rejected Quantity in Purchase Invoice"
+  },
+  {
+   "fieldname": "sb_ftp",
+   "fieldtype": "Section Break",
+   "label": "Farm To People"
+  },
+  {
+   "default": "1",
+   "description": "Number of days added to PO Confirmation Date, to calculate the Stock Use Date.",
+   "fieldname": "stock_use_days_offset",
+   "fieldtype": "Int",
+   "label": "Stock Use Offset (days)"
   }
  ],
  "icon": "fa fa-cog",
@@ -123,7 +137,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2021-06-24 10:38:28.934525",
+ "modified": "2022-02-28 15:48:08.773349",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Buying Settings",
