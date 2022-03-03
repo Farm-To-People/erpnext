@@ -246,11 +246,10 @@ frappe.ui.form.on("Purchase Order", {
 		mydialog.show();
 	}
 
-
-	,order_confirmation_date: function(frm) {
+	,schedule_date: function(frm) {
 		// Farm To People: Update the "Stock Use Date" whenever the Order Confirmation Date is updated.
 		frappe.db.get_single_value("Buying Settings", "stock_use_days_offset").then(val => {
-			let new_stock_use_date = frappe.datetime.add_days(frm.doc.order_confirmation_date, val);
+			let new_stock_use_date = frappe.datetime.add_days(frm.doc.schedule_date, val);
 			frm.set_value("stock_use_date", new_stock_use_date );
 		})
 	}
@@ -258,16 +257,30 @@ frappe.ui.form.on("Purchase Order", {
 });
 
 frappe.ui.form.on("Purchase Order Item", {
+
 	schedule_date: function(frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		if (row.schedule_date) {
-			if(!frm.doc.schedule_date) {
-				erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "schedule_date");
-			} else {
-				set_schedule_date(frm);
+
+		/*
+			Farm To People: Adding a means of prioritizing Order Header's schedule_date, over Lines.
+		*/
+		frappe.db.get_single_value("Buying Settings", "use_header_required_by").then(val => {
+
+			if (val == 1) {
+				return;
 			}
-		}
-	}
+
+			var row = locals[cdt][cdn];
+			if (row.schedule_date) {
+				if(!frm.doc.schedule_date) {
+					erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "schedule_date");
+				} else {
+					set_schedule_date(frm);
+				}
+			}
+		});
+
+	} // end schedule_date
+
 });
 
 erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend({

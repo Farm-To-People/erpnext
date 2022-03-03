@@ -48,10 +48,11 @@ class PurchaseOrder(BuyingController):
 		self.set_onload("supplier_tds", supplier_tds)
 
 	def before_validate(self):
-		if self.order_confirmation_date:
+		# Farm To People:  Ensure that Stock Use Date is related to the Required By Date (schedule_date)
+		if self.schedule_date:
 			if not self.stock_use_date:
 				offset = frappe.db.get_single_value("Buying Settings", "stock_use_days_offset")
-				self.stock_use_date = any_to_date(self.order_confirmation_date) + timedelta(days=offset)
+				self.stock_use_date = any_to_date(self.schedule_date) + timedelta(days=offset)
 		else:
 			self.stock_use_date = None
 
@@ -310,7 +311,7 @@ class PurchaseOrder(BuyingController):
 
 	def on_update(self):
 		"""
-		Farm To People:  After the PO is updated, we probably need to refresh Redis Inventory Quantities.
+		Farm To People:  After the PO is updated, refresh the Redis Inventory Quantities.
 		"""
 		from ftp.ftp_invent import repopulate_redis_for_item
 
@@ -332,7 +333,7 @@ class PurchaseOrder(BuyingController):
 					print(f"(2 Change Detected: PO Line stock quantity) : {line_orig.stock_qty} {line_orig.stock_uom} --> {purchase_line.stock_qty}")
 					repopulate_redis_for_item(purchase_line.item_code)
 
-		# Brian: For now just update whenever the PO is touched.  There are so many ways we'd need to detect.
+		# Brian: For now just update whenever the PO is touched.  Otherwise, so many data-modification scenarios we'd have to detect.
 		method1()
 
 	def update_status_updater(self):

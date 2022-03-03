@@ -15,16 +15,20 @@
   "supplier_name",
   "apply_tds",
   "tax_withholding_category",
-  "column_break1",
-  "company",
   "transaction_date",
+  "column_break1",
+  "email_status",
+  "company",
   "schedule_date",
-  "order_confirmation_no",
-  "order_confirmation_date",
   "stock_use_date",
+  "cb3",
+  "order_confirmation_date",
+  "order_confirmation_no",
   "amended_from",
   "get_items_section",
+  "items_section",
   "get_items_from_open_material_requests",
+  "items",
   "drop_ship",
   "customer",
   "customer_name",
@@ -61,8 +65,6 @@
   "scan_barcode",
   "items_col_break",
   "set_warehouse",
-  "items_section",
-  "items",
   "sb_last_purchase",
   "total_qty",
   "base_total",
@@ -140,8 +142,7 @@
   "party_account_currency",
   "is_internal_supplier",
   "represents_company",
-  "inter_company_order_reference",
-  "email_status"
+  "inter_company_order_reference"
  ],
  "fields": [
   {
@@ -166,7 +167,7 @@
    "no_copy": 1,
    "oldfieldname": "naming_series",
    "oldfieldtype": "Select",
-   "options": "PO-.YYYY.-",
+   "options": "PO-",
    "print_hide": 1,
    "reqd": 1,
    "set_only_once": 1
@@ -203,7 +204,6 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
-   "in_standard_filter": 1,
    "label": "Company",
    "oldfieldname": "company",
    "oldfieldtype": "Link",
@@ -223,16 +223,18 @@
    "default": "Today",
    "fieldname": "transaction_date",
    "fieldtype": "Date",
-   "in_list_view": 1,
-   "label": "Date",
+   "label": "Creation Date",
    "oldfieldname": "transaction_date",
    "oldfieldtype": "Date",
    "reqd": 1,
    "search_index": 1
   },
   {
+   "bold": 1,
    "fieldname": "schedule_date",
    "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Required By"
   },
   {
@@ -244,6 +246,7 @@
   },
   {
    "allow_on_submit": 1,
+   "depends_on": "eval:doc.docstatus===1",
    "fieldname": "order_confirmation_date",
    "fieldtype": "Date",
    "label": "Order Confirmation Date"
@@ -442,6 +445,7 @@
   {
    "fieldname": "sec_warehouse",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Subcontracting"
   },
   {
@@ -460,7 +464,6 @@
    "default": "No",
    "fieldname": "is_subcontracted",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
    "label": "Supply Raw Materials",
    "options": "No\nYes",
    "print_hide": 1
@@ -1135,7 +1138,9 @@
    "default": "0",
    "fieldname": "apply_tds",
    "fieldtype": "Check",
-   "label": "Apply Tax Withholding Amount"
+   "hidden": 1,
+   "label": "Apply Tax Withholding Amount",
+   "read_only": 1
   },
   {
    "depends_on": "eval: doc.apply_tds",
@@ -1145,22 +1150,32 @@
    "options": "Tax Withholding Category"
   },
   {
+   "allow_on_submit": 1,
+   "bold": 1,
+   "default": "Not Sent",
    "fieldname": "email_status",
-   "fieldtype": "Data",
-   "label": "Email Status"
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Email Status",
+   "options": "Not Sent\nSent"
   },
   {
    "fetch_from": "order_confirmation_date",
    "fieldname": "stock_use_date",
    "fieldtype": "Date",
    "label": "Stock Use Date"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-02-23 18:31:42.966802",
+ "modified": "2022-03-02 12:35:45.755811",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
