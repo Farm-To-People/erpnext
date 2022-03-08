@@ -81,17 +81,23 @@ frappe.ui.form.on("Purchase Order", {
 
 			// Custom Submit button #2
 			frm.add_custom_button(__('Email & Submit'),
+
 				function() {
-					new frappe.views.CommunicationComposer({
-						doc: frm.doc,
-						frm: frm,
-						subject: __(frm.meta.name) + ': ' + frm.docname,
-						recipients: frm.doc.email || frm.doc.email_id || frm.doc.contact_email,
-						attach_document_print: true,
-						message: "This is the message",
-						real_name: frm.doc.real_name || frm.doc.contact_display || frm.doc.contact_name
+					frappe.db.get_value("Supplier", {"name": frm.doc.supplier}, "emails_for_purchase_order").then(val => {
+
+						let recipients = val.message.emails_for_purchase_order;
+						new frappe.views.CommunicationComposer({
+							doc: frm.doc,
+							frm: frm,
+							subject: __(frm.meta.name) + ': ' + frm.docname,
+							recipients: recipients,
+							attach_document_print: true,
+							message: "Purchase Order from Farm To People:",
+							real_name: frm.doc.real_name || frm.doc.contact_display || frm.doc.contact_name
+						});
 					});
-				});
+				}
+			);
 
 			if (frm.doc.supplier) {
 				/* FTP: Add 'Supplier' to 'Get Items From'
@@ -161,6 +167,7 @@ frappe.ui.form.on("Purchase Order", {
 			Datahenge: WARNING, the code below is an Out-Of-The-Box function. 
 			           It's used as part of Raw Material subcontracting with a Supplier.
 				       It is --not-- the same as FTP's function that gets all Item Codes who have a default Supplier.
+					   See instead: get_suppliers_default_items()
 		*/
 		let po_details = [];
 
@@ -216,6 +223,7 @@ frappe.ui.form.on("Purchase Order", {
 				frappe.call({
 					method: "erpnext.buying.doctype.purchase_order.purchase_order.get_purchase_lines_based_on_sales",
 					args: {
+						supplier_id: frm.doc.supplier,
 						delivery_date_from: dialog_args.delivery_date_from,
 						delivery_date_to: dialog_args.delivery_date_to
 					},
@@ -235,13 +243,14 @@ frappe.ui.form.on("Purchase Order", {
 							});
 							
 							frm.refresh_fields("items");  // Important to refresh that portion of the page!
-							frm.save();
+							// frm.save();  // No point in saving, because validation will fail due to Missing Qty/Rate.
 							frappe.msgprint(__("Added {0} new lines to the Purchase Order.", [number_of_rows]));
 							mydialog.hide();						
 						}
 					}
 				});
-			}
+			},
+			primary_action_label: __('Add')
 		});
 		mydialog.show();
 	}
@@ -330,7 +339,8 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 							frm: this.frm,
 							child_docname: "items",
 							child_doctype: "Purchase Order Detail",
-							cannot_add_row: false,
+							cannot_add_row: true,  // Farm To People request
+							cannot_delete_row: true  // Farm To People request
 						})
 					});
 				}

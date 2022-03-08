@@ -649,7 +649,7 @@ def make_inter_company_sales_order(source_name, target_doc=None):
 @frappe.whitelist()
 def get_materials_from_supplier(purchase_order, po_details):
 	"""
-	DH: This function is used as part of raw material subcontracting with a Supplier.
+	DH: This vanilla ERPNext function is used as part of raw material subcontracting with a Supplier.
 	"""
 	if isinstance(po_details, str):
 		po_details = json.loads(po_details)
@@ -738,7 +738,7 @@ def get_suppliers_default_items(supplier_id):
 
 
 @frappe.whitelist()
-def get_purchase_lines_based_on_sales(delivery_date_from, delivery_date_to):
+def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_date_to):
 	"""
 	Given a date range, find all Daily Orders, aggregate by Item Code, and return a List of Dictionary.
 	"""
@@ -764,6 +764,13 @@ def get_purchase_lines_based_on_sales(delivery_date_from, delivery_date_to):
 		OrderHeader.name = OrderLine.parent
 	AND OrderHeader.status_delivery not in ('Cancelled')
 
+	INNER JOIN
+		`tabItem Default`	AS ItemDefaults
+	ON
+		ItemDefaults.parent = tabItem.item_code
+	AND ItemDefaults.default_supplier = %(default_supplier_id)s
+	AND ItemDefaults.company = 'Farm To People'
+
 	WHERE
 		OrderLine.delivery_date between %(date_from)s and %(date_to)s
 	GROUP BY
@@ -772,6 +779,8 @@ def get_purchase_lines_based_on_sales(delivery_date_from, delivery_date_to):
 		,OrderLine.uom_sales
 	"""
 
-	result = frappe.db.sql(query, values={"date_from": delivery_date_from, "date_to": delivery_date_to}, as_dict=True)
+	result = frappe.db.sql(query, values={"default_supplier_id": supplier_id,
+	                                      "date_from": delivery_date_from,
+	                                      "date_to": delivery_date_to}, as_dict=True)
 
 	return result  # returns the List of Dictionary to JavaScript caller.

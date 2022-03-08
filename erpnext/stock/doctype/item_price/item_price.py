@@ -103,6 +103,8 @@ class ItemPrice(Document):
 	def get_overlapping_prices_ftp(self):
 		# NOTE: Need to use MIN_DATE and MAX_DATE to replace NULL values in the table.
 		filters = { "item_code": self.item_code,
+		            "selling": self.selling,
+					"buying": self.buying,
 		            "name": ["!=", self.name]
 		}
 

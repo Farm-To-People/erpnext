@@ -449,6 +449,7 @@ erpnext.utils.select_alternate_items = function(opts) {
 erpnext.utils.update_child_items = function(opts) {
 	const frm = opts.frm;
 	const cannot_add_row = (typeof opts.cannot_add_row === 'undefined') ? true : opts.cannot_add_row;
+	const cannot_delete_row = (typeof opts.cannot_delete_row === 'undefined') ? true : opts.cannot_delete_row;
 	const child_docname = (typeof opts.cannot_add_row === 'undefined') ? "items" : opts.child_docname;
 	const child_meta = frappe.get_meta(`${frm.doc.doctype} Item`);
 	const get_precision = (fieldname) => child_meta.fields.find(f => f.fieldname == fieldname).precision;
@@ -538,6 +539,7 @@ erpnext.utils.update_child_items = function(opts) {
 				fieldtype: "Table",
 				label: "Items",
 				cannot_add_rows: cannot_add_row,
+				cannot_delete_rows: cannot_delete_row,		// Farm To People request.
 				in_place_edit: false,
 				reqd: 1,
 				data: this.data,

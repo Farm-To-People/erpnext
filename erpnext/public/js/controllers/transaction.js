@@ -1147,7 +1147,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 
 		if(!this.in_apply_price_list) {
-			this.apply_price_list(null, reset_plc_conversion=true);
+			this.apply_price_list(null, true);
 		}
 	},
 

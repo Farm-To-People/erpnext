@@ -676,7 +676,7 @@ class BuyingController(StockController, Subcontracting):
 
 		if self.schedule_date:
 			for d in self.get('items'):
-				
+			
 				# Farm To People: The schedule_date (Required By Date) of the Purchase Order should take priority over the Lines.
 				if update_header_schedule_date:
 					if not d.schedule_date:
@@ -688,7 +688,7 @@ class BuyingController(StockController, Subcontracting):
 
 				if (d.schedule_date and self.transaction_date and
 					getdate(d.schedule_date) < getdate(self.transaction_date)):
-					frappe.throw(_("Row #{0}: Reqd by Date cannot be before Transaction Date").format(d.idx))
+					frappe.throw(_("Row #{0}: Required By date cannot be earlier than order's Creation Date").format(d.idx))
 		else:
 			frappe.throw(_("Please enter Reqd by Date"))
 

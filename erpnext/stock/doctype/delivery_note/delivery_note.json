@@ -146,7 +146,8 @@
   "commission_rate",
   "total_commission",
   "section_break1",
-  "sales_team"
+  "sales_team",
+  "daily_order"
  ],
  "fields": [
   {
@@ -1282,13 +1283,19 @@
    "fieldname": "disable_rounded_total",
    "fieldtype": "Check",
    "label": "Disable Rounded Total"
+  },
+  {
+   "fieldname": "daily_order",
+   "fieldtype": "Link",
+   "label": "Daily Order",
+   "options": "Daily Order"
   }
  ],
  "icon": "fa fa-truck",
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-06-11 19:27:30.901112",
+ "modified": "2022-03-04 16:20:38.960341",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",
