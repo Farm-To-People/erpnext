@@ -158,6 +158,9 @@ class TransactionDeletionRecord(Document):
 		frappe.db.sql("""update tabSeries set current = %s where name=%s""", (last, prefix))
 
 	def delete_version_log(self, doctype, company_fieldname):
+		"""
+		Datahenge:  Need to find out who/how this is called.
+		"""
 		frappe.db.sql("""delete from `tabVersion` where ref_doctype=%s and docname in
 			(select name from `tab{0}` where `{1}`=%s)""".format(doctype,
 				company_fieldname), (doctype, self.company))

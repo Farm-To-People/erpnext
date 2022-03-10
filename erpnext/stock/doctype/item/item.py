@@ -33,7 +33,7 @@ class StockExistsForTemplate(frappe.ValidationError):
 class InvalidBarcode(frappe.ValidationError):
 	pass
 
-# Seriously...it inherits WebSiteGenerator?
+# Datahenge: Seriously...it inherits WebSiteGenerator?
 class Item(WebsiteGenerator):
 	website = frappe._dict(
 		page_title_field="item_name",
@@ -73,9 +73,12 @@ class Item(WebsiteGenerator):
 	def before_insert(self):
 		if not self.description:
 			self.description = self.item_name
-		# Datahenge:  Explicit is Better Than Implicit.
+
+		# Datahenge:  Explicit is Better Than Implicit.  So we're always going to set Valuation Method on Items.
 		if not self.valuation_method:
 			self.valuation_method = frappe.db.get_single_value("Stock Settings", "valuation_method")
+		if self.item_type == 'Farm Box':
+			self.farmbox_can_customize = 1
 
 	def after_insert(self):
 		'''set opening stock and item price'''
@@ -91,7 +94,7 @@ class Item(WebsiteGenerator):
 	def validate(self):
 		super(Item, self).validate()
 
-		# FTP : Do not allow pipes (|) in the Item Codes.  Pipes are used as key separators in Redis Inventory database.
+		# FTP:  Do not allow pipes (|) in the Item Codes.  Pipes are used as key separators in Redis Inventory database.
 		if '|' in self.item_code:
 			raise Exception("The pipe character '|' is forbidden anywhere in the 'item_code' DocField.")
 
