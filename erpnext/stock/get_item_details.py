@@ -785,13 +785,19 @@ def get_price_list_rate_for(args, item_code):
 			"batch_no": args.get('batch_no')
 	}
 
+	# Datahenge: This is a pretty huge bug fix.  What happens when you have a Price List Rate,
+	#            but the 'check_packing_list()' call fails?  In vanilla ERPNext, you get no results,
+	#            because 'item_price_data' is never populated.
 	item_price_data = 0
 	price_list_rate = get_item_price(item_price_args, item_code)
 	if price_list_rate:
 		desired_qty = args.get("qty")
 		if desired_qty and check_packing_list(price_list_rate[0][0], desired_qty, item_code):
 			item_price_data = price_list_rate
-	else:
+		else:
+			price_list_rate = None    # Datahenge: BUG FIX
+
+	if not price_list_rate:  # Datahenge: BUG FIX
 		for field in ["customer", "supplier"]:
 			del item_price_args[field]
 
