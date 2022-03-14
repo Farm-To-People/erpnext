@@ -44,6 +44,8 @@
   "sb_barcodes",
   "barcodes",
   "inventory_section",
+  "segregation",
+  "packing_sort_code",
   "shelf_life_in_days",
   "end_of_life",
   "default_material_request_type",
@@ -91,7 +93,6 @@
   "column_break_59",
   "customs_tariff_number",
   "sales_details",
-  "segregation",
   "sales_uom",
   "is_sales_item",
   "sales_uom_website",
@@ -1181,6 +1182,12 @@
    "fieldname": "farmbox_can_customize",
    "fieldtype": "Check",
    "label": "Farmbox Can Be Customized"
+  },
+  {
+   "description": "Determines where the Item prints on a Packing Slip within its segregation.",
+   "fieldname": "packing_sort_code",
+   "fieldtype": "Data",
+   "label": "Packing Slip Position"
   }
  ],
  "has_web_view": 1,
@@ -1190,7 +1197,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2022-03-09 14:05:05.843230",
+ "modified": "2022-03-14 15:01:03.986462",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
