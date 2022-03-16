@@ -603,11 +603,17 @@
  "index_web_pages_for_search": 1,
  "links": [
   {
+   "group": "Other",
+   "link_doctype": "Customer Activity Log",
+   "link_fieldname": "customer"
+  },
+  {
+   "group": "Other",
    "link_doctype": "Customer Integrations",
    "link_fieldname": "customer"
   }
  ],
- "modified": "2022-02-01 14:55:49.227642",
+ "modified": "2022-03-15 18:25:23.182431",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
