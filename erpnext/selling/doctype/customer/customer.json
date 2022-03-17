@@ -66,6 +66,8 @@
   "payment_terms",
   "credit_limits",
   "more_info",
+  "dbp_order_quantity",
+  "dbp_login_id",
   "customer_details",
   "column_break_45",
   "market_segment",
@@ -595,6 +597,18 @@
    "fieldname": "packing_notes_ftp",
    "fieldtype": "Small Text",
    "label": "Packing Notes"
+  },
+  {
+   "fieldname": "dbp_order_quantity",
+   "fieldtype": "Int",
+   "label": "Quantity of DBP Orders",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dbp_login_id",
+   "fieldtype": "Data",
+   "label": "DBP Login",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-user",
@@ -613,7 +627,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2022-03-15 18:25:23.182431",
+ "modified": "2022-03-17 16:35:37.155231",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
