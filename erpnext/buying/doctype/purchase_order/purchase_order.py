@@ -313,7 +313,7 @@ class PurchaseOrder(BuyingController):
 		"""
 		Farm To People:  After the PO is updated, refresh the Redis Inventory Quantities.
 		"""
-		from ftp.ftp_invent import repopulate_redis_for_item
+		from ftp.ftp_invent import try_update_redis_inventory
 
 		def method1():
 			# Option 1:  Update every PO line indiscriminately.
@@ -323,7 +323,7 @@ class PurchaseOrder(BuyingController):
 			for item_code in item_codes:
 				is_sales_item = frappe.db.get_value("Item", item_code, "is_sales_item")
 				if is_sales_item:
-					repopulate_redis_for_item(item_code)
+					try_update_redis_inventory(item_code)
 
 		def method2():  # pylint: disable=unused-variable
 			# Option 2: Try to detect changes (stock_qty, new_line, delivery_date, FTP parms)
@@ -331,7 +331,7 @@ class PurchaseOrder(BuyingController):
 				line_orig = self.get_doc_before_save().get("items")[idx]
 				if line_orig.stock_qty != purchase_line.stock_qty:
 					print(f"(2 Change Detected: PO Line stock quantity) : {line_orig.stock_qty} {line_orig.stock_uom} --> {purchase_line.stock_qty}")
-					repopulate_redis_for_item(purchase_line.item_code)
+					try_update_redis_inventory(purchase_line.item_code)
 
 		# Brian: For now just update whenever the PO is touched.  Otherwise, so many data-modification scenarios we'd have to detect.
 		method1()

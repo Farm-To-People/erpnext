@@ -6,6 +6,7 @@ import frappe
 from frappe.utils import flt, nowdate
 import frappe.defaults
 from frappe.model.document import Document
+from ftp.ftp_invent import try_update_redis_inventory
 
 # tabBin: A table for storing On Hand Stock data.
 #
@@ -27,6 +28,7 @@ from frappe.model.document import Document
 #
 # projected_qty = A sum of all the other Quantity Fields.
 #
+
 
 class Bin(Document):
 	def before_save(self):
@@ -81,18 +83,7 @@ class Bin(Document):
 
 		# Datahenge: This seems a fine place to intercept the Standard Code, and update
 		#            the Redis Availability.  The record for tabBin was just updated.
-		# print(f"Updating Redis Availability for Item '{self.item_code}' ...")
-
-		# Option 1: Instantly.
-		# from ftp.ftp_invent import repopulate_redis_for_item
-		# repopulate_redis_for_item(self.item_code)
-
-		# Option 2: Enqueued.
-		frappe.enqueue(
-			method="ftp.ftp_invent.repopulate_redis_for_item",
-			queue='short',
-			item_code=self.item_code
-		)
+		try_update_redis_inventory(self.item_code)  # Update quantities in Redis Inventory database
 
 	def set_projected_qty(self):
 		self.projected_qty = (flt(self.actual_qty) + flt(self.ordered_qty)
