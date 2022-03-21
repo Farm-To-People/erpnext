@@ -504,6 +504,9 @@ def apply_pricing_rule_on_transaction(doc):
 	""".format(conditions = conditions), values, as_dict=1)
 
 	if pricing_rules:
+
+		remove_rules_without_coupons(pricing_rules, doc)
+
 		pricing_rules = filter_pricing_rules_for_qty_amount(doc.total_qty,
 			doc.total, pricing_rules)
 
@@ -544,6 +547,20 @@ def apply_pricing_rule_on_transaction(doc):
 				apply_pricing_rule_for_free_items(doc, item_details.free_item_data)
 				doc.set_missing_values()
 				doc.calculate_taxes_and_totals()
+
+def remove_coupon_dependent_rules(pricing_rules, doc):
+	"""
+	Datahenge: Writing this because no one else has.
+
+	Alters the pricing rules in-place.
+	"""
+	coupon_codes = []
+	# if doc in doc.coupon_code_set
+	for pricing_rule in pricing_rules:
+		if not pricing_rule['coupon_code_based']:
+			continue
+		# Compare document's Coupon Code(s) to the ones required by the Pricing Rule.
+
 
 def remove_free_item(doc):
 	for d in doc.items:
