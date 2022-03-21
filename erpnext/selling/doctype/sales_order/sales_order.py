@@ -44,7 +44,7 @@ class SalesOrder(SellingController):
 		self.validate_serial_no_based_delivery()
 		validate_inter_company_party(self.doctype, self.customer, self.company, self.inter_company_order_reference)
 
-		# Datahenge:  Sales Orders no longer have a singular 'coupon_code'
+		# Datahenge:  At Farm To People, orders do not have a singular 'coupon_code'.  They have many code (child doctype)
 		#if self.coupon_code:
 		#	from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
 		#	validate_coupon_code(self.coupon_code)

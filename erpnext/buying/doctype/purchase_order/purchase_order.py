@@ -309,6 +309,8 @@ class PurchaseOrder(BuyingController):
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_order_reference)
 
+		try_update_redis_inventory(item_code)  # update Redis after Purchase Order has been cancelled.
+
 	def on_update(self):
 		"""
 		Farm To People:  After the PO is updated, refresh the Redis Inventory Quantities.
