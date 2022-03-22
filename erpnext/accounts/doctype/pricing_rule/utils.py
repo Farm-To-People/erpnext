@@ -3,9 +3,13 @@
 
 # For license information, please see license.txt
 
+# Datahenge: Disabling some linting rules, because I don't want to re-write the entire module.
+# pylint: disable=protected-access, consider-using-f-string, multiple-statements, invalid-name
+
 from __future__ import unicode_literals
 
 import copy
+import datetime
 import json
 
 
@@ -352,41 +356,6 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 
 	return rules
 
-
-def filter_pricing_rules_for_coupon_codes(pricing_rules, coupon_codes, delivery_date):
-	"""
-	Farm To People: Remove any Pricing Rules that aren't applicable, due to Coupon Codes.
-	                This should be Standard Functionality, but for Reasons Unknown, is not.
-	"""
-	import datetime
-	from temporal import validate_datatype
-	from ftp.ftp_module.doctype.coupon_code_multi.coupon_code_multi import expand_coupon_multicodes
-
-	validate_datatype('pricing_rules', pricing_rules, list, mandatory=True)
-	validate_datatype('delivery_date', delivery_date, datetime.date, mandatory=True)
-
-	rules = []
-	for rule in pricing_rules:
-		# 1. Allow non-coupon Pricing Rules.
-		if not rule.coupon_code_based:
-			rules.append(rule)
-			continue
-		# 2. If no coupon codes, drop the Pricing Rule.
-		if not coupon_codes:
-			continue
-		# 3. Expand Multi-Codes, and get a unique list of coupons.
-		unique_codes = expand_coupon_multicodes(coupon_codes)
-		# 4. Examine each coupon code
-		for row in unique_codes:
-			doc_coupon_code = frappe.get_doc("Coupon Code", row.coupon_code)
-			if not doc_coupon_code.valid_for_date(delivery_date):
-				continue  # coupon code is not valid for this Delivery Date.
-			if doc_coupon_code.pricing_rule == rule.name:
-				rules.append(rule)
-				break
-	return rules
-
-
 def if_all_rules_same(pricing_rules, fields):
 	all_rules_same = True
 	val = [pricing_rules[0].get(k) for k in fields]
@@ -446,6 +415,7 @@ def get_qty_and_rate_for_other_item(doc, pr_doc, pricing_rules):
 				pricing_rules[0].apply_rule_on_other_items = items
 				return pricing_rules
 
+
 def get_qty_amount_data_for_cumulative(pr_doc, doc, items=[]):
 	sum_qty, sum_amt = [0, 0]
 	doctype = doc.get('parenttype') or doc.doctype
@@ -491,8 +461,13 @@ def get_qty_amount_data_for_cumulative(pr_doc, doc, items=[]):
 
 	return [sum_qty, sum_amt]
 
+
 def apply_pricing_rule_on_transaction(doc):
-	from temporal import any_to_date  # Farm To People
+	"""
+	Called By:  erpnext.controllers.accounts_controller.py
+	"""
+
+	# TODO: Probably need to call this (somehow) via Daily Orders.
 
 	conditions = "apply_on = 'Transaction'"
 
@@ -505,19 +480,10 @@ def apply_pricing_rule_on_transaction(doc):
 
 	if pricing_rules:
 
-		remove_rules_without_coupons(pricing_rules, doc)
+		pricing_rules = remove_coupon_dependent_rules(pricing_rules, doc)  # FTP Coupon Code based Pricing Rules.
 
 		pricing_rules = filter_pricing_rules_for_qty_amount(doc.total_qty,
 			doc.total, pricing_rules)
-
-		# FTP Development CC1
-		if doc.doctype in ['Daily Order', 'Sales Order']:
-			# Remove rules based on Coupon Code matching.
-			pricing_rules = filter_pricing_rules_for_coupon_codes(
-				pricing_rules,
-				doc.coupon_code_set,  # coupon codes will be expanded automatically
-				any_to_date(doc.delivery_date)
-			)
 
 		if not pricing_rules:
 			remove_free_item(doc)
@@ -547,20 +513,6 @@ def apply_pricing_rule_on_transaction(doc):
 				apply_pricing_rule_for_free_items(doc, item_details.free_item_data)
 				doc.set_missing_values()
 				doc.calculate_taxes_and_totals()
-
-def remove_coupon_dependent_rules(pricing_rules, doc):
-	"""
-	Datahenge: Writing this because no one else has.
-
-	Alters the pricing rules in-place.
-	"""
-	coupon_codes = []
-	# if doc in doc.coupon_code_set
-	for pricing_rule in pricing_rules:
-		if not pricing_rule['coupon_code_based']:
-			continue
-		# Compare document's Coupon Code(s) to the ones required by the Pricing Rule.
-
 
 def remove_free_item(doc):
 	for d in doc.items:
@@ -667,3 +619,80 @@ def update_coupon_code_count(coupon_name,transaction_type):
 			if coupon.used>0:
 				coupon.used=coupon.used-1
 				coupon.save(ignore_permissions=True)
+
+
+# Datahenge/FTP Functions below
+
+
+def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_codes, delivery_date):
+	"""
+	Purpose: Given a Pricing Rule, Coupon Codes, and a Delivery Date, is this Price Rule valid?
+	* Datahenge and FTP invention.
+    * This should be Standard Functionality, but For Reasons Unknown, is strangely not.
+	"""
+	frappe.whatis(pricing_rule)
+	frappe.whatis(coupon_codes)
+	frappe.whatis(delivery_date)
+
+	from temporal import validate_datatype
+	from ftp.ftp_module.doctype.coupon_code_multi.coupon_code_multi import expand_coupon_multicodes
+
+	validate_datatype('pricing_rules', pricing_rule, dict, mandatory=True)
+	validate_datatype('delivery_date', delivery_date, datetime.date, mandatory=True)
+
+	if not bool(pricing_rule['coupon_code_based']):
+		raise Exception("Pricing rule is not Coupon Code based.  Function should not be called for this Pricing Rule.")
+
+	# 1. If no coupon codes, the Pricing Rule is inherently invalid.
+	if not coupon_codes:
+		return False
+
+	# Expand Multi-Codes, and get a unique list of coupons.
+	unique_codes = expand_coupon_multicodes(coupon_codes)
+
+	result = False
+	# Examine each coupon code
+	for row in unique_codes:
+		doc_coupon_code = frappe.get_doc("Coupon Code", row.coupon_code)
+		if not doc_coupon_code.valid_for_date(delivery_date):
+			continue  # coupon code is not valid for this Delivery Date, so this Pricing Rule cannot be active.
+		if doc_coupon_code.pricing_rule == pricing_rule.name:
+			result = True
+			break
+	return result
+
+
+def remove_coupon_dependent_rules(pricing_rules, doc, debug=True):
+	"""
+	Datahenge:  Writing this because no one else has done it.  This ensures that Coupon-based Pricing Rules
+	do not alter documents like Delivery Notes, Sales Invoices, Purchase Orders, etc.
+
+	pricing_rules = a Python List of Dictionary.
+	doc = Document
+
+	"""
+	new_rules = []
+	for pricing_rule in pricing_rules:
+
+		# If Pricing Rule is not Coupon Based, then keep it.
+		if not bool(pricing_rule['coupon_code_based']):
+			new_rules.append(pricing_rule)
+			if debug:
+				print(f"Retaining Pricing Rule '{pricing_rule.name}', because it does not require Coupon Codes.")
+			continue
+
+		# For coupon-based Rules, if this isn't a Daily or Sales Order, throw out this Pricing Rule.
+		if doc.doctype not in ['Daily Order', 'Sales Order']:
+			if debug:
+				print(f"Removing pricing rule '{pricing_rule.name}', because it requires Coupon Codes, but this isn't a Daily or Sales Order.")
+			continue
+
+		# Compare document's Coupon Code(s) to the ones required by the Pricing Rule.
+		frappe.whatis("foo bar baz")
+		if is_coupon_based_pricing_rule_valid(pricing_rule, doc.coupon_codes, doc.delivery_date):
+			new_rules.append(pricing_rule)
+		else:
+			if debug:
+				print("Pricing Rule '{pricing_rule.name}' doesn't qualify, given this particular Coupon Code set + Delivery Date.")
+
+	return new_rules
