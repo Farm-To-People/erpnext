@@ -24,13 +24,12 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "UOM",
-   "options": "UOM",
-   "reqd": 1
+   "options": "UOM"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-12-16 05:19:48.894664",
+ "modified": "2022-03-22 19:26:46.873136",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule Item Code",

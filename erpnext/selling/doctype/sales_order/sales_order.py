@@ -177,7 +177,7 @@ class SalesOrder(SellingController):
 
 		update_linked_doc(self.doctype, self.name, self.inter_company_order_reference)
 		# Begin: FTP Coupon Codes #1
-		for coupon_code_link in self.coupon_codes:
+		for coupon_code_link in self.coupon_code_set:
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
 			update_coupon_code_count(coupon_code_link.coupon_code,'used')
 		# End: FTP Coupon Codes #1			
@@ -200,9 +200,10 @@ class SalesOrder(SellingController):
 		self.update_blanket_order()
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_order_reference)
-		if self.coupon_code:
+		if self.coupon_code_set:
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
-			update_coupon_code_count(self.coupon_code,'cancelled')
+			for coupon_code in self.coupon_code_set:
+				update_coupon_code_count(coupon_code, 'cancelled')
 
 	def update_project(self):
 		if frappe.db.get_single_value('Selling Settings', 'sales_update_frequency') != "Each Transaction":

@@ -1217,6 +1217,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 		this.conversion_factor(doc, cdt, cdn, true);
 		this.calculate_stock_uom_rate(doc, cdt, cdn);
+		// console.log("Datahenge: transaction.js, qty field was modified.");
 		this.apply_pricing_rule(item, true);
 	},
 
@@ -1484,7 +1485,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			args: {	args: args, doc: me.frm.doc },
 			callback: function(r) {
 				if (!r.exc && r.message) {
-					me._set_values_for_item_list(r.message);  // This is how the Price gets updated?
+					me._set_values_for_item_list(r.message);  // Takes the response, and writes the values to the page.
 					if(item) me.set_gross_profit(item);
 					if(me.frm.doc.apply_discount_on) me.frm.trigger("apply_discount_on")
 				}
@@ -2265,9 +2266,14 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 	},
 
-	// Datahenge: Replaced by a Child Table 'Coupon Code Set'
-	// Also, seems broken because if 'ignore_pricing_rule' was already set to 1?
-	// This code would --force-- it to become zero.
+	/*
+		Datahenge Note 1: The 'coupon_code' function below is commented-out because FTP requires the option
+		for *multiple* Coupon Codes, per Order.  Thus the single DocField 'coupon_code' is repalced with
+		a Child DocType: 'Coupon Code Set'
+		
+		Datahenge Note 2: The original code seems broken anyway: if the User already set 'ignore_pricing_rule' = 1,
+		the code below would forcibly reset the value to zero.
+	*/
 
 	/*
 	coupon_code: function() {
@@ -2283,7 +2289,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 	_get_coupon_code_list: function(coupon_code_set) {
 		/*
-			Datahenge: Loop through the 'coupon_code_set' child DocType, and create an Array of String.
+			Datahenge: Given a child Document 'coupon_code_set', return an Array of String.
 		*/
 		var coupon_code_list = [];
 		// As always, the symbol '$' = JQuery.  Way to think it through, Dodge.

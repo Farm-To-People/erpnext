@@ -1,6 +1,9 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+# Datahenge: Unfortunate, but prevents a lot of pylint spam
+# pylint: disable=invalid-name
+
 from __future__ import unicode_literals
 
 import frappe
@@ -15,6 +18,8 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from frappe.utils import cint, flt
 from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+from ftp.ftp_invent import try_update_redis_inventory
 
 form_grid_templates = {
 	"items": "templates/form_grid/item_grid.html"
@@ -218,6 +223,8 @@ class DeliveryNote(SellingController):
 		self.update_stock_ledger()
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Order has been cancelled.
 
 	def on_cancel(self):
 		super(DeliveryNote, self).on_cancel()
@@ -237,6 +244,10 @@ class DeliveryNote(SellingController):
 		self.make_gl_entries_on_cancel()
 		self.repost_future_sle_and_gle()
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry', 'Repost Item Valuation')
+
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Order has been cancelled.
+
 
 	def check_credit_limit(self):
 		from erpnext.selling.doctype.customer.customer import check_credit_limit

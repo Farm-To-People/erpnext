@@ -370,6 +370,8 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 	},
 
 	qty: function(doc, cdt, cdn) {
+
+		// console.log("Datahenge: sales_common.js");
 		this._super(doc, cdt, cdn);
 
 		if(in_list(['Delivery Note', 'Sales Invoice'], doc.doctype)) {

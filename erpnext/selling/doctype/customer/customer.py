@@ -142,8 +142,6 @@ class Customer(TransactionBase):
 			# If any Holds modified, update all related orders
 			customer_holds._update_daily_orders(self.name)  # pylint: disable=protected-access
 
-		# TODO: If value of opted_into_promotional_emails() changed, we need to do Mailchimp things.
-
 	def update_customer_groups(self):
 		ignore_doctypes = ["Lead", "Opportunity", "POS Profile", "Tax Rule", "Pricing Rule"]
 		if frappe.flags.customer_group_changed:

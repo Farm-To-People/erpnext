@@ -35,6 +35,9 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		* Purpose: Calculates the Item Prices
 	"""
 
+	# Datahenge: This thread-variable helps my functions understand whether JS or Python originated the call.
+	frappe.local.price_caller = "JS"  # pylint: disable=assigning-non-slot
+
 	# ----------------
 	# Datahenge: VERY IMPORTANT function.
 	# * Appears to be smart-enough to consider From-To dates in Price Lists.
@@ -136,6 +139,8 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		out.rate = args.rate or out.price_list_rate
 		out.amount = flt(args.qty) * flt(out.rate)
 
+	# Should be the end of the line (returning to JavaScript), but reset the variable just in case.
+	frappe.local.price_caller = None  # pylint: disable=assigning-non-slot
 	return out
 
 def update_stock(args, out):

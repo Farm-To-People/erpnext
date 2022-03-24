@@ -181,31 +181,36 @@ class PricingRule(Document):
 @frappe.whitelist()
 def apply_pricing_rule(args, doc=None):
 	"""
-		Arguments:
-			args:	String
-			doc:	String
+		PURPOSE: Given arguments and a Document, return some pricing-related data.
+		MISNOMER: The function's name implies something is "applied".  Not true.  It just returns a dictionary.
 
-		Example of args:
+		ARGUMENTS:
+			args:	String.  Can be transformed into JSON, then a Python Dictionary.
+			doc:	String.  Can be transformed into JSON, then a Dictionary.
 
-		args = {
-			"items": [{"doctype": "", "name": "", "item_code": "", "brand": "", "item_group": ""}, ...],
-			"customer": "something",
-			"customer_group": "something",
-			"territory": "something",
-			"supplier": "something",
-			"supplier_group": "something",
-			"currency": "something",
-			"conversion_rate": "something",
-			"price_list": "something",
-			"plc_conversion_rate": "something",
-			"company": "something",
-			"transaction_date": "something",
-			"campaign": "something",
-			"sales_partner": "something",
-			"ignore_pricing_rule": "something",
-			"doctype": "something",
-			"coupon_codes":  "something"
-		}
+		The "items" portion of args determines how many results you get back.  Regardless of the number of actual "items' in the Document.
+
+		Example of 'args':
+
+			args = {
+				"items": [{"doctype": "", "name": "", "item_code": "", "brand": "", "item_group": ""}, ...],
+				"customer": "something",
+				"customer_group": "something",
+				"territory": "something",
+				"supplier": "something",
+				"supplier_group": "something",
+				"currency": "something",
+				"conversion_rate": "something",
+				"price_list": "something",
+				"plc_conversion_rate": "something",
+				"company": "something",
+				"transaction_date": "something",
+				"campaign": "something",
+				"sales_partner": "something",
+				"ignore_pricing_rule": "something",
+				"doctype": "something",
+				"coupon_codes":  "something"
+			}
 	"""
 
 	# ---------------
@@ -213,10 +218,10 @@ def apply_pricing_rule(args, doc=None):
 	#
 	# There are 2 callers that matter the most to me:
 	#
-	#	1. erpnext/public/js/controllers/transaction.js  (via changing Company, Qty)
+	#	1. erpnext/public/js/controllers/transaction.js  (via changing fields like Company or Qty)
 	#	2. daily_order.js
 	#
-	#	I need 'args' to provide a new piece of information:  Coupon Code Set.
+	#	When used by Daily and Sales Orders, 'args' must contain 1 additional element: 'coupon_codes'
 	#	To accomplish this, I should modify the JS code, and add Coupon Code Set to it's payload.
 	# ---------------
 
@@ -234,10 +239,9 @@ def apply_pricing_rule(args, doc=None):
 
 	if args.get("doctype") == "Material Request": return out
 
-	# Extract the "items" into their own variable.
-	# Sales Order Item, Daily Order Item, etc.
+	# Extract the "items" child Document into their own variable (e.g. Sales Order Item, Daily Order Item)
 	item_list = args.get("items")
-	args.pop("items")  # DH: could have just done this on line above
+	args.pop("items")  # DH: Frappe could have just done this on line above
 
 	set_serial_nos_based_on_fifo = frappe.db.get_single_value("Stock Settings",
 		"automatically_set_serial_nos_based_on_fifo")
@@ -275,7 +279,9 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	"""
 	Arguments:
 		args: A Python Dictionary.
-		doc:  A parent DocType such as Sales Order, Daily Order, Purchase Order.
+		doc:  The datatype of this argument varies.
+		      Might be a Python Dictionary, representing a -parent- Document (e.g. Sales Order, Daily Order, Purchase Order)
+			  Might be an actual Document class.
 
 	Returns:
 		New dictionary 'item_details'
@@ -304,11 +310,12 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		* Argument 'doc' is a Frappe Class.
 		* Quite a lot of 'get_item_details' is building the 'args', prior to arriving here.
 
-	A huge challenge/problem with this function is Inconsistent Argument Types.  What is args?
+	A huge challenge/problem with this function is Inconsistent Argument Types.  What are the contents of 'args'?
 
 	When called from a Sales Order:
 	  * 'args' is a Dictionary of Sales Order, Sales Order Item, Coupon Codes, Price Lists.
 	  * 'doc' is the SalesOrder document.
+
 	"""
 
 	# ----------------
@@ -387,9 +394,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# DH: Confusing way of writing this, but leaving it alone for now:
 	pricing_rules = (get_applied_pricing_rules(args.get('pricing_rules'))
 		if for_validate and args.get("pricing_rules") else get_pricing_rules(args, doc))
-	validate_datatype("pricing_rules", pricing_rules, list)
 
+	validate_datatype("pricing_rules", pricing_rules, list)
 	dprint(f"\nThere are {len(pricing_rules)} Potential Pricing Rules.\n")
+
 	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.
 	if not pricing_rules and args.get("pricing_rules"):
 		dprint("Arguments contain 'pricing_rules' that must be removed from the Order.")
@@ -504,7 +512,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	item_details.has_pricing_rule = 1
 	item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in applied_rules])
 
-	dprint(f"Final Results:\n{item_details}")
+	dprint(f"Returning variable 'item_details' to caller:\n{item_details}")
 	dprint("\n**************** END PRICING************************\n")
 
 	return item_details

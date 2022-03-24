@@ -1,11 +1,14 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+# pylint: disable=invalid-name
+
 from __future__ import unicode_literals
 from datetime import timedelta
 
-import frappe
 import json
+import frappe
+
 from frappe.utils import cstr, flt, cint
 from frappe import msgprint, _
 from frappe.model.mapper import get_mapped_doc
@@ -21,8 +24,9 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category import get_party_tax_withholding_details
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (validate_inter_company_party,
 	update_linked_doc, unlink_inter_company_doc)
-from temporal import any_to_date
 
+from temporal import any_to_date
+from ftp.ftp_invent import try_update_redis_inventory
 
 form_grid_templates = {
 	"items": "templates/form_grid/item_grid.html"
@@ -309,14 +313,13 @@ class PurchaseOrder(BuyingController):
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_order_reference)
 
-		try_update_redis_inventory(item_code)  # update Redis after Purchase Order has been cancelled.
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Order has been cancelled.
 
 	def on_update(self):
 		"""
 		Farm To People:  After the PO is updated, refresh the Redis Inventory Quantities.
 		"""
-		from ftp.ftp_invent import try_update_redis_inventory
-
 		def method1():
 			# Option 1:  Update every PO line indiscriminately.
 			item_codes = list(set([d.item_code for d in self.get("items")]))

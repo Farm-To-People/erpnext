@@ -20,6 +20,17 @@ from erpnext.stock.get_item_details import get_conversion_factor
 from frappe import _, bold
 from frappe.utils import cint, flt, get_link_to_form, getdate, today, fmt_money
 
+# ---- Datahenge ----
+DEBUG_MODE = False
+
+def dprint(msg):
+	if DEBUG_MODE:
+		print(msg)
+
+VALIDATE_SCHEMAS = True
+
+# -------------------
+
 
 class MultiplePricingRuleConflict(frappe.ValidationError):
 	pass
@@ -31,6 +42,12 @@ apply_on_table = {
 }
 
 def get_pricing_rules(args, doc=None):
+	"""
+	Determine a list of Pricing Rules that "might" apply to these conditions.
+
+	What are 'args'?  An indeterminate Dictionary full of "stuff".  It's awful how inconsistent it is.
+	"""
+
 	pricing_rules = []
 	values =  {}
 
@@ -44,7 +61,10 @@ def get_pricing_rules(args, doc=None):
 	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
 
 	if not pricing_rules:
+		dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.")
 		return []
+
+	dprint(f"DH: get_pricing_rules().  Possible rules include {[ each['name'] for each in pricing_rules] }")
 
 	if apply_multiple_pricing_rules(pricing_rules):
 		pricing_rules = sorted_by_priority(pricing_rules, args, doc)
@@ -54,10 +74,14 @@ def get_pricing_rules(args, doc=None):
 			else:
 				rules.append(pricing_rule)
 	else:
+		# No need to apply multiple Pricing Rules.  There can only be One?
+		# TODO: This function below is stripping out rules that should apply to Daily Order Lines.
 		pricing_rule = filter_pricing_rules(args, pricing_rules, doc)
 		if pricing_rule:
 			rules.append(pricing_rule)
 
+	if not rules:
+		dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.")
 	return rules
 
 def sorted_by_priority(pricing_rules, args, doc=None):
@@ -80,6 +104,13 @@ def sorted_by_priority(pricing_rules, args, doc=None):
 	return pricing_rules_list or pricing_rules
 
 def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
+	"""
+	This function is used by Client-side and Server-side for price calculations.
+	"""
+	# Datahenge: This code seems okay for Daily Orders, so far.
+
+	# dprint(f"filter_pricing_rule_based_on_condition.  Potential Pricing Rules: {len(pricing_rules)}")
+
 	filtered_pricing_rules = []
 	if doc:
 		for pricing_rule in pricing_rules:
@@ -94,6 +125,7 @@ def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 	else:
 		filtered_pricing_rules = pricing_rules
 
+	# dprint(f"filter_pricing_rule_based_on_condition.  Result Pricing Rules: {len(pricing_rules)}")
 	return filtered_pricing_rules
 
 def _get_pricing_rules(apply_on, args, values):
@@ -162,6 +194,9 @@ def _get_pricing_rules(apply_on, args, values):
 	return pricing_rules
 
 def apply_multiple_pricing_rules(pricing_rules):
+	"""
+	Datahenge: Returns a boolean True/False if ANY of the pricing_rules passed allows for Multiple Application.
+	"""
 	apply_multiple_rule = [d.apply_multiple_pricing_rules
 		for d in pricing_rules if d.apply_multiple_pricing_rules]
 
@@ -227,9 +262,17 @@ def get_other_conditions(conditions, values, args):
 	return conditions
 
 def filter_pricing_rules(args, pricing_rules, doc=None):
+	"""
+	Datahenge: Given a List 'pricing_rules', which ones apply under the conditions of args + doc?
+
+	Called -only- by JavaScript (to the best of my knowledge)
+	"""
+
+	# frappe.whatis("filter_pricing_rules(). Originator = JavaScript or Daily Order")
+	# validate_args_schema_PY1(doc, args)  # need to ensure that arg contains enough information.
+
 	if not isinstance(pricing_rules, list):
 		pricing_rules = [pricing_rules]
-
 	original_pricing_rule = copy.copy(pricing_rules)
 
 	# filter for qty
@@ -662,7 +705,7 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_codes, delivery_date
 	return result
 
 
-def remove_coupon_dependent_rules(pricing_rules, doc, debug=True):
+def remove_coupon_dependent_rules(pricing_rules, doc, debug=False):
 	"""
 	Datahenge:  Writing this because no one else has done it.  This ensures that Coupon-based Pricing Rules
 	do not alter documents like Delivery Notes, Sales Invoices, Purchase Orders, etc.
@@ -696,3 +739,64 @@ def remove_coupon_dependent_rules(pricing_rules, doc, debug=True):
 				print("Pricing Rule '{pricing_rule.name}' doesn't qualify, given this particular Coupon Code set + Delivery Date.")
 
 	return new_rules
+
+
+"""
+def validate_args_schema_PY1(doc, args):
+
+	from schema import Schema, And, Or, Optional
+	NoneType = type(None)
+
+	print(f"Document: {doc}")
+	print(f"Length of args = {len(args)}")
+
+	if not doc:
+		# I've seen 40 keys with no Document passed.
+		return  # not going to bother validating this scenario just yet.
+
+	if doc.doctype not in ('Daily Order', 'Daily Order Item'):
+		# When called via JavaScript with a SalesOrder, I've seen 34 keys, 36 keys, 70 keys, and 182 keys.
+		# It's driving me crazy how inconsistent the arguments are, for the same exact function.
+		return
+
+	result_schema = Schema({
+		'customer': And(str, len),
+		'customer_group': Or(str, NoneType),
+		'territory': Or(str, NoneType),
+		'currency': And(str, len),
+		'conversion_rate': Or(int, float),
+		'price_list': And(str, len),
+		'price_list_currency': And(str, len),
+		'plc_conversion_rate': Or(int, float),
+		'company': And(str, len),
+		'transaction_date': And(str, len),
+		'ignore_pricing_rule': int,
+		'doctype': And(str,len),
+		'name': And(str, len),
+		Optional('is_return'): int,
+		'update_stock': int,
+		Optional('pos_profile'): str,
+		'coupon_codes': list,
+		'transaction_type': And(str,len),
+		'child_docname': And(str, len),
+		'item_code': And(str, len),
+		'item_group': And(str, len),
+		'qty': Or(int, float),
+		'stock_qty': Or(int, float),
+		'uom': And(str, len),
+		'stock_uom': And(str, len),
+		Optional('parenttype'): And(str, len),
+		Optional('parent'): And(str, len),
+		Optional('pricing_rules'): Or(str, list),
+		'warehouse': And(str, len),
+		'price_list_rate': Or(int, float),
+		'conversion_factor': Or(int, float),
+		Optional('margin_rate_or_amount'): Or(int, float),
+		'brand': Or(NoneType, str),
+		'supplier': Or(NoneType, str),
+		'supplier_group': Or(NoneType, str),
+		'variant_of': Or(NoneType, str)
+		})
+
+	result_schema.validate(args)
+"""
