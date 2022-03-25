@@ -377,6 +377,12 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 		status = False
 		conversion_factor = 1
 
+		# Datahenge: Protect against scenario where UOM is filled-in, but there is no Item.
+		if rule.get("uom") and rule.uom and rule.apply_on != "Item":
+			continue  # Cannot specify a UOM without rules applying to Items
+		if rule.get("uom") and not rule.item_code:
+			continue  # Furthermore, you actually have to specify an Item.
+
 		if rule.get("uom"):
 			conversion_factor = get_conversion_factor(rule.item_code, rule.uom).get("conversion_factor", 1)
 

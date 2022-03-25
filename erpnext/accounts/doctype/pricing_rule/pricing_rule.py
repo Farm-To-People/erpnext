@@ -1,4 +1,5 @@
 """ pricing_rule.py """
+
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 
 # For license information, please see license.txt
@@ -43,6 +44,7 @@ class PricingRule(Document):
 		self.validate_dates()
 		self.validate_condition()
 		self.validate_nth()  # Farm To People
+		self.validate_child_foo()
 
 		if not self.margin_type: self.margin_rate_or_amount = 0.0
 
@@ -144,7 +146,7 @@ class PricingRule(Document):
 
 	def validate_max_discount(self):
 		if self.rate_or_discount == "Discount Percentage" and self.get("items"):
-			for d in self.items:
+			for d in self.items:    # pylint: disable=not-an-iterable
 				max_discount = frappe.get_cached_value("Item", d.item_code, "max_discount")
 				if max_discount and flt(self.discount_percentage) > flt(max_discount):
 					throw(_("Max discount allowed for item: {0} is {1}%").format(d.item_code, max_discount))
@@ -175,6 +177,42 @@ class PricingRule(Document):
 
 		if (self.nth_order_only) and (self.first_n_orders) and (self.nth_order_only > self.first_n_orders):
 			frappe.throw(_("Value of Nth Order Only cannot exceed value of First N Orders."))
+
+	def validate_child_foo(self):
+		"""
+		There are potentially 1 of 3 child tables:
+			* items ( Pricing Rule Item Code )
+			* item_groups ( Pricing Rule Item Group )
+			* brands ( Pricing Rule Item Brand )
+		"""
+
+		# Clear out invalid Child Table data.
+		if self.apply_on == 'Item Code':
+			self.item_groups = None
+			self.brands = None
+		if self.apply_on == 'Item Group':
+			self.items = None
+			self.brands = None
+		if self.apply_on == 'Brand':
+			self.items = None
+			self.item_groups = None
+
+		if hasattr(self, "items") and self.items:
+			rows_with_uom = [ row for row in self.items if row.uom ]  # pylint: disable=not-an-iterable
+			if rows_with_uom:
+				print(rows_with_uom)
+				raise Exception("'UOMs are a bad idea right now' - Shelby & Brian")
+
+		if hasattr(self, "brands") and self.brands:
+			rows_with_uom = [ row for row in self.brands if row.uom ]  # pylint: disable=not-an-iterable
+			if rows_with_uom:
+				raise Exception("UOM is not allowed when Apply On = Brand.")
+
+		if hasattr(self, "item_groups") and self.item_groups:
+			rows_with_uom = [ row for row in self.item_groups if row.uom ]  # pylint: disable=not-an-iterable
+			if rows_with_uom:
+				raise Exception("UOM is not allowed when Apply On = Item Group.")
+
 
 #--------------------------------------------------------------------------------
 
