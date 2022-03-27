@@ -737,7 +737,6 @@ def remove_coupon_dependent_rules(pricing_rules, doc, debug=False):
 			continue
 
 		# Compare document's Coupon Code(s) to the ones required by the Pricing Rule.
-		frappe.whatis("foo bar baz")
 		if is_coupon_based_pricing_rule_valid(pricing_rule, doc.coupon_codes, doc.delivery_date):
 			new_rules.append(pricing_rule)
 		else:

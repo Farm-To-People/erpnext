@@ -27,11 +27,14 @@
   "multi_coupon_codes",
   "uses",
   "valid_from",
-  "maximum_use",
-  "used",
+  "internal_use_only",
   "column_break_11",
   "valid_upto",
+  "sb_usage",
+  "maximum_use",
   "maximum_use_per_customer",
+  "column_break_24",
+  "used",
   "amended_from"
  ],
  "fields": [
@@ -73,9 +76,10 @@
    "options": "Coupon Code Pricing Rule"
   },
   {
+   "description": "The dates below are calculated using the actual date the Customer applies the Coupon Code to their order: <b>not</b> delivery date.",
    "fieldname": "uses",
    "fieldtype": "Section Break",
-   "label": "Validity and Usage"
+   "label": "Validity"
   },
   {
    "fieldname": "valid_from",
@@ -185,10 +189,26 @@
    "fieldname": "sb_custom_behavior",
    "fieldtype": "Section Break",
    "label": "Custom Behaviors"
+  },
+  {
+   "default": "0",
+   "description": "When marked, the website customer cannot use this Coupon Code.  However, employees can.",
+   "fieldname": "internal_use_only",
+   "fieldtype": "Check",
+   "label": "Internal Use Only"
+  },
+  {
+   "fieldname": "sb_usage",
+   "fieldtype": "Section Break",
+   "label": "Usage"
+  },
+  {
+   "fieldname": "column_break_24",
+   "fieldtype": "Column Break"
   }
  ],
  "links": [],
- "modified": "2021-10-11 14:45:44.454507",
+ "modified": "2022-03-25 16:09:26.381107",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",
