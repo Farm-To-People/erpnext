@@ -2,20 +2,25 @@
 # License: GNU General Public License v3. See license.txt
 
 from __future__ import unicode_literals
-import frappe
 import json
+import pathlib
+
+import frappe
 from frappe.model.naming import set_name_by_naming_series
 from frappe import _, msgprint
 import frappe.defaults
 from frappe.utils import flt, cint, cstr, today, get_formatted_email
 from frappe.desk.reportview import build_match_conditions, get_filters_cond
-from erpnext.utilities.transaction_base import TransactionBase
-from erpnext import get_default_company
-from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data # keep this
 from frappe.contacts.address_and_contact import load_address_and_contact, delete_contact_and_address
 from frappe.model.rename_doc import update_linked_doctypes
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils.user import get_users_with_role
+from erpnext.utilities.transaction_base import TransactionBase
+from erpnext import get_default_company
+from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data # keep this
+
+
+AR_SUMMARY_QUERY = None  # Datahenge: Save SQL query in memory, instead of reading from disk each time.
 
 class Customer(TransactionBase):
 	def get_feed(self):
@@ -743,7 +748,6 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if not self.is_anon():
 			send_welcome_to_ftp(self.name)  # Farm to People + Mandrill welcome email via Redis Queue.
 
-
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.
 		super().on_update()
@@ -772,7 +776,6 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		return is_customer_anon(self)
 
-
 	def get_ar_balance_per_gl(self):
 		"""
 		Get a simple AR balance based on General Ledger transactions.
@@ -798,52 +801,18 @@ class Customer(Customer):  # pylint: disable=function-redefined
 							   as_dict=True, debug=debug, explain=debug)
 		return result
 
-	def _get_open_ar_transactions(self, debug=False):
+	def calc_ar_summary_by_type(self, debug=False):
 		"""
-			Get a list of Invoices and Payments that are open.
-
-			Returns:  List of Dictionary.
-			Note: Does not include any Journal Entries that target Accounts Receivable directly.
+		Datahenge: Display a summarized view of the different components that make up Accounts Receivable.
 		"""
-
-		query = """
-		SELECT
-			'Payment Entry' as transaction_type, name, party, payment_type, posting_date, paid_amount, unallocated_amount, reference_no
-		FROM
-			`tabPayment Entry`
-		WHERE
-			party_type = 'Customer'
-		AND unallocated_amount <> 0
-		AND docstatus = 1
-		AND party = %(customer_key)s
-
-		UNION ALL
-
-		SELECT
-			'Invoice' as transaction_type, name, customer, status, posting_date, grand_total, outstanding_amount, ''
-		FROM 
-			`tabSales Invoice`
-		WHERE
-			outstanding_amount <> 0
-		AND docstatus = 1
-		AND customer =  %(customer_key)s
-		"""
-		result = frappe.db.sql(query=query,
-		                       values={"customer_key": self.name},
-							   as_dict=True, debug=debug, explain=debug)
-		return result
-
-	def get_ar_balance_per_transactions(self):
 		from ftp.ftp_module.generics import value_to_currency  # deliberate late import, because it's cross-module
 
-		transactions = self._get_open_ar_transactions()
-		balance = value_to_currency(0.00)
-		for row in transactions:
-			if row['transaction_type'] == 'Payment Entry':
-				balance -= value_to_currency(row['unallocated_amount'])
-			else:
-				balance += value_to_currency(row['unallocated_amount'])
-		return balance
+		query_result = frappe.db.sql(query=AR_SUMMARY_QUERY,
+		                             values={"customer_key": self.name},
+									 as_dict=True, debug=debug, explain=debug)
+		for row in query_result:
+			row['amount'] = value_to_currency(row['amount'])
+		return query_result
 
 	@frappe.whitelist()
 	def show_accounts_receivable_summary(self):
@@ -851,9 +820,11 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		Return a lightly formatted message, showing a Customer's AR Balance.
 		This message does --not-- include a breakdown about Credit Allocations to Daily Orders.
 		"""
-		message = f"Accounts Receivable Summary for Customer: {self.name}\n"
-		message += f"\n\u2022 AR Balance per GL: {self.get_ar_balance_per_gl()}"
-		message += f"\n\u2022 AR Balance per Transactions: {self.get_ar_balance_per_transactions()}"
+		balance_per_gl = self.get_ar_balance_per_gl()
+
+		message = f"<b>Accounts Receivable</b>"
+		message += f"\n{self.customer_name}&nbsp;({self.name})\n"
+		message += ar_summary_to_html(self.calc_ar_summary_by_type(), balance_per_gl)
 		message = message.replace("\n","<br>")
 		return message
 
@@ -936,3 +907,55 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if not address_key:
 			return None
 		return frappe.get_doc("Address", address_key)
+
+
+# Accounts Receivable Summary Query
+def read_ar_summary_query():
+	global AR_SUMMARY_QUERY
+
+	this_path = pathlib.Path(__file__)  # path to this Python module
+	query_path = this_path.parent / 'ar_summary_by_type.sql'
+	if not query_path.exists():
+		raise FileNotFoundError(f"Cannot ready query file '{query_path}'")
+	with open(query_path, encoding="utf-8") as fstream:
+		AR_SUMMARY_QUERY = fstream.readlines()
+	AR_SUMMARY_QUERY = ''.join(AR_SUMMARY_QUERY)
+
+def ar_summary_to_html(data_rows, balance_per_gl):
+	"""
+	Take the query results, and make them into a nice HTML format.
+	"""
+	from ftp.ftp_module.generics import value_to_currency  # deliberate late import, because it's cross-module
+
+	ret = """<head><style>#divheight { height: 0.5rem;} </style></head>
+	    <hr>
+		<table bgcolor="#EFEFEF" class="table table-bordered" width="95%" style="margin-top: 0px;">
+		<tr>
+		  <div id="divheight">
+            <th>Transaction Type</th>
+            <th>Amount</th>
+          </div>
+		</tr>
+	"""
+	grand_total = value_to_currency(0)
+
+	for row in data_rows:
+		ret += f"<tr bgcolor='#FFFFFF'><td> {row['transaction_type']} </td>"
+		ret += f"<td>{row['amount']} </td></tr>"
+		grand_total += row['amount']
+
+	# Add the Grand Total Row
+	ret += "<tr> <td> <b>Total:</b> </td>"
+	ret += f"<td> <b>{grand_total}</b> </td></tr>"
+
+	# Add the Balance according to the General Ledger:
+	ret += "<tr> <td> <b>Total:</b> (per General Ledger)</td>"
+	ret += f"<td> <b>{value_to_currency(balance_per_gl)}</b> </td></tr>"
+	ret += "</table>"
+
+	ret = ret.replace('\n','')  # Very important to ditch the newlines, so they don't become <br>
+	return ret
+
+# Load the SQL query into memory.
+if not AR_SUMMARY_QUERY:
+	read_ar_summary_query()
