@@ -147,6 +147,8 @@ class Customer(TransactionBase):
 			# If any Holds modified, update all related orders
 			customer_holds._update_daily_orders(self.name)  # pylint: disable=protected-access
 
+		self.update_order_shipping_rules()  # if default Shipping Rule modified, update all related Orders.
+
 	def update_customer_groups(self):
 		ignore_doctypes = ["Lead", "Opportunity", "POS Profile", "Tax Rule", "Pricing Rule"]
 		if frappe.flags.customer_group_changed:
@@ -907,6 +909,24 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if not address_key:
 			return None
 		return frappe.get_doc("Address", address_key)
+
+
+	def update_order_shipping_rules(self):
+		"""
+		Useful when the Customer's default Shipping Rule is modified, to update all existing Orders.
+		"""
+		if not self.has_value_changed('default_shipping_rule'):
+			return
+
+		filters = { "status_delivery": ["in", ["Ready","Good Faith", "Skipped", "Paused"]],
+					"customer": self.name,
+					"status_billing": "Not Billed",
+					"status_editing": "Unlocked" }
+		order_names = frappe.get_list("Daily Order", filters=filters, pluck='name')
+		for order_name in order_names:
+			doc_order = frappe.get_doc("Daily Order", order_name)
+			doc_order.set_shipping_rule()
+			doc_order.save()
 
 
 # Accounts Receivable Summary Query

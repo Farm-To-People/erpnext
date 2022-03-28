@@ -14,6 +14,7 @@
   "cb0",
   "default_price_list",
   "payment_terms",
+  "default_shipping_rule",
   "lft",
   "rgt",
   "old_parent",
@@ -133,13 +134,20 @@
    "fieldtype": "Table",
    "label": "Credit Limit",
    "options": "Customer Credit Limit"
+  },
+  {
+   "description": "If set, this overrides the global default Shipping Rule, for all customers who are a member of this Group.",
+   "fieldname": "default_shipping_rule",
+   "fieldtype": "Link",
+   "label": "Default Shipping Rule",
+   "options": "Shipping Rule"
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2021-02-08 17:01:52.162202",
+ "modified": "2022-03-28 15:28:28.692006",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",

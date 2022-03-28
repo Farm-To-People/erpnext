@@ -177,11 +177,28 @@ class ShippingRule(Document):
 			msgprint("\n".join(messages), raise_exception=OverlappingConditionError)
 
 
-def get_default_shipping_rule_id():
+def get_default_shipping_rule_id(customer_key=None):
 	"""
 	Datahenge: Return the ID of the default Shipping Rule.
 	"""
-	filters = { "is_default_rule": 1 }
-	rule = frappe.get_list("Shipping Rule", filters=filters, pluck='name', ignore_permissions=True)
-	return rule[0]  # assuming there is only 1 value
+	if customer_key:
+		query_result = frappe.db.get_values("Customer", {"name": customer_key}, fieldname=["customer_group", "default_shipping_rule"])
+		customer_group, customer_shipping_rule = query_result[0]
 
+		# Customer-specific Shipping Rule
+		if customer_shipping_rule:
+			return customer_shipping_rule
+
+		# Customer Group-specific Shipping Rule
+		customer_group_shipping_rule = frappe.db.get_value("Customer Group", customer_group, "default_shipping_rule")
+		if customer_group_shipping_rule:
+			return customer_group_shipping_rule
+
+	# Otherwise, return the global, default rule:
+	filters = { "is_default_rule": 1 }
+	default_shipping_rule = frappe.get_list("Shipping Rule", filters=filters, pluck='name', ignore_permissions=True)
+	if not default_shipping_rule:
+		raise Exception("Error; system has not been configured with a default Shipping Rule.")
+	default_shipping_rule = default_shipping_rule[0]  # assuming there is only 1 record marked as default.
+
+	return default_shipping_rule

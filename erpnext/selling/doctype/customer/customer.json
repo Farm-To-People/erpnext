@@ -21,6 +21,7 @@
   "has_special_pricing",
   "column_break0",
   "customer_group",
+  "default_shipping_rule",
   "territory",
   "so_required",
   "dn_required",
@@ -609,6 +610,13 @@
    "fieldtype": "Data",
    "label": "DBP Login",
    "read_only": 1
+  },
+  {
+   "description": "If set, this overrides the default Global and Customer Group rule.",
+   "fieldname": "default_shipping_rule",
+   "fieldtype": "Link",
+   "label": "Default Shipping Rule",
+   "options": "Shipping Rule"
   }
  ],
  "icon": "fa fa-user",
@@ -627,7 +635,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2022-03-17 16:35:37.155231",
+ "modified": "2022-03-28 15:32:21.999437",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
