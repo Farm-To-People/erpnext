@@ -68,6 +68,7 @@ class JournalEntry(AccountsController):
 		self.update_invoice_discounting()
 		check_if_stock_and_account_balance_synced(self.posting_date,
 			self.company, self.doctype, self.name)
+		self.reapply_order_credits_ftp()
 
 	def on_cancel(self):
 		from erpnext.accounts.utils import unlink_ref_doc_from_payment_entries
@@ -83,6 +84,7 @@ class JournalEntry(AccountsController):
 		self.unlink_inter_company_jv()
 		self.unlink_asset_adjustment_entry()
 		self.update_invoice_discounting()
+		self.reapply_order_credits_ftp()		# FTP: Reapply order credits if applicable.
 
 	def get_title(self):
 		return self.pay_to_recd_from or self.accounts[0].account
@@ -682,6 +684,28 @@ class JournalEntry(AccountsController):
 
 			d.account_balance = account_balance[d.account]
 			d.party_balance = party_balance[(d.party_type, d.party)]
+
+
+	def reapply_order_credits_ftp(self):
+		"""
+		If this Journal Entry credits the customers Receivables, then update all Open orders.
+		"""
+		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module
+
+		customers_to_recalc = set()
+		receivables_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Receivable", "is_group": 0})
+
+		for journal_line in self.accounts:
+			if journal_line.account == receivables_account and journal_line.party_type == 'Customer':
+				customers_to_recalc.add(journal_line.party)
+
+		# Now that we have a unique set of Customer IDs, recalculate order balances for each one.
+		for customer_key in customers_to_recalc:
+			reapply_customer_credits(customer_key=customer_key)
+
+
+
+# Standalone Functions begin below:
 
 @frappe.whitelist()
 def get_default_bank_cash_account(company, account_type=None, mode_of_payment=None, account=None):

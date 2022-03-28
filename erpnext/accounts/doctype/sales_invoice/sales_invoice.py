@@ -188,6 +188,8 @@ class SalesInvoice(SellingController):
 		set_account_for_mode_of_payment(self)
 
 	def on_submit(self):
+		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
+
 		self.validate_pos_paid_amount()
 
 		if not self.auto_repeat:
@@ -253,6 +255,9 @@ class SalesInvoice(SellingController):
 		if "Healthcare" in active_domains:
 			manage_invoice_submit_cancel(self, "on_submit")
 
+		# Farm To People: Recalculate customer Credits...
+		reapply_customer_credits(customer_key=self.customer)	
+
 	def validate_pos_return(self):
 
 		if self.is_pos and self.is_return:
@@ -290,6 +295,8 @@ class SalesInvoice(SellingController):
 		self.update_time_sheet(None)
 
 	def on_cancel(self):
+		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module reference
+
 		super(SalesInvoice, self).on_cancel()
 
 		self.check_sales_order_on_hold_or_close("sales_order")
@@ -341,6 +348,9 @@ class SalesInvoice(SellingController):
 			manage_invoice_submit_cancel(self, "on_cancel")
 		self.unlink_sales_invoice_from_timesheets()
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry', 'Repost Item Valuation')
+
+		# Farm To People: Recalculate customer Credits...
+		reapply_customer_credits(customer_key=self.customer)
 
 	def update_status_updater_args(self):
 		if cint(self.update_stock):
