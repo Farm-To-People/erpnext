@@ -6,6 +6,7 @@
 
 from __future__ import unicode_literals
 import copy
+from datetime import date as DateType
 import json
 import re
 from six import string_types
@@ -764,7 +765,7 @@ def create_nth_order_list(customer_id, daily_order=None):
 	"""
 	Farm To People:  Return a list of Daily Orders, filtered, and sorted by Delivery Date ascending.
 	"""
-	from temporal import validate_datatype
+	from temporal import validate_datatype, date_to_iso_string
 	from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder
 
 	validate_datatype("customer_id", customer_id, str, mandatory=True)
@@ -776,8 +777,14 @@ def create_nth_order_list(customer_id, daily_order=None):
 	}
 	orders = frappe.get_list("Daily Order", filters=filters, fields=fields)
 
-	if daily_order and daily_order not in [ foo['name'] for foo in orders ]:
-		orders.append({"name": daily_order.name, "delivery_date": daily_order.delivery_date})
+	# The values of 'delivery_date' from the query above will be Strings, so convert daily_order.delivery_date to a String.
+	delivery_date_filter = daily_order.delivery_date
+	if isinstance(delivery_date_filter, DateType):
+		delivery_date_filter = date_to_iso_string(delivery_date_filter)
+
+	if daily_order and daily_order not in [ each_order['name'] for each_order in orders ]:
+		orders.append({"name": daily_order.name, 
+		               "delivery_date": daily_order.delivery_date})
 
 	ret = sorted(orders, key=lambda k: k['delivery_date'])
 	return ret
