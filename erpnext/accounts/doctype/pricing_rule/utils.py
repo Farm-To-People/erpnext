@@ -271,6 +271,8 @@ def filter_pricing_rules(args, pricing_rules, doc=None):
 	# frappe.whatis("filter_pricing_rules(). Originator = JavaScript or Daily Order")
 	# validate_args_schema_PY1(doc, args)  # need to ensure that arg contains enough information.
 
+	args["for_shopping_cart"] = True  # DH (28 March) For the purpose of price calculations, this argument avoids conflicts due to lack of Priority.
+
 	if not isinstance(pricing_rules, list):
 		pricing_rules = [pricing_rules]
 	original_pricing_rule = copy.copy(pricing_rules)
