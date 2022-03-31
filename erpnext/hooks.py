@@ -31,7 +31,8 @@ doctype_js = {
 }
 
 override_doctype_class = {
-	'Address': 'erpnext.accounts.custom.address.ERPNextAddress'
+	'Address': 'erpnext.accounts.custom.address.ERPNextAddress',
+	'Contact': 'erpnext.accounts.custom.contact.ERPNextContact'  # Datahenge: Update Customer 'mobile_no' when Contact is updated.
 }
 
 welcome_email = "erpnext.setup.utils.welcome_email"
