@@ -31,7 +31,7 @@ class ShippingRule(Document):
 		"""
 		# Another mistake in Frappe framework.  Checkboxes should automatically be Booleans, not Integers.
 		# I understand that MySQL stores them as TinyINT. That's no excuse for not correctly casting them to Boolean
-		# in the Document framework. `1 == True` is True.  But `1 is True` equals False.
+		# in the Document framework. Because in Python, `1 == True` is True.  But `1 is True` equals False.
 		#
 		# Demonstration:  frappe.whatis(self.is_default_rule)
 		#

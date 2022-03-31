@@ -543,7 +543,7 @@ def apply_pricing_rule_on_transaction(doc):
 
 			if d.price_or_product_discount == 'Price':
 				if d.apply_discount_on:
-					doc.set('apply_discount_on', d.apply_discount_on)
+					doc.set('apply_discount_on', d.apply_discount_on)  # DH: This is bad; subsequent rules can flip this back and forth.
 
 				for field in ['additional_discount_percentage', 'discount_amount']:
 					pr_field = ('discount_percentage'
@@ -681,6 +681,7 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_codes, delivery_date
 	* Datahenge and FTP invention.
     * This should be Standard Functionality, but For Reasons Unknown, is strangely not.
 	"""
+
 	frappe.whatis(pricing_rule)
 	frappe.whatis(coupon_codes)
 	frappe.whatis(delivery_date)
