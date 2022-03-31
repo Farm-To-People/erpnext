@@ -741,6 +741,7 @@ def get_item_price(args, item_code, ignore_party=False):
 			optional fields transaction_date, customer, supplier
 		:param item_code: str, Item Doctype field item_code
 	"""
+	# TODO: Datahenge: This ERPNext function could really use args validation, maybe a Schema?
 
 	args['item_code'] = item_code
 

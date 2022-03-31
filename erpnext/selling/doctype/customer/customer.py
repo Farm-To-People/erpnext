@@ -131,8 +131,10 @@ class Customer(TransactionBase):
 		from ftp.ftp_module.doctype.customer_holds import customer_holds  # Important: Late Import due to Circular Reference
 
 		self.validate_name_with_customer_group()
-		self.create_primary_contact()
-		self.create_primary_address()
+		# Datahenge: Disabling these 2 features.  They don't help, but rather, create extraneous, junk data.
+		# Instead, force the Users to maintain their Customers, and choose a Primary Contact/Address.
+		# self.create_primary_contact()
+		# self.create_primary_address()
 
 		if self.flags.old_lead != self.lead_name:
 			self.update_lead_status()
@@ -910,7 +912,6 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			return None
 		return frappe.get_doc("Address", address_key)
 
-
 	def update_order_shipping_rules(self):
 		"""
 		Useful when the Customer's default Shipping Rule is modified, to update all existing Orders.
@@ -928,6 +929,78 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			doc_order.set_shipping_rule()
 			doc_order.save()
 
+	def auto_fix_phone_numbers(self):
+		"""
+		Congruity Check.  Try to repair Customer's contacts and phone numbers.
+		"""
+
+		# Scenario 1: Both values already populated.
+		if self.mobile_no and self.customer_primary_contact:
+			# TODO: Could validate that mobile number = Contact's mobile number.
+			print("\u2713 Customer has both a mobile number and Primary Contact.")
+			return
+
+		# Scenario 2: Mobile number populated.
+		if self.mobile_no:
+			# The Customer document has a mobile number, but no Primary Contact.
+			contact = self.find_a_primary_contact(self.mobile_no)
+			if contact:
+				self.customer_primary_contact = contact.name
+				self.save()
+				frappe.db.commit()
+				print(f"\u2713 Found a Contact with same mobile number. Updated Customer record {self.name}.")
+			else:
+				print(f"Warning: Customer {self.name}. Could not find an eligible, existing Contact with same mobile number.")
+			return
+
+		# Scenario 3: Primary Contact populated.
+		if self.customer_primary_contact:
+			# The Customer document has a Primary Contact, but field 'mobile_no' is empty on Customer.
+			try:
+				doc_contact = frappe.get_doc("Contact", self.customer_primary_contact)
+			except Exception:
+				print(f"Integrity Error. Customer's primary contact '{self.customer_primary_contact}' was not found in Contact table.")			
+				return
+
+			if doc_contact.mobile_no:
+				self.mobile_no = doc_contact.mobile_no
+				self.save()
+				frappe.db.commit()
+				print(f"\u2713 Updated the Customer's mobile number, based on the value found in Primary Contact. {self.name}.")
+			else:
+				print(f"Error! Customer {self.name} has no mobile number, and neither does its Primary Contact.")			
+			return
+
+		# Scenario 4: Neither field is populated.
+		print(f"Error! Customer {self.name} has no mobile number or Primary Contact.  CSRs should examine manually.")
+
+	def find_a_primary_contact(self, mobile_number=None):
+		"""
+		Return the first, eligible Primary Contact for this Customer.
+		"""
+		values={"customer_key": self.name}
+
+		query = """
+				SELECT Contact.name, Contact.is_primary_contact, Contact.mobile_no
+				FROM `tabDynamic Link` dl
+				INNER JOIN		tabContact		AS Contact
+				ON Contact.name = dl.parent
+				WHERE
+					dl.link_doctype = "Customer"
+					AND dl.link_name =%(customer_key)s
+					AND dl.parenttype = "Contact"
+		"""
+
+		if mobile_number:
+			query += " AND Contact.mobile_no = %(mobile_number)s "
+			values['mobile_number'] = mobile_number
+		query += " ORDER BY Contact.mobile_no DESC"
+
+		contact_persons = frappe.db.sql(query, values=values, as_dict=1)
+
+		if contact_persons:
+			return contact_persons[0]
+		return None
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
