@@ -285,6 +285,9 @@ class PurchaseOrder(BuyingController):
 		self.update_blanket_order()
 
 		update_linked_doc(self.doctype, self.name, self.inter_company_order_reference)
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Order is Submitted.
+
 
 	def on_cancel(self):
 		super(PurchaseOrder, self).on_cancel()

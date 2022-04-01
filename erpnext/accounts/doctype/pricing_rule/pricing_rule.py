@@ -214,6 +214,16 @@ class PricingRule(Document):
 			if rows_with_uom:
 				raise Exception("UOM is not allowed when Apply On = Item Group.")
 
+	def on_change(self):
+		from ftp.ftp_invent import repopulate_redis_for_item
+		if self.apply_on == 'Item Code' and self.items:
+			message = ""
+			for row in self.items:
+				repopulate_redis_for_item(item_code=row.item_code)
+				message += f"Website inventory updated for Item '{row.item_code}'. (Redis)\n"
+			frappe.msgprint(message)
+
+		self.on_update_children(child_docfield_name='items')
 
 #--------------------------------------------------------------------------------
 

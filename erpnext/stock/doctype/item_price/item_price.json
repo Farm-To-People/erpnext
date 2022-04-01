@@ -23,9 +23,9 @@
   "buying",
   "selling",
   "item_details",
+  "price_list_rate",
   "currency",
   "col_br_1",
-  "price_list_rate",
   "section_break_15",
   "valid_from",
   "lead_time_days",
@@ -70,9 +70,11 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 2,
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Item Name",
    "read_only": 1
   },
@@ -96,20 +98,20 @@
    "options": "fa fa-tags"
   },
   {
+   "columns": 1,
    "fieldname": "price_list",
    "fieldtype": "Link",
    "in_global_search": 1,
-   "in_standard_filter": 1,
    "label": "Price List",
    "options": "Price List",
-   "reqd": 1
+   "reqd": 1,
+   "reqd_in_database": 1
   },
   {
    "bold": 1,
    "depends_on": "eval:doc.selling == 1",
    "fieldname": "customer",
    "fieldtype": "Link",
-   "in_list_view": 0,
    "label": "Customer",
    "options": "Customer"
   },
@@ -128,6 +130,7 @@
    "default": "0",
    "fieldname": "buying",
    "fieldtype": "Check",
+   "in_standard_filter": 1,
    "label": "Buying",
    "read_only": 1
   },
@@ -135,6 +138,7 @@
    "default": "0",
    "fieldname": "selling",
    "fieldtype": "Check",
+   "in_standard_filter": 1,
    "label": "Selling",
    "read_only": 1
   },
@@ -144,7 +148,6 @@
    "options": "fa fa-tag"
   },
   {
-   "bold": 1,
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
@@ -156,6 +159,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "fieldname": "price_list_rate",
    "fieldtype": "Currency",
    "in_filter": 1,
@@ -164,7 +168,7 @@
    "label": "Rate",
    "oldfieldname": "ref_rate",
    "oldfieldtype": "Currency",
-   "options": "currency",
+   "precision": "2",
    "reqd": 1
   },
   {
@@ -172,6 +176,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "columns": 1,
    "default": "Today",
    "fieldname": "valid_from",
    "fieldtype": "Date",
@@ -189,6 +194,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "fieldname": "valid_upto",
    "fieldtype": "Date",
    "in_list_view": 1,
@@ -219,7 +225,7 @@
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-12-09 14:13:39.673298",
+ "modified": "2022-03-31 21:45:32.949491",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
@@ -256,6 +262,6 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "ASC",
- "title_field": "item_name",
+ "title_field": "item_code",
  "track_changes": 1
 }

@@ -179,6 +179,7 @@ class PurchaseReceipt(BuyingController):
 
 	# on submit
 	def on_submit(self):
+		from ftp.ftp_invent import try_update_redis_inventory
 		super(PurchaseReceipt, self).on_submit()
 
 		# Check for Approving Authority
@@ -203,6 +204,9 @@ class PurchaseReceipt(BuyingController):
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 		self.set_consumed_qty_in_po()
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Receipt is Submitted.
+
 
 	def check_next_docstatus(self):
 		submit_rv = frappe.db.sql("""select t1.name
@@ -213,6 +217,7 @@ class PurchaseReceipt(BuyingController):
 			frappe.throw(_("Purchase Invoice {0} is already submitted").format(self.submit_rv[0][0]))
 
 	def on_cancel(self):
+		from ftp.ftp_invent import try_update_redis_inventory
 		super(PurchaseReceipt, self).on_cancel()
 
 		self.check_on_hold_or_closed_status()
@@ -235,6 +240,9 @@ class PurchaseReceipt(BuyingController):
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry', 'Repost Item Valuation')
 		self.delete_auto_created_batches()
 		self.set_consumed_qty_in_po()
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Receipt is Submitted.
+
 
 	@frappe.whitelist()
 	def get_current_stock(self):

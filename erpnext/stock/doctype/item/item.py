@@ -157,6 +157,10 @@ class Item(WebsiteGenerator):
 		self.update_variants()
 		self.update_item_price()
 		self.update_template_item()
+		# Farm To People: Update redis after Item Price touched.
+		from ftp.ftp_invent import repopulate_redis_for_item
+		repopulate_redis_for_item(item_code=self.item_code)
+		frappe.msgprint("Website inventory updated. (Redis)")
 
 	def validate_description(self):
 		'''Clean HTML description if set'''

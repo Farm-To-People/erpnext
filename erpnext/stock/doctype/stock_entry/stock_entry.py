@@ -114,6 +114,11 @@ class StockEntry(StockController):
 			self.set_material_request_transfer_status('In Transit')
 		if self.purpose == 'Material Transfer' and self.outgoing_stock_entry:
 			self.set_material_request_transfer_status('Completed')
+		
+		from ftp.ftp_invent import try_update_redis_inventory
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Stock Entry has been submitted.
+
 
 	def on_cancel(self):
 		self.update_purchase_order_supplied_items()
@@ -138,6 +143,12 @@ class StockEntry(StockController):
 			self.set_material_request_transfer_status('Not Started')
 		if self.purpose == 'Material Transfer' and self.outgoing_stock_entry:
 			self.set_material_request_transfer_status('In Transit')
+
+		from ftp.ftp_invent import try_update_redis_inventory
+		for each in self.items:
+			try_update_redis_inventory(each.item_code)  # update Redis after Stock Entry has been cancelled.
+
+
 
 	def set_job_card_data(self):
 		if self.job_card and not self.work_order:

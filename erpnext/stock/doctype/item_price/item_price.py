@@ -129,3 +129,11 @@ class ItemPrice(Document):
 				return line.name, line.valid_from, line.valid_upto
 
 		return None, None, None
+
+	def on_change(self):
+		"""
+		Farm To People: Update redis after Item Price touched.
+		"""
+		from ftp.ftp_invent import repopulate_redis_for_item
+		repopulate_redis_for_item(item_code=self.item_code)
+		frappe.msgprint("Website inventory updated. (Redis)")
