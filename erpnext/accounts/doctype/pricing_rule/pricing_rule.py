@@ -6,7 +6,7 @@
 
 from __future__ import unicode_literals
 import copy
-from datetime import date as DateType
+# from datetime import date as DateType
 import json
 import re
 from six import string_types
@@ -16,7 +16,8 @@ from frappe import throw, _
 from frappe.utils import flt, cint, getdate
 from frappe.model.document import Document
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, invalid-name
+
 
 # ---- Datahenge ----
 DEBUG_MODE = False
@@ -215,11 +216,11 @@ class PricingRule(Document):
 				raise Exception("UOM is not allowed when Apply On = Item Group.")
 
 	def on_change(self):
-		from ftp.ftp_invent import repopulate_redis_for_item
+		from ftp.ftp_invent import try_update_redis_inventory
 		if self.apply_on == 'Item Code' and self.items:
 			message = ""
-			for row in self.items:
-				repopulate_redis_for_item(item_code=row.item_code)
+			for row in self.items:  # pylint: disable=not-an-iterable
+				try_update_redis_inventory(item_code=row.item_code)
 				message += f"Website inventory updated for Item '{row.item_code}'. (Redis)\n"
 			frappe.msgprint(message)
 
@@ -790,7 +791,7 @@ def create_nth_order_list(customer_id, daily_order=None):
 	# NOTE: In the 'orders' object above, the delivery_date variables are DateTime dates...
 
 	if daily_order and daily_order not in [ each_order['name'] for each_order in orders ]:
-		orders.append({"name": daily_order.name, 
+		orders.append({"name": daily_order.name,
 		               "delivery_date": any_to_date(daily_order.delivery_date)  # ...so this must be too
 					   })
 	ret = sorted(orders, key=lambda k: k['delivery_date'])

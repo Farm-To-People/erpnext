@@ -1,6 +1,8 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+# pylint: disable=protected-access, invalid-name
+
 import itertools
 import json
 import copy
