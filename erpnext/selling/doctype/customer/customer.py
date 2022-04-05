@@ -732,6 +732,16 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			"""
 			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
 
+		if self.has_value_changed('delivery_instructions'):
+			statement = """ UPDATE `tabDaily Order`
+			SET delivery_instructions = %(delivery_instructions)s
+			WHERE customer = %(customer_id)s
+			AND status_delivery NOT IN ('Delivered', 'Cancelled')
+			"""
+			frappe.db.sql(statement, values={"delivery_instructions": self.delivery_instructions, "customer_id": self.name })
+			frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
+
+
 	def before_insert(self):
 		if not self.referral_code:
 			self.set_referral_code()
