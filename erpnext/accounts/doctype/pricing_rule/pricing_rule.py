@@ -505,7 +505,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 				dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order")
 				continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
 			else:
-				print(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}")
+				dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}")
 		# ------------------------------------
 
 		# ------------------------------------
