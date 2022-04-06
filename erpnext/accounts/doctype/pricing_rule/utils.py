@@ -14,11 +14,12 @@ import json
 
 
 import frappe
+from frappe import _, bold
+from frappe.utils import cint, flt, get_link_to_form, getdate, today, fmt_money
+
 from erpnext.setup.doctype.item_group.item_group import get_child_item_groups
 from erpnext.stock.doctype.warehouse.warehouse import get_child_warehouses
 from erpnext.stock.get_item_details import get_conversion_factor
-from frappe import _, bold
-from frappe.utils import cint, flt, get_link_to_form, getdate, today, fmt_money
 
 # ---- Datahenge ----
 DEBUG_MODE = False
@@ -679,9 +680,9 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_codes, delivery_date
     * This should be Standard Functionality, but For Reasons Unknown, is strangely not.
 	"""
 
-	frappe.whatis(pricing_rule)
-	frappe.whatis(coupon_codes)
-	frappe.whatis(delivery_date)
+	# frappe.whatis(pricing_rule)
+	# frappe.whatis(coupon_codes)
+	# frappe.whatis(delivery_date)
 
 	from temporal import validate_datatype
 	from ftp.ftp_module.doctype.coupon_code_multi.coupon_code_multi import expand_coupon_multicodes
@@ -720,6 +721,8 @@ def remove_coupon_dependent_rules(pricing_rules, doc, debug=False):
 	doc = Document
 
 	"""
+	from temporal import any_to_date
+
 	new_rules = []
 	for pricing_rule in pricing_rules:
 
@@ -737,7 +740,7 @@ def remove_coupon_dependent_rules(pricing_rules, doc, debug=False):
 			continue
 
 		# Compare document's Coupon Code(s) to the ones required by the Pricing Rule.
-		if is_coupon_based_pricing_rule_valid(pricing_rule, doc.coupon_code_set, doc.delivery_date):
+		if is_coupon_based_pricing_rule_valid(pricing_rule, doc.coupon_code_set, any_to_date(doc.delivery_date)):
 			new_rules.append(pricing_rule)
 		else:
 			if debug:
