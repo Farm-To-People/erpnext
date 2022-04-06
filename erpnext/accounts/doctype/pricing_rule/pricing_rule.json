@@ -493,7 +493,7 @@
    "description": "Higher the number, higher the priority",
    "fieldname": "priority",
    "fieldtype": "Select",
-   "in_list_view": 0,
+   "in_list_view": 1,
    "label": "Priority",
    "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
   },
@@ -581,6 +581,7 @@
   },
   {
    "default": "All",
+   "depends_on": "eval: doc.apply_on != \"Transaction\"",
    "fieldname": "limit_to_origin",
    "fieldtype": "Select",
    "label": "Limit to Origin",
@@ -611,7 +612,7 @@
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2022-03-29 15:59:43.365545",
+ "modified": "2022-04-06 00:21:56.257977",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",

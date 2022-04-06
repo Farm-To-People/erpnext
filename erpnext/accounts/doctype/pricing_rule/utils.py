@@ -517,9 +517,6 @@ def apply_pricing_rule_on_transaction(doc):
 	"""
 	Called By:  erpnext.controllers.accounts_controller.py
 	"""
-
-	# TODO: Probably need to call this (somehow) via Daily Orders.
-
 	conditions = "apply_on = 'Transaction'"
 
 	values = {}
