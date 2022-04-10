@@ -23,11 +23,6 @@ from erpnext.stock.get_item_details import get_conversion_factor
 
 # ---- Datahenge ----
 DEBUG_MODE = False
-
-def dprint(msg):
-	if DEBUG_MODE:
-		print(msg)
-
 VALIDATE_SCHEMAS = True
 
 # -------------------
@@ -62,10 +57,10 @@ def get_pricing_rules(args, doc=None):
 	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
 
 	if not pricing_rules:
-		dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.")
+		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 		return []
 
-	dprint(f"DH: get_pricing_rules().  Possible rules include {[ each['name'] for each in pricing_rules] }")
+	frappe.dprint(f"DH: get_pricing_rules().  Possible rules include {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
 
 	if apply_multiple_pricing_rules(pricing_rules):
 		pricing_rules = sorted_by_priority(pricing_rules, args, doc)
@@ -82,7 +77,7 @@ def get_pricing_rules(args, doc=None):
 			rules.append(pricing_rule)
 
 	if not rules:
-		dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.")
+		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 	return rules
 
 def sorted_by_priority(pricing_rules, args, doc=None):
@@ -707,11 +702,11 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective
 	result = False
 	# Examine each coupon code
 	for each_coupon_code in unique_codes:
-		dprint(f"Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...")
+		frappe.dprint(f"Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...", check_env='FTP_DEBUG_PRICING_RULE')
 		doc_coupon_code = frappe.get_doc("Coupon Code", each_coupon_code)
 
 		if not doc_coupon_code.valid_for_date(effective_date):
-			dprint(f"Coupon code {doc_coupon_code.name} is not valid for this Effective Date ({effective_date}).")
+			frappe.dprint(f"Coupon code {doc_coupon_code.name} is not valid for this Effective Date ({effective_date}).", check_env='FTP_DEBUG_PRICING_RULE')
 			continue  # coupon code is not valid for this Effective Date, so this Pricing Rule cannot be active.
 
 		# Each coupon code can 1 or more Pricing Rules (April 8th 2022)

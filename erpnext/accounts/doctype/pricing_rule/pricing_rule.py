@@ -6,7 +6,6 @@
 
 from __future__ import unicode_literals
 import copy
-# from datetime import date as DateType
 import json
 import re
 from six import string_types
@@ -17,15 +16,6 @@ from frappe.utils import flt, cint, getdate
 from frappe.model.document import Document
 
 # pylint: disable=protected-access, invalid-name
-
-
-# ---- Datahenge ----
-DEBUG_MODE = False
-
-def dprint(msg):
-	if DEBUG_MODE:
-		print(msg)
-# -------------------
 
 apply_on_dict = {"Item Code": "items",
 	"Item Group": "item_groups", "Brand": "brands"}
@@ -396,7 +386,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# 2. Debugging output
 	# ----------------
 
-	dprint("\n*****************PRICING RULE.py*************************")
+	frappe.dprint("\n*****************PRICING RULE.py*************************", check_env='FTP_DEBUG_PRICING_RULE')
 	# frappe.print_caller()
 	# dprint("1. Function Arguments")
 	# dprint(f"\targs : a Dictionary with {len(args.keys())} keys.")
@@ -433,7 +423,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules,
 	#                       then return the price information for all Lines.
 	if args.ignore_pricing_rule or not args.item_code:
-		dprint(f"* Automatic Pricing is disabled for Order Line {doc.name}")
+		frappe.dprint(f"* Automatic Pricing is disabled for Order Line {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 		if frappe.db.exists(args.doctype, args.name) and args.get("pricing_rules"):
 			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
 				item_details, args.get('item_code'))
@@ -446,11 +436,11 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		if for_validate and args.get("pricing_rules") else get_pricing_rules(args, doc))
 
 	validate_datatype("pricing_rules", pricing_rules, list)
-	dprint(f"\nThere are {len(pricing_rules)} Potential Pricing Rules.\n")
+	frappe.dprint(f"\nThere are {len(pricing_rules)} Potential Pricing Rules.\n", check_env='FTP_DEBUG_PRICING_RULE')
 
 	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.
 	if not pricing_rules and args.get("pricing_rules"):
-		dprint("Arguments contain 'pricing_rules' that must be removed from the Order.")
+		frappe.dprint("Arguments contain 'pricing_rules' that must be removed from the Order.", check_env='FTP_DEBUG_PRICING_RULE')
 		item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
 			                                        item_details,
 													args.get('item_code'))
@@ -466,9 +456,9 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 			# continue
 
 		if isinstance(pricing_rule, str):
-			dprint(f"Evaluating Pricing Rule '{pricing_rule}' ...")
+			frappe.dprint(f"Evaluating Pricing Rule '{pricing_rule}' ...", check_env='FTP_DEBUG_PRICING_RULE')
 		elif isinstance(pricing_rule, dict):
-			dprint(f"Evaluating Pricing Rule '{pricing_rule['name']}' ...")
+			frappe.dprint(f"Evaluating Pricing Rule '{pricing_rule['name']}' ...", check_env='FTP_DEBUG_PRICING_RULE')
 		else:
 			frappe.throw(f"Unexpected type '{type(pricing_rule)}' for variable 'pricing_rule'")
 
@@ -486,7 +476,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		# Farm To People: Nth Order
 		# ------------------------------------
 		if doc and doc.doctype == 'Daily Order' and bool(pricing_rule.nth_order_only):
-			dprint(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.")
+			frappe.dprint(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.", check_env='FTP_DEBUG_PRICING_RULE')
 
 			# Create a list of all non-cancelled Daily Orders
 			nth_order_list = create_nth_order_list(customer_id=doc.customer,
@@ -498,14 +488,16 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 			# Case 1:  Fewer orders exist than the Nth Order.
 			if len(nth_order_list) < pricing_rule.nth_order_only:
-				dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order")
+				frappe.dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order",
+				              check_env='FTP_DEBUG_PRICING_RULE')
 				continue
 			# Case 2:  Is this the Nth?
 			elif nth_order_list[pricing_rule.nth_order_only - 1]['name'] != doc.name:
-				dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order")
+				frappe.dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order",
+				              check_env='FTP_DEBUG_PRICING_RULE')
 				continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
 			else:
-				dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}")
+				frappe.dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 		# ------------------------------------
 
 		# ------------------------------------
@@ -539,21 +531,21 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
 			# But what if a rule already exists on the Order.  And now then Coupon is deleted?
 			# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
-			dprint(f"Removing Pricing Rule '{pricing_rule['name']}' from order, because of missing Coupon Code.")
+			frappe.dprint(f"Removing Pricing Rule '{pricing_rule['name']}' from order, because of missing Coupon Code.", check_env='FTP_DEBUG_PRICING_RULE')
 			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
 			return item_details
 		# ------------------------------------
 
 		if not pricing_rule.validate_applied_rule:
 			if pricing_rule.price_or_product_discount == "Price":
-				dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Price' ...")
+				frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Price' ...", check_env='FTP_DEBUG_PRICING_RULE')
 				apply_price_discount_rule(pricing_rule, item_details, args)
 			else:
-				dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Product' ...")
+				frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Product' ...", check_env='FTP_DEBUG_PRICING_RULE')
 				get_product_discount_rule(pricing_rule, item_details, args, doc)
 	# end of for loop
 
-	dprint(f"Price Loops completed.  Rules applied = {applied_rules}")
+	frappe.dprint(f"Price Loops completed.  Rules applied = {applied_rules}", check_env='FTP_DEBUG_PRICING_RULE')
 
 	if not item_details.get("has_margin"):
 		item_details.margin_type = None
@@ -562,8 +554,8 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	item_details.has_pricing_rule = 1
 	item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in applied_rules])
 
-	dprint(f"Returning variable 'item_details' to caller:\n{item_details}")
-	dprint("\n**************** END PRICING************************\n")
+	frappe.dprint(f"Returning variable 'item_details' to caller:\n{item_details}", check_env='FTP_DEBUG_PRICING_RULE')
+	frappe.dprint("\n**************** END PRICING************************\n", check_env='FTP_DEBUG_PRICING_RULE')
 
 	return item_details
 
@@ -607,7 +599,7 @@ def get_pricing_rule_details(args, pricing_rule):
 	})
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
-	dprint("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...")
+	frappe.dprint("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...", check_env='FTP_DEBUG_PRICING_RULE')
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
 	if ((pricing_rule.margin_type in ['Amount', 'Percentage'] and pricing_rule.currency == args.currency)
