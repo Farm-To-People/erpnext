@@ -288,8 +288,7 @@ def apply_pricing_rule(args, doc=None):
 
 	for item in item_list:
 		args_copy = copy.deepcopy(args)
-		# Next, merge the Order Line dictionary (item) into the 'args' dictionary
-		args_copy.update(item)
+		args_copy.update(item)	# merge the Order Line dictionary (item) into the 'args' dictionary.
 		# Datahenge Requirements:  The 'args_copy' must contain the Coupon Code Set as a List of String.
 		# Also, removed an unused argument below:
 		data = get_pricing_rule_for_item(args_copy, doc=doc)

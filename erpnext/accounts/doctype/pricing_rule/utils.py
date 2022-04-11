@@ -513,7 +513,7 @@ def apply_pricing_rule_on_transaction(doc):
 	"""
 	Called By:  erpnext.controllers.accounts_controller.py
 	"""
-	# Datahenge: No longer required for Daily Orders.
+	# Datahenge: No longer used by Daily Orders; they have their own code.
 	if doc.doctype == 'Daily Order':
 		raise Exception("Daily Orders should not call standard ERPNext 'apply_pricing_rule_on_transaction'")
 	conditions = "apply_on = 'Transaction'"
@@ -535,6 +535,12 @@ def apply_pricing_rule_on_transaction(doc):
 			remove_free_item(doc)
 
 		for d in pricing_rules:
+
+			# Farm To People: Exclude certain DocTypes based on Selling or Buying.
+			if d.selling and doc.doctype not in ['Sales Order', 'Daily Order', 'Sales Invoice']:
+				continue  # Do not run this code for Purchase Orders, Purchase Receipts, and Purchase Invoices.
+			if d.buying and doc.doctype not in ['Purchase Order', 'Purchase Invoice']:
+				continue  # Do not run this code for Purchase Orders, Purchase Receipts, and Purchase Invoices.
 
 			if d.price_or_product_discount == 'Price':
 				if d.apply_discount_on:
