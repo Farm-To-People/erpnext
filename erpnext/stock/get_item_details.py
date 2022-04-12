@@ -30,8 +30,7 @@ purchase_doctypes = ['Material Request', 'Supplier Quotation', 'Purchase Order',
 @frappe.whitelist()
 def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True):
 	"""
-		* Callers:
-			* JavaScript code on web pages like Sales Order.
+		* Callers: JavaScript code on web pages like Sales Order.
 		* Purpose: Calculates the Item Prices
 	"""
 

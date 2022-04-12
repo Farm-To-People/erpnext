@@ -385,7 +385,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# 2. Debugging output
 	# ----------------
 
-	frappe.dprint("\n*****************PRICING RULE.py*************************", check_env='FTP_DEBUG_PRICING_RULE')
+	frappe.dprint("\n***************** get_pricing_rule_for_item() *************************", check_env='FTP_DEBUG_PRICING_RULE')
+	if args.get('item_code'):
+		frappe.dprint(f"Item Code: {args.get('item_code')}", check_env='FTP_DEBUG_PRICING_RULE')
+
 	# frappe.print_caller()
 	# dprint("1. Function Arguments")
 	# dprint(f"\targs : a Dictionary with {len(args.keys())} keys.")
@@ -422,7 +425,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules,
 	#                       then return the price information for all Lines.
 	if args.ignore_pricing_rule or not args.item_code:
-		frappe.dprint(f"* Automatic Pricing is disabled for Order Line {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint(f"* Warning: 'ignore_pricing_rule' is set for Order Line {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 		if frappe.db.exists(args.doctype, args.name) and args.get("pricing_rules"):
 			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
 				item_details, args.get('item_code'))
@@ -537,14 +540,15 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 		if not pricing_rule.validate_applied_rule:
 			if pricing_rule.price_or_product_discount == "Price":
-				frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Price' ...", check_env='FTP_DEBUG_PRICING_RULE')
+				# frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Price' ...", check_env='FTP_DEBUG_PRICING_RULE')
 				apply_price_discount_rule(pricing_rule, item_details, args)
 			else:
-				frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Product' ...", check_env='FTP_DEBUG_PRICING_RULE')
+				# frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Product' ...", check_env='FTP_DEBUG_PRICING_RULE')
 				get_product_discount_rule(pricing_rule, item_details, args, doc)
 	# end of for loop
 
-	frappe.dprint(f"Price Loops completed.  Rules applied = {applied_rules}", check_env='FTP_DEBUG_PRICING_RULE')
+	applied_rule_names = ",".join([ each.pricing_rule for each in applied_rules])
+	frappe.dprint(f"Price Loops completed.  Rules applied = {applied_rule_names}", check_env='FTP_DEBUG_PRICING_RULE')
 
 	if not item_details.get("has_margin"):
 		item_details.margin_type = None
