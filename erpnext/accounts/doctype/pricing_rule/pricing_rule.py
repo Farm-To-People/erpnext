@@ -436,11 +436,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	# DH: Confusing way of writing this, but leaving it alone for now:
 	pricing_rules = (get_applied_pricing_rules(args.get('pricing_rules'))
 		if for_validate and args.get("pricing_rules") else get_pricing_rules(args, doc))
-
-	validate_datatype("pricing_rules", pricing_rules, list)
+	validate_datatype("pricing_rules", pricing_rules, list)	# DH: Ensure this variable is a Python List.
 	frappe.dprint(f"\nThere are {len(pricing_rules)} Potential Pricing Rules.\n", check_env='FTP_DEBUG_PRICING_RULE')
 
-	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.
+	# If there are no Potential Pricing Rules, but the 'args' mentions some?  Remove those rules from the Order.  Weird.
 	if not pricing_rules and args.get("pricing_rules"):
 		frappe.dprint("Arguments contain 'pricing_rules' that must be removed from the Order.", check_env='FTP_DEBUG_PRICING_RULE')
 		item_details = remove_pricing_rule_for_item(args.get("pricing_rules"),
@@ -469,7 +468,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 			pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
 			pricing_rule.apply_rule_on_other_items = get_pricing_rule_items(pricing_rule)
 
-		# Skip if it's only a suggestion? (no idea how that works)
+		# Skip if it's only a suggestion? (no idea how this feature was supposed to work)
 		if pricing_rule.get('suggestion'):
 			print("Skipping Pricing Rule, because it's only a suggestion?")
 			continue
@@ -500,7 +499,6 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 				continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
 			else:
 				frappe.dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
-		# ------------------------------------
 
 		# ------------------------------------
 		# Farm To People: Pricing Rule based on Order Line's Origin Code.
@@ -527,9 +525,8 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 		# ------------------------------------
 		# Farm To People: Pricing Rule based on Coupon Codes.
-		#
-		# Standard code never accomplished this.  Coupon Codes, if they worked at all, only worked with ERPNext Website stuff.
 		# ------------------------------------
+		# NOTE: Standard code never accomplished this.  Coupon Codes (if they worked at all), only worked with ERPNext shopping carts.
 		if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
 			# But what if a rule already exists on the Order.  And now then Coupon is deleted?
 			# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
@@ -540,10 +537,8 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 		if not pricing_rule.validate_applied_rule:
 			if pricing_rule.price_or_product_discount == "Price":
-				# frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Price' ...", check_env='FTP_DEBUG_PRICING_RULE')
 				apply_price_discount_rule(pricing_rule, item_details, args)
 			else:
-				# frappe.dprint(f"DEBUG: Price Rule {pricing_rule.name} is of type 'Product' ...", check_env='FTP_DEBUG_PRICING_RULE')
 				get_product_discount_rule(pricing_rule, item_details, args, doc)
 	# end of for loop
 

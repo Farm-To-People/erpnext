@@ -127,11 +127,14 @@ def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 def _get_pricing_rules(apply_on, args, values):
 	"""
 	args:	a frappe.dict() class
-	"""
+	values:	another dictionary
 
-	# Datahenge: Let's add some validation:
+	Purpose of this function is to add rules, based on "Apply On" values.
+	"""
+	# IMPORTANT: This code is one of the deepest 'origins' of Potential Pricing Rules.  It contains the SQL that fetches the potentials.
+	# Datahenge: Added some validation:
 	if not apply_on or apply_on not in ['Brand', 'Detail', 'Item Code', 'Item Group']:
-		raise Exception("Missing valid argument 'apply_on' in function '_get_pricing_rules()'")
+		raise Exception("Argument 'apply_on' not one of (Brand, Detail, Item Code, Item Group) in function '_get_pricing_rules()'")
 	if not args.transaction_type:
 		raise ValueError("Missing mandatory args key = 'transaction_type'")
 
@@ -186,6 +189,10 @@ def _get_pricing_rules(apply_on, args, values):
 			warehouse_cond = warehouse_conditions,
 			apply_on_other_field = "other_{0}".format(apply_on_field),
 			conditions = conditions), values, as_dict=1) or []
+
+	if args.coupon_codes:
+		# TODO: Filter out the Pricing Rules that are not limited by Coupon Codes. 
+		pass
 
 	return pricing_rules
 
@@ -572,13 +579,18 @@ def remove_free_item(doc):
 			doc.remove(d)
 
 def get_applied_pricing_rules(pricing_rules):
-	if pricing_rules:
-		if pricing_rules.startswith('['):
-			return json.loads(pricing_rules)
-		else:
-			return pricing_rules.split(',')
+	"""
+	Converts a string 'pricing_rules' into something else?
+	"""
+	# Datahenge: As always, standard code has no type hints or any indication about function's purpose.
+	if not pricing_rules:
+		return []
 
-	return []
+	if pricing_rules.startswith('['):
+		return json.loads(pricing_rules)
+	else:
+		return pricing_rules.split(',')
+
 
 def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 	free_item = pricing_rule.free_item
