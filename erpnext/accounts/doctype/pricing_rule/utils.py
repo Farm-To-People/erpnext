@@ -543,8 +543,9 @@ def apply_pricing_rule_on_transaction(doc):
 
 		for d in pricing_rules:
 
-			# Farm To People: Exclude certain DocTypes based on Selling or Buying.
-			if d.selling and doc.doctype not in ['Sales Order', 'Daily Order', 'Sales Invoice']:
+			# Farm To People: Exclude everything except Daily Orders.
+			# Sales Invoices cannot handle the 2 simultaneous discounts of Net Total and Grand Total.
+			if d.selling and doc.doctype not in ['Daily Order']:
 				continue  # Do not run this code for Purchase Orders, Purchase Receipts, and Purchase Invoices.
 			if d.buying and doc.doctype not in ['Purchase Order', 'Purchase Invoice']:
 				continue  # Do not run this code for Purchase Orders, Purchase Receipts, and Purchase Invoices.
