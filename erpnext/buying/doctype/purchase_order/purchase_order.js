@@ -124,6 +124,11 @@ frappe.ui.form.on("Purchase Order", {
 									new_order_line.item_code = row['item_code'];
 									new_order_line.uom = row['purchase_uom'];
 									new_order_line.item_name = row['item_name'];
+									new_order_line.rate = row['price_list_rate'];
+									new_order_line.price_list_rate = new_order_line.rate;
+									// "Base" Rates are the Company Currency Rates
+									new_order_line.base_rate = new_order_line.rate;
+									new_order_line.base_price_list_rate = new_order_line.price_list_rate;
 									new_order_line.conversion_factor = row['conversion_factor']
 									new_order_line.schedule_date = frm.doc.schedule_date;
 									cur_frm.refresh_fields("items");  // Important to refresh that portion of the page!
@@ -231,19 +236,25 @@ frappe.ui.form.on("Purchase Order", {
 						if (r.message) {
 							let number_of_rows = r.message.length;
 							r.message.forEach(row => {
-								// console.log(row);
 								// Create a new Purchase Order Line:
 								let new_order_line = frm.add_child("items");
 								new_order_line.item_code = row['item_code'];
 								new_order_line.item_name = row['item_name'];
 								new_order_line.uom = row['uom'];
 								new_order_line.qty = row['quantity'];
+								new_order_line.rate = row['price_list_rate'];
+								new_order_line.price_list_rate = new_order_line.rate;
+								new_order_line.amount = new_order_line.qty * new_order_line.rate;
+								// "Base" Rates are the Company Currency Rates
+								new_order_line.base_rate = new_order_line.rate;
+								new_order_line.base_price_list_rate = new_order_line.price_list_rate;
+								new_order_line.base_amount = new_order_line.amount;
+
 								new_order_line.conversion_factor = 1;
 								new_order_line.schedule_date = frm.doc.schedule_date;
 							});
-							
 							frm.refresh_fields("items");  // Important to refresh that portion of the page!
-							// frm.save();  // No point in saving, because validation will fail due to Missing Qty/Rate.
+							frm.save();
 							frappe.msgprint(__("Added {0} new lines to the Purchase Order.", [number_of_rows]));
 							mydialog.hide();						
 						}

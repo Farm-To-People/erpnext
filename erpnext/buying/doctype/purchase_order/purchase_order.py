@@ -720,7 +720,7 @@ def get_suppliers_default_items(supplier_id):
 	Used by JavaScript when adding lines to a Purchase Order.
 	One line for every Item's default supplier.
 	"""
-	from erpnext.stock.get_item_details import get_conversion_factor
+	from erpnext.stock.get_item_details import get_conversion_factor, get_price_list_rate_for
 
 	filters = { "parenttype": "Item", "default_supplier": supplier_id }
 	results = frappe.get_all("Item Default", filters=filters, fields=["parent"])
@@ -741,7 +741,19 @@ def get_suppliers_default_items(supplier_id):
 			conversion_factor = get_conversion_factor(item_code=item_code, uom=item_data['purchase_uom'])['conversion_factor']
 			item_data['conversion_factor'] = conversion_factor
 
+		price_list_rate = get_price_list_rate_for(args={
+			"supplier": supplier_id,
+			"price_list": "Standard Buying",
+			"item_code": item_code,
+			"qty": 1,
+			"uom": item_data['purchase_uom'],
+			"transaction_date": frappe.utils.getdate()
+		}, item_code=item_code)
+
+		item_data['price_list_rate'] = price_list_rate
+
 		result.append(item_data)
+
 	return result
 
 
@@ -751,10 +763,13 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
 	Given a date range, find all Daily Orders, aggregate by Item Code, and return a List of Dictionary.
 	"""
 
+	price_list_name = frappe.db.get_single_value("Buying Settings", "buying_price_list")
+
 	query = """ SELECT
-		 OrderLine.item_code			AS item_code
+		 OrderLine.item_code					AS item_code
 		,tabItem.item_name
-		,OrderLine.uom_sales			AS uom
+		,OrderLine.uom_sales					AS uom
+		,IFNULL(ItemPrice.price_list_rate,0)	AS price_list_rate		
 		,SUM(OrderLine.qty_sales_unit)	AS quantity
 
 	FROM 	
@@ -765,12 +780,13 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
 	ON
 		tabItem.name = OrderLine.item_code
 	AND tabItem.item_type not in ('Farm Box')
+	AND tabItem.is_purchase_item = 1
 
 	INNER JOIN
 		`tabDaily Order`	AS OrderHeader
 	ON
 		OrderHeader.name = OrderLine.parent
-	AND OrderHeader.status_delivery not in ('Cancelled')
+	AND OrderHeader.status_delivery not in ('Cancelled', 'Anonymous')
 
 	INNER JOIN
 		`tabItem Default`	AS ItemDefaults
@@ -779,8 +795,16 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
 	AND ItemDefaults.default_supplier = %(default_supplier_id)s
 	AND ItemDefaults.company = 'Farm To People'
 
-	WHERE
-		OrderLine.delivery_date between %(date_from)s and %(date_to)s
+	LEFT JOIN
+		`tabItem Price`	AS ItemPrice
+	ON
+		ItemPrice.buying = 1
+	AND ItemPrice.item_code = tabItem.item_code 
+	AND ItemPrice.uom  = OrderLine.uom_sales
+ 	AND (ItemPrice.valid_from is NULL	OR ItemPrice.valid_from <=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
+	AND (ItemPrice.valid_upto is NULL	or ItemPrice.valid_upto >=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
+	AND ItemPrice.price_list = %(price_list_name)s
+	
 	GROUP BY
 		 OrderLine.item_code
 		,tabItem.item_name
@@ -789,6 +813,7 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
 
 	result = frappe.db.sql(query, values={"default_supplier_id": supplier_id,
 	                                      "date_from": delivery_date_from,
-	                                      "date_to": delivery_date_to}, as_dict=True)
+	                                      "date_to": delivery_date_to,
+										  "price_list_name": price_list_name }, as_dict=True)
 
 	return result  # returns the List of Dictionary to JavaScript caller.

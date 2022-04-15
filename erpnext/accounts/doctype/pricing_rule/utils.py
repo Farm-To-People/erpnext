@@ -458,6 +458,9 @@ def get_qty_and_rate_for_mixed_conditions(doc, pr_doc, args):
 	return sum_qty, sum_amt, items
 
 def get_qty_and_rate_for_other_item(doc, pr_doc, pricing_rules):
+	"""
+	This creates a list of Pricing Rules based on the 'Apply Rule on Other' field.
+	"""
 	items = get_pricing_rule_items(pr_doc)
 
 	for row in doc.items:

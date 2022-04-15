@@ -772,13 +772,17 @@ def get_item_price(args, item_code, ignore_party=False):
 
 def get_price_list_rate_for(args, item_code):
 	"""
+		:param item_code: str, Item Doctype field item_code
 		:param customer: link to Customer DocType
 		:param supplier: link to Supplier DocType
+		:param currency: str
+		:param price_list_currency: str
 		:param price_list: str (Standard Buying or Standard Selling)
-		:param item_code: str, Item Doctype field item_code
 		:param qty: Desired Qty
+		:param uom: str
 		:param transaction_date: Date of the price
 	"""
+
 	item_price_args = {
 			"item_code": item_code,
 			"price_list": args.get('price_list'),
