@@ -1789,6 +1789,8 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			child_item.idx = len(parent.items) + 1
 			child_item.insert()
 		else:
+			if child_item.doctype == 'Purchase Order Item':
+				child_item.flags.update_redis = True  # Farm To People: trigger an update to Website Inventory Redis on save.
 			child_item.save()
 
 	parent.reload()

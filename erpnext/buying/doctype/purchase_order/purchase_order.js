@@ -254,7 +254,7 @@ frappe.ui.form.on("Purchase Order", {
 								new_order_line.schedule_date = frm.doc.schedule_date;
 							});
 							frm.refresh_fields("items");  // Important to refresh that portion of the page!
-							frm.save();
+							// frm.save();   // Do not save, per conversation with Shelby on 15th of April.
 							frappe.msgprint(__("Added {0} new lines to the Purchase Order.", [number_of_rows]));
 							mydialog.hide();						
 						}

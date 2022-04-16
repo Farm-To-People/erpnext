@@ -7,6 +7,7 @@ import frappe
 from frappe.model.document import Document
 
 # FTP
+from ftp.ftp_invent import try_update_redis_inventory
 from ftp.ftp_invent.invent import validate_uom_compatibility
 
 class PurchaseOrderItem(Document):
@@ -16,6 +17,10 @@ class PurchaseOrderItem(Document):
 		if not validate_uom_compatibility(self.uom, self.stock_uom, self.item_code):
 			raise ValueError(f"There are are no UOM conversion factors between '{self.uom}' and '{self.stock_uom}'.")
 
+	def on_change(self):
+		# FTP : This code block will executed using the "Update Items" button on Purchase Orders.
+		if self.flags.update_redis:
+			try_update_redis_inventory(self.item_code)
 
 def on_doctype_update():
 	frappe.db.add_index("Purchase Order Item", ["item_code", "warehouse"])
