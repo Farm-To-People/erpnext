@@ -722,25 +722,25 @@ class Customer(Customer):  # pylint: disable=function-redefined
 	# intermingles the code above, which does make Git Diff more difficult to reconcile.
 
 	def on_change(self):
+
 		# FTP: If customer's name changed, then update Web Subscription names
 		# Datahenge: This is why 1) We shouldn't store DocType attributes in secondary tables.
 		#            And also 2) Why ERPNext really needs the concept of 'Display Methods'
-		if self.has_value_changed('customer_name'):
+		if (not self.is_anon()) and self.has_value_changed('customer_name'):
 			statement = """ UPDATE `tabWeb Subscription`
 			SET customer_name = %(customer_name)s
 			WHERE customer = %(customer_id)s
 			"""
 			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
 
-		if self.has_value_changed('delivery_instructions'):
-			statement = """ UPDATE `tabDaily Order`
-			SET delivery_instructions = %(delivery_instructions)s
-			WHERE customer = %(customer_id)s
-			AND status_delivery NOT IN ('Delivered', 'Cancelled')
-			"""
-			frappe.db.sql(statement, values={"delivery_instructions": self.delivery_instructions, "customer_id": self.name })
-			frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
-
+		if (not self.is_anon()) and self.has_value_changed('delivery_instructions'):
+				statement = """ UPDATE `tabDaily Order`
+				SET delivery_instructions = %(delivery_instructions)s
+				WHERE customer = %(customer_id)s
+				AND status_delivery NOT IN ('Delivered', 'Cancelled')
+				"""
+				frappe.db.sql(statement, values={"delivery_instructions": self.delivery_instructions, "customer_id": self.name })
+				frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
 
 	def before_insert(self):
 		if not self.referral_code:
