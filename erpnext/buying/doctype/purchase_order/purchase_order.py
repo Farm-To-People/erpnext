@@ -786,7 +786,7 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
 		`tabDaily Order`	AS OrderHeader
 	ON
 		OrderHeader.name = OrderLine.parent
-	AND OrderHeader.status_delivery not in ('Cancelled', 'Anonymous')
+	AND OrderHeader.status_delivery not in ('Cancelled', 'Anonymous', 'Paused', 'Skipped')
 
 	INNER JOIN
 		`tabItem Default`	AS ItemDefaults
@@ -804,7 +804,11 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
  	AND (ItemPrice.valid_from is NULL	OR ItemPrice.valid_from <=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
 	AND (ItemPrice.valid_upto is NULL	or ItemPrice.valid_upto >=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
 	AND ItemPrice.price_list = %(price_list_name)s
-	
+
+	WHERE
+		OrderLine.delivery_date >= %(date_from)s
+	AND OrderLine.delivery_date <= %(date_to)s
+
 	GROUP BY
 		 OrderLine.item_code
 		,tabItem.item_name
