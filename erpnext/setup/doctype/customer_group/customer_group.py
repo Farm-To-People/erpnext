@@ -35,7 +35,7 @@ class CustomerGroup(NestedSet):
 
 		# TODO: This could be a potentially lengthy update?
 		for customer_name in customer_names:
-			filters = { "status_delivery": ["in", ["Ready","Good Faith", "Skipped", "Paused"]],
+			filters = { "status_delivery": ["in", ["Ready", "Good Faith", "Skipped", "Paused"]],
 						"customer": customer_name,
 						"status_billing": "Not Billed",
 						"status_editing": "Unlocked" }

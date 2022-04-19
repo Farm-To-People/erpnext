@@ -78,13 +78,17 @@ class PaymentEntry(AccountsController):
 			frappe.throw(_("Difference Amount must be zero"))
 
 		# Begin: Farm To People
-		if self.mode_of_payment == 'Stripe' and not self.reference_no:
+		if self.mode_of_payment == 'Stripe':
+			if self.reference_no:
+				raise Exception(f"Skipping Stripe integration; Payment Entry already has a value in 'reference_no' ('{self.reference_no}')")
+
 			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name)
+			print(f"During Payment Entry submit, received a 'payment_intent_id' = {payment_intent_id}")
 			if not payment_intent_id:
 				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API."))
 			self.db_set('reference_no', payment_intent_id, update_modified = True)
-		# End: Farm To People
 
+		# End: Farm To People
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
 		self.update_advance_paid()

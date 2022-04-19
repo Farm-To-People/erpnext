@@ -104,7 +104,7 @@
    "unique": 1
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "disable",
    "fieldtype": "Check",
    "label": "Disable"
@@ -611,7 +611,7 @@
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2022-04-12 13:21:04.896433",
+ "modified": "2022-04-19 10:42:00.933608",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",
