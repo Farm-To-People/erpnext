@@ -108,8 +108,8 @@ class PaymentEntry(AccountsController):
 
 		 # We can never cancel a Payment Entry that references Stripe;
 		 # Instead, the solution is to create a second, opposite Payment Entry.
-		if self.mode_of_payment == 'Stripe':
-			return Result(False, 'Cannot cancel a Stripe-based payment; perform a refund instead.')
+		if (self.mode_of_payment == 'Stripe') and self.reference_no:
+			return Result(False, 'Cannot cancel a successful Stripe-based payment; perform a refund instead.')
 		return Result(True,"")
 
 	def before_cancel(self):

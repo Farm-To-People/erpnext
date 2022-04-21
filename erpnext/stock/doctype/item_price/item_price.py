@@ -134,10 +134,10 @@ class ItemPrice(Document):
 		"""
 		Farm To People: Update redis after Item Price touched.
 		"""
-		from ftp.ftp_invent import repopulate_redis_for_item
+		from ftp.ftp_invent import try_update_redis_inventory
 		if self.selling:
 			try:
-				repopulate_redis_for_item(item_code=self.item_code)
+				try_update_redis_inventory(item_code=self.item_code)
 				frappe.msgprint("Successfully updated prices on website. (Redis)")
 			except Exception as ex:
 				print(ex)
@@ -147,10 +147,10 @@ class ItemPrice(Document):
 		"""
 		Farm To People: Update redis after Item Price touched.
 		"""
-		from ftp.ftp_invent import repopulate_redis_for_item
+		from ftp.ftp_invent import try_update_redis_inventory
 		if self.selling:
 			try:
-				repopulate_redis_for_item(item_code=self.item_code)
+				try_update_redis_inventory(item_code=self.item_code)
 				frappe.msgprint("Successfully updated prices on website. (Redis)")
 			except Exception as ex:
 				print(ex)
