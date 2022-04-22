@@ -449,17 +449,15 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 	applied_rules = []  # originally named 'rules' in standard code.
 
-	for pricing_rule in pricing_rules:
+	for index, pricing_rule in enumerate(pricing_rules):
 
 		# For each --potential-- Pricing Rule, determine if it's actually applicable or not.
-		if not pricing_rule:
-			frappe.throw("Unexpected Condition: No pricing rules found while looping.")
-			# continue
-
 		if isinstance(pricing_rule, str):
-			frappe.dprint(f"Evaluating Pricing Rule '{pricing_rule}' ...", check_env='FTP_DEBUG_PRICING_RULE')
+			frappe.dprint(f"Evaluating Pricing Rule '{pricing_rule}' ({index + 1} of {len(pricing_rules)}) ...",
+			              check_env='FTP_DEBUG_PRICING_RULE')
 		elif isinstance(pricing_rule, dict):
-			frappe.dprint(f"Evaluating Pricing Rule '{pricing_rule['name']}' ...", check_env='FTP_DEBUG_PRICING_RULE')
+			frappe.dprint(f"Evaluating Pricing Rule '{pricing_rule['name']}'  ({index + 1} of {len(pricing_rules)})...",
+			              check_env='FTP_DEBUG_PRICING_RULE')
 		else:
 			frappe.throw(f"Unexpected type '{type(pricing_rule)}' for variable 'pricing_rule'")
 
@@ -470,7 +468,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 		# Skip if it's only a suggestion? (no idea how this feature was supposed to work)
 		if pricing_rule.get('suggestion'):
-			print("Skipping Pricing Rule, because it's only a suggestion?")
+			frappe.dprint("Skipping Pricing Rule, because it's only a suggestion?", check_env='FTP_DEBUG_PRICING_RULE')
 			continue
 
 		# ------------------------------------
@@ -510,6 +508,19 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 				continue
 		# ------------------------------------
 
+		# ------------------------------------
+		# Farm To People: Pricing Rule based on Coupon Codes.
+		# ------------------------------------
+		# NOTE: Standard code never accomplished this.  Coupon Codes (if they worked at all), only worked with ERPNext shopping carts.
+		if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
+			# But what if a rule already exists on the Order.  And now then Coupon is deleted?
+			# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
+			frappe.dprint(f"x Removing Pricing Rule '{pricing_rule['name']}' from order, because Coupon Codes {args.coupon_codes} do not enable it.",
+			              check_env='FTP_DEBUG_PRICING_RULE')
+			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
+			continue
+		# ------------------------------------
+
 		item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0)
 		item_details.price_or_product_discount = pricing_rule.get("price_or_product_discount")
 
@@ -523,24 +534,13 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 					if pricing_rule.apply_rule_on_other else frappe.scrub(pricing_rule.get('apply_on')))
 			})
 
-		# ------------------------------------
-		# Farm To People: Pricing Rule based on Coupon Codes.
-		# ------------------------------------
-		# NOTE: Standard code never accomplished this.  Coupon Codes (if they worked at all), only worked with ERPNext shopping carts.
-		if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
-			# But what if a rule already exists on the Order.  And now then Coupon is deleted?
-			# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
-			frappe.dprint(f"Removing Pricing Rule '{pricing_rule['name']}' from order, because of missing Coupon Code.", check_env='FTP_DEBUG_PRICING_RULE')
-			item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
-			return item_details
-		# ------------------------------------
-
 		if not pricing_rule.validate_applied_rule:
 			if pricing_rule.price_or_product_discount == "Price":
 				apply_price_discount_rule(pricing_rule, item_details, args)
 			else:
 				get_product_discount_rule(pricing_rule, item_details, args, doc)
-	# end of for loop
+
+	# -----> end of really large For Loop!
 
 	applied_rule_names = ",".join([ each.pricing_rule for each in applied_rules])
 	frappe.dprint(f"Price Loops completed.  Rules applied = {applied_rule_names}", check_env='FTP_DEBUG_PRICING_RULE')
@@ -552,7 +552,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	item_details.has_pricing_rule = 1
 	item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in applied_rules])
 
-	frappe.dprint(f"Returning variable 'item_details' to caller:\n{item_details}", check_env='FTP_DEBUG_PRICING_RULE')
+	frappe.dprint(f"\nReturning variable 'item_details' to caller:\n{item_details}", check_env='FTP_DEBUG_PRICING_RULE')
 	frappe.dprint("\n**************** END PRICING************************\n", check_env='FTP_DEBUG_PRICING_RULE')
 
 	return item_details
@@ -729,15 +729,16 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list, verbose=Fal
 			pricing_rule:  		Frappe dictionary
 			coupon_code_list: 	Python List of Strings, representing Coupon Codes.
 	"""
-
 	from temporal import validate_datatype  # Late import from across Python modules.
+
+	validate_datatype('pricing_rule', pricing_rule, dict, mandatory=True)
 	validate_datatype('coupon_code_list', coupon_code_list, list, mandatory=False)
 
-	if pricing_rule.coupon_code_based != 1:
+	if not bool(pricing_rule.coupon_code_based):
 		return True
 
 	if not coupon_code_list:
-		return False	# no coupons provided, so no matches are possible.
+		return False	# no coupons provided, so matching is impossible.
 
 	# This is some REALLY screwed up syntax for escaping SQL 'WHERE IN'.  But it appears
 	# to be prolific throughout ERPNext.

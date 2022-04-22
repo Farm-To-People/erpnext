@@ -47,21 +47,22 @@ def get_pricing_rules(args, doc=None):
 	pricing_rules = []
 	values =  {}
 
+	# 1. Start adding some potential Pricing Rules to the list 'pricing_rules':
 	for apply_on in ['Item Code', 'Item Group', 'Brand']:
+		frappe.dprint(f"* Searching for pricing rules based on {apply_on}", check_env='FTP_DEBUG_PRICING_RULE')
 		pricing_rules.extend(_get_pricing_rules(apply_on, args, values))
 		if pricing_rules and not apply_multiple_pricing_rules(pricing_rules):
+			frappe.dprint(f"Added {pricing_rules} and will not search for any additional ones.", check_env='FTP_DEBUG_PRICING_RULE')
 			break
 
-	rules = []
+	frappe.dprint(f"1. Possible rules include {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
 
 	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
-
 	if not pricing_rules:
 		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 		return []
 
-	frappe.dprint(f"DH: get_pricing_rules().  Possible rules include {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
-
+	rules = []
 	if apply_multiple_pricing_rules(pricing_rules):
 		pricing_rules = sorted_by_priority(pricing_rules, args, doc)
 		for pricing_rule in pricing_rules:
@@ -78,6 +79,9 @@ def get_pricing_rules(args, doc=None):
 
 	if not rules:
 		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
+	else:
+		frappe.dprint(f"2. Final rules include {[ each['name'] for each in rules] }", check_env='FTP_DEBUG_PRICING_RULE')
+
 	return rules
 
 def sorted_by_priority(pricing_rules, args, doc=None):
@@ -133,13 +137,12 @@ def _get_pricing_rules(apply_on, args, values):
 	"""
 	# IMPORTANT: This code is one of the deepest 'origins' of Potential Pricing Rules.  It contains the SQL that fetches the potentials.
 	# Datahenge: Added some validation:
-	if not apply_on or apply_on not in ['Brand', 'Detail', 'Item Code', 'Item Group']:
+	if (not apply_on) or apply_on not in ['Brand', 'Detail', 'Item Code', 'Item Group']:
 		raise Exception("Argument 'apply_on' not one of (Brand, Detail, Item Code, Item Group) in function '_get_pricing_rules()'")
 	if not args.transaction_type:
 		raise ValueError("Missing mandatory args key = 'transaction_type'")
 
 	apply_on_field = frappe.scrub(apply_on)
-
 	if not args.get(apply_on_field):
 		return []
 
@@ -166,7 +169,8 @@ def _get_pricing_rules(apply_on, args, values):
 	if warehouse_conditions:
 		warehouse_conditions = " and {0}".format(warehouse_conditions)
 
-	if not args.price_list: args.price_list = None
+	if not args.price_list:
+		args.price_list = None
 
 	conditions += " and ifnull(`tabPricing Rule`.for_price_list, '') in (%(price_list)s, '')"
 	values["price_list"] = args.get("price_list")
@@ -188,10 +192,10 @@ def _get_pricing_rules(apply_on, args, values):
 			transaction_type = args.transaction_type,
 			warehouse_cond = warehouse_conditions,
 			apply_on_other_field = "other_{0}".format(apply_on_field),
-			conditions = conditions), values, as_dict=1) or []
+			conditions = conditions), values, as_dict=1, debug=False) or []
 
 	if args.coupon_codes:
-		# TODO: Filter out the Pricing Rules that are not limited by Coupon Codes. 
+		# TODO: Filter out the Pricing Rules that are not limited by Coupon Codes.
 		pass
 
 	return pricing_rules
@@ -724,7 +728,7 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective
 	result = False
 	# Examine each coupon code
 	for each_coupon_code in unique_codes:
-		frappe.dprint(f"Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint(f"* Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...", check_env='FTP_DEBUG_PRICING_RULE')
 		doc_coupon_code = frappe.get_doc("Coupon Code", each_coupon_code)
 
 		if not doc_coupon_code.valid_for_date(effective_date):
