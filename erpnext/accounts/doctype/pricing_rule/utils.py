@@ -52,7 +52,7 @@ def get_pricing_rules(args, doc=None):
 		frappe.dprint(f"* Searching for pricing rules based on {apply_on}", check_env='FTP_DEBUG_PRICING_RULE')
 		pricing_rules.extend(_get_pricing_rules(apply_on, args, values))
 		if pricing_rules and not apply_multiple_pricing_rules(pricing_rules):
-			frappe.dprint(f"Added {pricing_rules} and will not search for any additional ones.", check_env='FTP_DEBUG_PRICING_RULE')
+			frappe.dprint(f"Added {len(pricing_rules)} and will not search for any additional ones.", check_env='FTP_DEBUG_PRICING_RULE')
 			break
 
 	frappe.dprint(f"1. Possible rules include {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
@@ -707,10 +707,6 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective
 		coupon_code_list : a Python List of coupon code names (strings)
 	"""
 
-	# frappe.whatis(pricing_rule)
-	# frappe.whatis(coupon_codes)
-	# frappe.whatis(delivery_date)
-
 	from temporal import validate_datatype
 	from ftp.ftp_module.doctype.coupon_code_multi.coupon_code_multi import expand_coupon_multicodes
 
@@ -728,7 +724,7 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective
 	result = False
 	# Examine each coupon code
 	for each_coupon_code in unique_codes:
-		frappe.dprint(f"* Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...", check_env='FTP_DEBUG_PRICING_RULE')
+		# frappe.dprint(f"* Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...", check_env='FTP_DEBUG_PRICING_RULE')
 		doc_coupon_code = frappe.get_doc("Coupon Code", each_coupon_code)
 
 		if not doc_coupon_code.valid_for_date(effective_date):
@@ -738,6 +734,7 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective
 		# Each coupon code can 1 or more Pricing Rules (April 8th 2022)
 		applicable_rules = [ row.pricing_rule for row in doc_coupon_code.pricing_rule ]
 		if pricing_rule.name in applicable_rules:
+			frappe.dprint(f"\u2713 Coupon code '{each_coupon_code}' enabled pricing rule '{pricing_rule.name}'", check_env='FTP_DEBUG_PRICING_RULE')
 			result = True
 			break
 
