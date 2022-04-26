@@ -71,24 +71,9 @@ class PaymentEntry(AccountsController):
 		self.set_status()
 
 	def on_submit(self):
-		# FTP and Pinstripe
-		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
-
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
-
-		# Begin: Farm To People
-		if self.mode_of_payment == 'Stripe':
-			if self.reference_no:
-				raise Exception(f"Skipping Stripe integration; Payment Entry already has a value in 'reference_no' ('{self.reference_no}')")
-
-			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name)
-			print(f"During Payment Entry submit, received a 'payment_intent_id' = {payment_intent_id}")
-			if not payment_intent_id:
-				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API."))
-			self.db_set('reference_no', payment_intent_id, update_modified = True)
-
-		# End: Farm To People
+		self.acquire_stripe_payment_intent()  # FTP and Pinstripe
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
 		self.update_advance_paid()
@@ -97,11 +82,65 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule()
 		self.set_status()
 
+	def acquire_stripe_payment_intent(self):
+		"""
+		Farm To People integration with Stripe payment processing.
+		"""
+		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
+
+		if self.mode_of_payment != 'Stripe':
+			return
+
+		if self.reference_no:
+			raise Exception(f"Skipping Stripe integration; Payment Entry already has a value in 'reference_no' ('{self.reference_no}')")
+
+		try:
+			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name)
+			if not payment_intent_id:
+				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API (no payment intent returned)"))
+			self.db_set('reference_no', payment_intent_id, update_modified = True)
+			self._log_stripe_on_success(payment_intent_id)
+		except Exception as ex:
+			frappe.db.rollback() # rollback any changes that happened?
+			# Write the Error response to the Activity Log.
+			activity_log = frappe.new_doc("Customer Activity Log")
+			activity_log.customer = self.party
+			activity_log.activity_type = 'Stripe Payment'  # this is an 'Option' on the Customer Activity Log DocType.
+			activity_log.description_short = ex
+			activity_log.description_long = ex
+			activity_log.reference_doctype = 'Payment Entry'
+			activity_log.reference_document = self.name
+			activity_log.log_level = 'Error'
+			activity_log.save(ignore_permissions=True)
+			frappe.db.commit()
+			raise ex  # VERY important to re-raise, so that Submit fails.
+
+	def _log_stripe_on_success(self, payment_intent_id):
+		"""
+		Write the log inside its own try/except.
+		If the log fails to write, that shouldn't invalidate Submitting the payment entry.
+		"""
+		try:
+			# Write the Success response to the Activity Log.
+			activity_log = frappe.new_doc("Customer Activity Log")
+			activity_log.customer = self.party
+			activity_log.activity_type = 'Stripe Payment'  # this is an 'Option' on the Customer Activity Log DocType.
+			activity_log.description_short = f"Payment Entry received a Stripe Payment Intent: {payment_intent_id}"
+			if self.daily_order:
+				activity_log.description_long = f"Payment is associated with Daily Order {self.daily_order}"
+			activity_log.reference_doctype = 'Payment Entry'
+			activity_log.reference_document = self.name
+			activity_log.log_level = 'Info'
+			activity_log.save(ignore_permissions=True)
+		except Exception as ex:
+			frappe.msgprint(f"Warning, failed to write Customer Activity Log while submitting a Stripe Payment Entry: {ex}")
+
 	def create_stripe_refund(self):
 		"""
 		This function should be called rarely.
 		The purpose is to reverse the Payment in Stripe, and cancel the ERPNext Payment Entry.
 		"""
+		# TODO: Figure out how to create refunds.
 
 	def can_cancel(self):
 		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
@@ -616,8 +655,8 @@ class PaymentEntry(AccountsController):
 			where parent = %s and allocated_amount = 0""", self.name)
 
 	def validate_payment_against_negative_invoice(self):
-		if ((self.payment_type=="Pay" and self.party_type=="Customer")
-				or (self.payment_type=="Receive" and self.party_type=="Supplier")):
+		# Datahenge: Disabling so FTP can credit Customers, regardless of whether they have invoices.
+		if (self.payment_type=="Receive" and self.party_type=="Supplier"):
 
 			total_negative_outstanding = sum(abs(flt(d.outstanding_amount))
 				for d in self.get("references") if flt(d.outstanding_amount) < 0)
@@ -684,6 +723,7 @@ class PaymentEntry(AccountsController):
 		self.set("remarks", "\n".join(remarks))
 
 	def make_gl_entries(self, cancel=0, adv_adj=0):
+		# TODO: Make this handle reverse Payment Entries for Customers.
 		if self.payment_type in ("Receive", "Pay") and not self.get("party_account_field"):
 			self.setup_party_account_field()
 
@@ -880,7 +920,7 @@ class PaymentEntry(AccountsController):
 
 		if account_details:
 			row.update(account_details)
-		
+
 		if not row.get('amount'):
 			# if no difference amount
 			return
@@ -1005,6 +1045,18 @@ class PaymentEntry(AccountsController):
 			current_tax_fraction *= -1.0
 
 		return current_tax_fraction
+
+	def get_customer_contact_email_address(self):
+		"""
+		FTP: Access point for Pinstripe module to obtain the Customer's email address.
+		"""
+		if self.party_type != "Customer":
+			raise Exception(f"Payment Entry {self.name} does not have party_type = 'Customer'")
+		return frappe.get_value("Customer", self.party_account, "email_id")
+
+# ----------------
+# STATIC METHODS
+# ----------------
 
 def validate_inclusive_tax(tax, doc):
 	def _on_previous_row_error(row_range):

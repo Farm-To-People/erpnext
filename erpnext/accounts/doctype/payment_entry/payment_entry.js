@@ -820,6 +820,8 @@ frappe.ui.form.on('Payment Entry', {
 
 			var allocated_positive_outstanding =  paid_amount + allocated_negative_outstanding;
 		} else if (in_list(["Customer", "Supplier"], frm.doc.party_type)) {
+			/* DATAHENGE: Disabling so you can Credit a customer whenever you need to.
+
 			if(paid_amount > total_negative_outstanding) {
 				if(total_negative_outstanding == 0) {
 					frappe.msgprint(
@@ -839,6 +841,11 @@ frappe.ui.form.on('Payment Entry', {
 					(total_positive_outstanding_including_order < allocated_positive_outstanding ?
 						total_positive_outstanding_including_order : allocated_positive_outstanding)
 			}
+			*/
+			allocated_positive_outstanding = total_negative_outstanding - paid_amount;
+			allocated_negative_outstanding = paid_amount +
+				(total_positive_outstanding_including_order < allocated_positive_outstanding ?
+					total_positive_outstanding_including_order : allocated_positive_outstanding)
 		}
 
 		$.each(frm.doc.references || [], function(i, row) {
