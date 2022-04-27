@@ -88,6 +88,7 @@ class PaymentEntry(AccountsController):
 		"""
 		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
 		from ftp.ftp_module.payments import LoggedError
+		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log
 
 		if self.mode_of_payment != 'Stripe':
 			return
@@ -104,35 +105,23 @@ class PaymentEntry(AccountsController):
 		except Exception as ex:
 			frappe.db.rollback() # rollback any changes that happened?
 			# Write the Error response to the Activity Log.
-			activity_log = frappe.new_doc("Customer Activity Log")
-			activity_log.customer = self.party
-			activity_log.activity_type = 'Stripe Payment'  # this is an 'Option' on the Customer Activity Log DocType.
-			activity_log.description_short = ex
-			activity_log.description_long = ex
-			activity_log.reference_doctype = 'Daily Order' if self.daily_order else 'Payment Entry'
-			activity_log.reference_document = self.daily_order if self.daily_order else self.name
-			activity_log.log_level = 'Error'
-			activity_log.save(ignore_permissions=True)
-			frappe.db.commit()
-			raise LoggedError  # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
+			new_error_log(customer_key=self.party, activity_type='Stripe Payment', 
+			              short_message=ex, ref_doctype='Daily Order' if self.daily_order else 'Payment Entry',
+						  ref_docname = self.daily_order if self.daily_order else self.name)
+			raise LoggedError from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
 
 	def _log_stripe_on_success(self, payment_intent_id):
+		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_info_log
 		"""
 		Write the log inside its own try/except.
 		If the log fails to write, that shouldn't invalidate Submitting the payment entry.
 		"""
 		try:
 			# Write the Success response to the Activity Log.
-			activity_log = frappe.new_doc("Customer Activity Log")
-			activity_log.customer = self.party
-			activity_log.activity_type = 'Stripe Payment'  # this is an 'Option' on the Customer Activity Log DocType.
-			activity_log.description_short = f"Payment Entry received a Stripe Payment Intent: {payment_intent_id}"
-			if self.daily_order:
-				activity_log.description_long = f"Payment is associated with Daily Order {self.daily_order}"
-			activity_log.reference_doctype = 'Payment Entry'
-			activity_log.reference_document = self.name
-			activity_log.log_level = 'Info'
-			activity_log.save(ignore_permissions=True)
+			new_info_log(customer_key=self.party, activity_type='Stripe Payment',
+			             message=f"Payment Entry received a Stripe Payment Intent: {payment_intent_id}",
+						 message_long=f"Payment is associated with Daily Order {self.daily_order}" if self.daily_order else None,
+						 ref_doctype='Payment Entry', ref_docname=self.name)
 		except Exception as ex:
 			frappe.msgprint(f"Warning, failed to write Customer Activity Log while submitting a Stripe Payment Entry: {ex}")
 
@@ -1053,9 +1042,9 @@ class PaymentEntry(AccountsController):
 		"""
 		if self.party_type != "Customer":
 			raise Exception(f"Payment Entry {self.name} does not have party_type = 'Customer'")
-		email_address = frappe.get_value("Customer", self.party_name, "email_id")
+		email_address = frappe.get_value("Customer", self.party, "email_id")
 		if not email_address:
-			raise ValueError(f"Cannot find customer email address for Payment Entry with Party = {self.party_name}")
+			raise ValueError(f"Cannot find customer email address for Payment Entry with Party = {self.party}")
 		return email_address
 
 	def on_trash(self):
