@@ -87,6 +87,7 @@ class PaymentEntry(AccountsController):
 		Farm To People integration with Stripe payment processing.
 		"""
 		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
+		from ftp.ftp_module.payments import LoggedError
 
 		if self.mode_of_payment != 'Stripe':
 			return
@@ -108,12 +109,12 @@ class PaymentEntry(AccountsController):
 			activity_log.activity_type = 'Stripe Payment'  # this is an 'Option' on the Customer Activity Log DocType.
 			activity_log.description_short = ex
 			activity_log.description_long = ex
-			activity_log.reference_doctype = 'Payment Entry'
-			activity_log.reference_document = self.name
+			activity_log.reference_doctype = 'Daily Order' if self.daily_order else 'Payment Entry'
+			activity_log.reference_document = self.daily_order if self.daily_order else self.name
 			activity_log.log_level = 'Error'
 			activity_log.save(ignore_permissions=True)
 			frappe.db.commit()
-			raise ex  # VERY important to re-raise, so that Submit fails.
+			raise LoggedError  # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
 
 	def _log_stripe_on_success(self, payment_intent_id):
 		"""
@@ -372,8 +373,8 @@ class PaymentEntry(AccountsController):
 							ref_party_account = ref_doc.payable_account
 
 						if ref_party_account != self.party_account:
-								frappe.throw(_("{0} {1} is associated with {2}, but Party Account is {3}")
-									.format(d.reference_doctype, d.reference_name, ref_party_account, self.party_account))
+							frappe.throw(_("{0} {1} is associated with {2}, but Party Account is {3}")
+								.format(d.reference_doctype, d.reference_name, ref_party_account, self.party_account))
 
 					if ref_doc.docstatus != 1:
 						frappe.throw(_("{0} {1} must be submitted")
@@ -1053,6 +1054,9 @@ class PaymentEntry(AccountsController):
 		if self.party_type != "Customer":
 			raise Exception(f"Payment Entry {self.name} does not have party_type = 'Customer'")
 		return frappe.get_value("Customer", self.party_account, "email_id")
+
+	def on_trash(self):
+		self.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
 
 # ----------------
 # STATIC METHODS
