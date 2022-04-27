@@ -1053,7 +1053,10 @@ class PaymentEntry(AccountsController):
 		"""
 		if self.party_type != "Customer":
 			raise Exception(f"Payment Entry {self.name} does not have party_type = 'Customer'")
-		return frappe.get_value("Customer", self.party_account, "email_id")
+		email_address = frappe.get_value("Customer", self.party_name, "email_id")
+		if not email_address:
+			raise ValueError(f"Cannot find customer email address for Payment Entry with Party = {self.party_name}")
+		return email_address
 
 	def on_trash(self):
 		self.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
