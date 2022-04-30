@@ -24,6 +24,8 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import g
 #  9. Report amounts are in "Party Currency" if party is selected, or company currency for multi-party
 # 10. This reports is based on all GL Entries that are made against account_type "Receivable" or "Payable"
 
+# DATAHENGE: Need to modify so that Prepayments are shown as such, including reversals.
+
 def execute(filters=None):
 	args = {
 		"party_type": "Customer",
@@ -140,13 +142,18 @@ class ReceivablePayableReport(object):
 		# get the row where this balance needs to be updated
 		# if its a payment, it will return the linked invoice or will be considered as advance
 		row = self.get_voucher_balance(gle)
-		if not row: return
+		if not row:
+			return
+
 		# gle_balance will be the total "debit - credit" for receivable type reports and
 		# and vice-versa for payable type reports
 		gle_balance = self.get_gle_balance(gle)
 		if gle_balance > 0:
 			if gle.voucher_type in ('Journal Entry', 'Payment Entry') and gle.against_voucher:
-				# debit against sales / purchase invoice
+							# debit against sales / purchase invoice
+				row.paid -= gle_balance
+			# Datahenge: Need to handle the case where a Prepayment is reversed:
+			elif gle.voucher_type in ('Journal Entry', 'Payment Entry'):
 				row.paid -= gle_balance
 			else:
 				# invoice

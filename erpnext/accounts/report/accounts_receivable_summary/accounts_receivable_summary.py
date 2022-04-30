@@ -2,12 +2,13 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+from six import iteritems
 import frappe
 from frappe import _, scrub
 from frappe.utils import flt, cint
 from erpnext.accounts.party import get_partywise_advanced_payment_amount
 from erpnext.accounts.report.accounts_receivable.accounts_receivable import ReceivablePayableReport
-from six import iteritems
+
 
 def execute(filters=None):
 	args = {
@@ -28,8 +29,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 	def get_data(self, args):
 		self.data = []
 
+		# Fetches a List of Dictionary data, about AR transactions.
 		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
-
 		self.get_party_total(args)
 
 		party_advance_amount = get_partywise_advanced_payment_amount(self.party_type,
@@ -48,7 +49,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			row.update(party_dict)
 
 			# Advance against party
-			row.advance = party_advance_amount.get(party, 0)
+			row.advance = party_advance_amount.get(party, 0)  # NOTE: Datahenge customized this formula to handle Prepayment reversals.
 
 			# In AR/AP, advance shown in paid columns,
 			# but in summary report advance shown in separate column

@@ -251,7 +251,7 @@
    "depends_on": "paid_from",
    "fieldname": "paid_from_account_balance",
    "fieldtype": "Currency",
-   "label": "Account Balance",
+   "label": "Paid From Account Balance",
    "options": "paid_from_account_currency",
    "print_hide": 1,
    "read_only": 1
@@ -284,7 +284,7 @@
    "depends_on": "paid_to",
    "fieldname": "paid_to_account_balance",
    "fieldtype": "Currency",
-   "label": "Account Balance",
+   "label": "Paid To Account Balance",
    "options": "paid_to_account_currency",
    "print_hide": 1,
    "read_only": 1
@@ -723,7 +723,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-04-25 16:48:31.418114",
+ "modified": "2022-04-29 12:37:23.792763",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",

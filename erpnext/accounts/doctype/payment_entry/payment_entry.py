@@ -71,6 +71,7 @@ class PaymentEntry(AccountsController):
 		self.set_status()
 
 	def on_submit(self):
+		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
 		self.acquire_stripe_payment_intent()  # FTP and Pinstripe
@@ -81,6 +82,10 @@ class PaymentEntry(AccountsController):
 		self.update_donation()
 		self.update_payment_schedule()
 		self.set_status()
+		# FTP : Recalculate a customer's account balance.
+		if self.party and self.party_type in ("Customer"):
+			reapply_customer_credits(customer_key=self.party)
+
 
 	def acquire_stripe_payment_intent(self):
 		"""
@@ -137,8 +142,11 @@ class PaymentEntry(AccountsController):
 
 		 # We can never cancel a Payment Entry that references Stripe;
 		 # Instead, the solution is to create a second, opposite Payment Entry.
-		if (self.mode_of_payment == 'Stripe') and self.reference_no:
-			return Result(False, 'Cannot cancel a successful Stripe-based payment; perform a refund instead.')
+
+		# TODO: Perform a real, Stripe refund.
+
+		#if (self.mode_of_payment == 'Stripe') and self.reference_no:
+		#	return Result(False, 'Cannot cancel a successful Stripe-based payment; perform a refund instead.')
 		return Result(True,"")
 
 	def before_cancel(self):
@@ -147,6 +155,7 @@ class PaymentEntry(AccountsController):
 			raise Exception(okay.message)
 
 	def on_cancel(self):
+		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
 		self.make_gl_entries(cancel=1)
 		self.update_outstanding_amounts()
@@ -157,6 +166,10 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule(cancel=1)
 		self.set_payment_req_status()
 		self.set_status()
+		# FTP : Recalculate a customer's account balance.
+		if self.party and self.party_type in ("Customer"):
+			reapply_customer_credits(customer_key=self.party)
+
 
 	def set_payment_req_status(self):
 		from erpnext.accounts.doctype.payment_request.payment_request import update_payment_req_status
@@ -645,7 +658,9 @@ class PaymentEntry(AccountsController):
 			where parent = %s and allocated_amount = 0""", self.name)
 
 	def validate_payment_against_negative_invoice(self):
-		# Datahenge: Disabling so FTP can credit Customers, regardless of whether they have invoices.
+		# Datahenge: Disabling so FTP can credit Customers, regardless of whether they have open Invoices.
+		# If they can collect pre-Payment automatically, there is not reason they should not be able to refund
+		# pre-payment manually.
 		if (self.payment_type=="Receive" and self.party_type=="Supplier"):
 
 			total_negative_outstanding = sum(abs(flt(d.outstanding_amount))
@@ -726,52 +741,65 @@ class PaymentEntry(AccountsController):
 		make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj)
 
 	def add_party_gl_entries(self, gl_entries):
-		if self.party_account:
-			if self.payment_type=="Receive":
-				against_account = self.paid_to
-			else:
-				against_account = self.paid_from
 
-			party_gl_dict = self.get_gl_dict({
-				"account": self.party_account,
-				"party_type": self.party_type,
-				"party": self.party,
-				"against": against_account,
-				"account_currency": self.party_account_currency,
-				"cost_center": self.cost_center
-			}, item=self)
+		if not self.party_account:
+			return None
 
-			dr_or_cr = "credit" if erpnext.get_party_account_type(self.party_type) == 'Receivable' else "debit"
+		if self.payment_type=="Receive":
+			against_account = self.paid_to
+		else:
+			against_account = self.paid_from
 
-			for d in self.get("references"):
-				gle = party_gl_dict.copy()
-				gle.update({
-					"against_voucher_type": d.reference_doctype,
-					"against_voucher": d.reference_name
-				})
+		party_gl_dict = self.get_gl_dict({
+			"account": self.party_account,
+			"party_type": self.party_type,
+			"party": self.party,
+			"against": against_account,
+			"account_currency": self.party_account_currency,
+			"cost_center": self.cost_center
+		}, item=self)
 
-				allocated_amount_in_company_currency = flt(flt(d.allocated_amount) * flt(d.exchange_rate),
-					self.precision("paid_amount"))
+		# Datahenge: Making a correction to this incorrect business logic.
+		# dr_or_cr = "credit" if erpnext.get_party_account_type(self.party_type) == 'Receivable' else "debit"
+		if self.payment_type == "Receive" and erpnext.get_party_account_type(self.party_type) == 'Receivable':
+			dr_or_cr = "credit"  # receiving a payment will credit Accounts Receivable.
+		elif self.payment_type == "Receive" and erpnext.get_party_account_type(self.party_type) != 'Receivable':
+			dr_or_cr = "debit"  # receiving a refund will debit Accounts Payable.
+		elif self.payment_type == "Pay" and erpnext.get_party_account_type(self.party_type) == 'Receivable':
+			dr_or_cr = "debit"  # issuing a refund will debit Accounts Receivable
+		elif self.payment_type == "Pay" and erpnext.get_party_account_type(self.party_type) != 'Receivable':
+			dr_or_cr = "credit"  # paying a supplier will credit Accounts Payable
+			
 
-				gle.update({
-					dr_or_cr + "_in_account_currency": d.allocated_amount,
-					dr_or_cr: allocated_amount_in_company_currency
-				})
+		for d in self.get("references"):
+			gle = party_gl_dict.copy()
+			gle.update({
+				"against_voucher_type": d.reference_doctype,
+				"against_voucher": d.reference_name
+			})
 
-				gl_entries.append(gle)
+			allocated_amount_in_company_currency = flt(flt(d.allocated_amount) * flt(d.exchange_rate),
+				self.precision("paid_amount"))
 
-			if self.unallocated_amount:
-				exchange_rate = self.get_exchange_rate()
-				base_unallocated_amount = (self.unallocated_amount * exchange_rate)
+			gle.update({
+				dr_or_cr + "_in_account_currency": d.allocated_amount,
+				dr_or_cr: allocated_amount_in_company_currency
+			})
 
-				gle = party_gl_dict.copy()
+			gl_entries.append(gle)
 
-				gle.update({
-					dr_or_cr + "_in_account_currency": self.unallocated_amount,
-					dr_or_cr: base_unallocated_amount
-				})
+		if self.unallocated_amount:
+			exchange_rate = self.get_exchange_rate()
+			base_unallocated_amount = (self.unallocated_amount * exchange_rate)
 
-				gl_entries.append(gle)
+			gle = party_gl_dict.copy()
+
+			gle.update({
+				dr_or_cr + "_in_account_currency": self.unallocated_amount,
+				dr_or_cr: base_unallocated_amount
+			})
+
+			gl_entries.append(gle)
 
 	def add_bank_gl_entries(self, gl_entries):
 		if self.payment_type in ("Pay", "Internal Transfer"):

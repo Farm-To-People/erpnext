@@ -525,9 +525,11 @@ def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=F
 		cond = """ and cost_center in (select name from `tabCost Center` where
 			lft >= {0} and rgt <= {1})""".format(lft, rgt)
 
+	# Datahenge: Ignored cancelled Ledger Transactions.
 	outstanding_based_on_gle = frappe.db.sql("""
 		select sum(debit) - sum(credit)
 		from `tabGL Entry` where party_type = 'Customer'
+		AND is_cancelled = 0
 		and party = %s and company=%s {0}""".format(cond), (customer, company))
 
 	outstanding_based_on_gle = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0
@@ -675,11 +677,13 @@ def get_ar_balance_per_customer_per_gl(customer_key, validate_exists=False):
 	if validate_exists and (not frappe.db.exists("Customer", customer_key)):
 		frappe.throw(f"Cannot find Customer with 'name' = '{customer_key}'")
 
+	# Datahenge: Ignored cancelled Ledger Transactions.
 	company = get_default_company()
 	outstanding_based_on_gle = frappe.db.sql("""
 		select sum(debit) - sum(credit)
 		from `tabGL Entry` where party_type = 'Customer'
-		and party = %s and company=%s""", (customer_key, company))
+		AND is_cancelled = 0
+		AND party = %s and company=%s""", (customer_key, company))
 
 	balance = flt(outstanding_based_on_gle[0][0]) if outstanding_based_on_gle else 0.00
 	return balance

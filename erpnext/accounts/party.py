@@ -604,6 +604,7 @@ def get_party_shipping_address(doctype, name):
 		return ''
 
 def get_partywise_advanced_payment_amount(party_type, posting_date = None, future_payment=0, company=None):
+	# Datahenge: Need to teach this about Reversing Prepayments
 	cond = "1=1"
 	if posting_date:
 		if future_payment:
@@ -614,13 +615,15 @@ def get_partywise_advanced_payment_amount(party_type, posting_date = None, futur
 	if company:
 		cond += "and company = {0}".format(frappe.db.escape(company))
 
+	# Datahenge: Changing this from summing Credit, to summing Credit minus Debit.
+	#            This should help capture Prepayment Reversals.
 	data = frappe.db.sql(""" SELECT party, sum({0}) as amount
 		FROM `tabGL Entry`
 		WHERE
 			party_type = %s and against_voucher is null
 			and is_cancelled = 0
 			and {1} GROUP BY party"""
-		.format(("credit") if party_type == "Customer" else "debit", cond) , party_type)
+		.format(("credit - debit") if party_type == "Customer" else "debit", cond) , party_type)
 
 	if data:
 		return frappe._dict(data)
