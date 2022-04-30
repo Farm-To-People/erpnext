@@ -1018,6 +1018,12 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			return contact_persons[0]
 		return None
 
+	def update_order_phone_numbers(self):
+		"""
+		Update the mobile number on all upcoming Daily Orders.
+		"""
+		update_order_phone_numbers(self.name)
+
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
 	global AR_SUMMARY_QUERY
@@ -1068,3 +1074,29 @@ def ar_summary_to_html(data_rows, balance_per_gl):
 # Load the SQL query into memory.
 if not AR_SUMMARY_QUERY:
 	read_ar_summary_query()
+
+
+def update_order_phone_numbers(customer_key: str, mobile_number: str=None):
+	"""
+	Update the mobile number on all upcoming Daily Orders.
+
+	Adding here as a static method, because there's no need to frappe.get_doc() the entire Customer, just for this small update.
+	"""
+	from ftp.ftp_module.generics import get_calculation_date
+
+	if not mobile_number:
+		mobile_number = frappe.get_value("Customer", customer_key, mobile_no)
+
+	# Using a single SQL statement, for efficiency.
+	statement = """ UPDATE `tabDaily Order` SET contact_phone = %(mobile_number)s
+	WHERE customer = %(customer_key)s AND delivery_date >= %(date_today)s """
+	try:
+		values = {
+			"mobile_number": mobile_number,
+			"customer_key": customer_key,
+			"date_today": get_calculation_date()
+		}
+		frappe.db.sql(statement, values=values, debug=False)
+	except Exception as ex:
+		print(f"Error in update_order_phone_numbers(): {ex}")
+		raise ex
