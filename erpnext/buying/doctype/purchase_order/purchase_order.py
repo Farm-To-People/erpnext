@@ -325,9 +325,17 @@ class PurchaseOrder(BuyingController):
 		"""
 		def method1():
 			# Option 1:  Update every PO line indiscriminately.
-			item_codes = list(set([d.item_code for d in self.get("items")]))
+			item_codes = [d.item_code for d in self.get("items")]
+
+			doc_orig = self.get_doc_before_save()
+			if doc_orig:
+				item_codes_before = [d.item_code for d in doc_orig.get("items")]
+				item_codes = item_codes + item_codes_before
+
+			item_codes = list(set(item_codes))  # de-duplicate
 			if not item_codes:
 				return
+
 			for item_code in item_codes:
 				is_sales_item = frappe.db.get_value("Item", item_code, "is_sales_item")
 				if is_sales_item:
@@ -413,6 +421,24 @@ class PurchaseOrder(BuyingController):
 			frappe.throw(_("Purchase Order can only be reset to 'Draft' when status is 'To Receive and Bill'"))
 		frappe.db.set_value("Purchase Order", self.name, "docstatus", 0)
 		self.reload()
+
+
+	def after_delete(self):
+		"""
+		After deleting a Purchase Order, try to update Redis.
+		"""
+		item_codes = [d.item_code for d in self.get("items")]
+		doc_orig = self.get_doc_before_save()
+		if doc_orig:
+			item_codes_before = [d.item_code for d in doc_orig.get("items")]
+			item_codes = item_codes + item_codes_before
+
+		item_codes = list(set(item_codes))  # de-duplicate
+		if not item_codes:
+			return
+
+		for item_code in item_codes:
+			try_update_redis_inventory(item_code)
 
 # ----------------------------------------
 # 			END CONTROLLER METHODS
