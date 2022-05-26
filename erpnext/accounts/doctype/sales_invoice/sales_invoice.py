@@ -1844,6 +1844,8 @@ def get_loyalty_programs(customer):
 
 def on_doctype_update():
 	frappe.db.add_index("Sales Invoice", ["customer", "is_return", "return_against"])
+	# FTP: Add an additional index for performance of Orders Not Invoiced report.
+	frappe.db.add_index("Sales Invoice", ["daily_order", "docstatus", "is_return"])
 
 @frappe.whitelist()
 def create_invoice_discounting(source_name, target_doc=None):

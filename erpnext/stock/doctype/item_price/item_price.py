@@ -138,7 +138,7 @@ class ItemPrice(Document):
 		if self.selling:
 			try:
 				try_update_redis_inventory(item_code=self.item_code)
-				frappe.msgprint("Successfully updated prices on website. (Redis)")
+				# frappe.msgprint("Successfully updated prices on website. (Redis)")
 			except Exception as ex:
 				print(ex)
 				frappe.msgprint("Unable to update Redis.<br>To resolve, continue editing Item Prices.  There should be an active Selling Price for the next 28 days.")

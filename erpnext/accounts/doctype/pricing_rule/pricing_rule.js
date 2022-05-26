@@ -154,4 +154,69 @@ frappe.ui.form.on('Pricing Rule', {
 		if(!in_list(options, applicable_for)) applicable_for = null;
 		frm.set_value("applicable_for", applicable_for);
 	}
+
+	,after_save: function(frm) {
+
+		if (frm.doc.coupon_code_based == true) {
+			return;
+		}
+		frappe.db.get_single_value("FTP Custom Settings", "open_dialog_on_price_change").then(val => {
+
+			if (val == false) {
+				return;
+			}
+			var my_dialog = new frappe.ui.Dialog({
+				title: 'Update Orders?',
+				width: 100,
+				fields: [
+					{
+						fieldtype: 'Select',
+						fieldname: 'update_existing_orders',
+						label: __('Update existing orders?'),
+						options: __('No\nYes'),
+						default: 'No',
+						reqd: 1,
+						onchange: function() {
+							if(my_dialog.fields_dict.update_existing_orders.value == 'Yes') {
+								my_dialog.set_df_property("delivery_date_start", "hidden", 0);
+							} else {
+								my_dialog.set_df_property("delivery_date_start", "hidden", 1);
+							}
+						}
+					},
+					{
+						'fieldtype': 'Date',
+						'fieldname': 'delivery_date_start',
+						'label': __('Starting with Delivery Date:'),
+						default: ((frm.doc.valid_from > frappe.datetime.get_today()) ? frm.doc.valid_from :frappe.datetime.get_today()),
+						hidden: true
+					}
+				]
+			});
+	
+			my_dialog.set_primary_action(__('Continue'), args => {
+	
+				if (args.update_existing_orders == 'Yes') {
+	
+					const dialog_data = my_dialog.get_values();
+					let delivery_date_start = dialog_data.delivery_date_start;
+	
+					frappe.call({
+						method:"ftp.utilities.pricing.js_recalculate_pricing_rule",
+						args: {
+							"pricing_rule_name": frm.doc.name,
+							"delivery_date_start": delivery_date_start
+						},
+						callback: function(r) {
+							if (r.message) {
+								frappe.msgprint(r.message);
+							}
+						}
+					});
+				}
+				my_dialog.hide();	
+			});
+			my_dialog.show();
+		})
+	}
 });
