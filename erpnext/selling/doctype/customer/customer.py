@@ -1086,7 +1086,7 @@ def update_order_phone_numbers(customer_key: str, mobile_number: str=None):
 	from ftp.ftp_module.generics import get_calculation_date
 
 	if not mobile_number:
-		mobile_number = frappe.get_value("Customer", customer_key, mobile_no)
+		mobile_number = frappe.get_value("Customer", customer_key, "mobile_no")
 
 	# Using a single SQL statement, for efficiency.
 	statement = """ UPDATE `tabDaily Order` SET contact_phone = %(mobile_number)s
