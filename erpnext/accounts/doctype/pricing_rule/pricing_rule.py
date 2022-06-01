@@ -478,27 +478,21 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		# ------------------------------------
 		if doc and doc.doctype == 'Daily Order' and bool(pricing_rule.nth_order_only):
 			frappe.dprint(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.", check_env='FTP_DEBUG_PRICING_RULE')
-
-			# Create a list of all non-cancelled Daily Orders
-			nth_order_list = create_nth_order_list(customer_id=doc.customer,
+			try:
+				# Create a list of all non-cancelled Daily Orders
+				nth_order_list = create_nth_order_list(customer_id=doc.customer,
 													daily_order=doc)
+				this_order_position = next(iter([ order for order in nth_order_list if order['name'] == doc.name ]))
+				this_order_position = this_order_position['nth_order_index']
+			except StopIteration:
+				this_order_position = 1
 
-			#order_position = next((index for (index, d) in enumerate(nth_order_list)
-			#                       if d["name"] == doc_daily_order.name), None) + 1
-			# print(f"* Relative position of Daily Order '{doc_daily_order.name}' = {order_position}")
-
-			# Case 1:  Fewer orders exist than the Nth Order.
-			if len(nth_order_list) < pricing_rule.nth_order_only:
-				frappe.dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order",
-				              check_env='FTP_DEBUG_PRICING_RULE')
-				continue
-			# Case 2:  Is this the Nth?
-			elif nth_order_list[pricing_rule.nth_order_only - 1]['name'] != doc.name:
-				frappe.dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order",
+			if this_order_position !=  pricing_rule.nth_order_only:
+				frappe.dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order.",
 				              check_env='FTP_DEBUG_PRICING_RULE')
 				continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
-			else:
-				frappe.dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
+
+			frappe.dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 
 		# ------------------------------------
 		# Farm To People: Pricing Rule based on Order Line's Origin Code.
@@ -767,17 +761,25 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list, verbose=Fal
 
 def create_nth_order_list(customer_id, daily_order=None):
 	"""
-	Farm To People:  Return a list of Daily Orders, filtered, and sorted by Delivery Date ascending.
+	Farm To People:  Return a List of Daily Orders, filtered, and sorted by Delivery Date ascending.
+
+	Example:  [	{"name": "CDO-2022-01640", "delivery_date": "2022-03-15", "status_delivery": "Delivered", "nth_order_index": 128},
+	            {"name": "CDO-2022-01638", "delivery_date": "2022-03-22", "status_delivery": "Delivered", "nth_order_index": 129},
+				{"name": "CDO-2022-01641", "delivery_date": "2022-03-29", "status_delivery": "Delivered", "nth_order_index": 130}
+			  ]
 	"""
+
 	from temporal import validate_datatype, any_to_date
 	from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder
 
 	validate_datatype("customer_id", customer_id, str, mandatory=True)
 	validate_datatype("daily_order", daily_order, DailyOrder, mandatory=False)
 
+	dbp_order_quantity = frappe.db.get_value("Customer", customer_id, "dbp_order_quantity")
+
 	fields=['name', 'delivery_date', 'status_delivery']
 	filters={ "status_delivery": ["not in", ['Paused', 'Skipped', 'Cancelled']],
-	           "customer": customer_id
+	          "customer": customer_id
 	}
 	orders = frappe.get_list("Daily Order", filters=filters, fields=fields)
 
@@ -788,4 +790,9 @@ def create_nth_order_list(customer_id, daily_order=None):
 		               "delivery_date": any_to_date(daily_order.delivery_date)  # ...so this must be too
 					   })
 	ret = sorted(orders, key=lambda k: k['delivery_date'])
+
+	# Assigned each order an 'nth_order_index' value
+	for index, order in enumerate(ret):
+		order['nth_order_index'] = index + 1 + dbp_order_quantity
+
 	return ret
