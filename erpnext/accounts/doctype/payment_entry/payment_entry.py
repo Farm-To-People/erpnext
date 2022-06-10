@@ -155,7 +155,8 @@ class PaymentEntry(AccountsController):
 			raise Exception(okay.message)
 
 	def on_cancel(self):
-		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
+		from ftp.ftp_module.payments import reapply_customer_credits, get_owned_payment_amount  # late import due to cross-Module code
+
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
 		self.make_gl_entries(cancel=1)
 		self.update_outstanding_amounts()
@@ -166,9 +167,17 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule(cancel=1)
 		self.set_payment_req_status()
 		self.set_status()
-		# FTP : Recalculate a customer's account balance.
+
 		if self.party and self.party_type in ("Customer"):
-			reapply_customer_credits(customer_key=self.party)
+			reapply_customer_credits(customer_key=self.party)  # FTP : Recalculate a customer's account balance.
+
+	def on_change(self):
+		from ftp.ftp_module.payments import get_owned_payment_amount  # late import due to cross-Module code
+		# FTP:  Update Daily Order's owned payment amount.
+		if self.daily_order:
+			# At this point in Cancellation Workflow, the DB should already be updated.  So it 
+			# 'should' be safe to call get_owned_payment_amount(), which relies on a SQL query.
+			frappe.db.set_value("Daily Order", self.daily_order, "amount_paid", get_owned_payment_amount(self.daily_order))
 
 
 	def set_payment_req_status(self):
