@@ -739,6 +739,21 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			"""
 			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
 
+			statement = """ UPDATE `tabDaily Order`
+			SET customer_name = %(customer_name)s
+			WHERE customer = %(customer_id)s
+			"""
+			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
+
+		if self.customer_primary_contact:
+			doc_primary_contact = frappe.get_doc("Contact", self.customer_primary_contact)
+			if (not self.is_anon()) and self.has_value_changed('first_name'):
+				doc_primary_contact.first_name = self.first_name
+				doc_primary_contact.db_update()
+			if (not self.is_anon()) and self.has_value_changed('last_name'):
+				doc_primary_contact.last_name = self.last_name
+				doc_primary_contact.db_update()
+
 		if (not self.is_anon()) and self.has_value_changed('delivery_instructions'):
 			statement = """ UPDATE `tabDaily Order`
 			SET delivery_instructions = %(delivery_instructions)s
@@ -772,6 +787,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.
+		# frappe.in_sql_transaction()
 		super().on_update()
 		self.on_update_children(child_docfield_name='pauses')
 
@@ -780,7 +796,12 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Find a Customer based on email address.
 		"""
-		customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name')
+		# before = frappe.in_sql_transaction()
+		customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
+		# after = frappe.in_sql_transaction()
+		#if before != after:
+		#	raise Exception("Inside SQL transaction.")
+
 		# Rule: There Can Only Be One
 		if len(customers) == 0:
 			if err_on_missing:
