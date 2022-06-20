@@ -15,7 +15,6 @@ class ERPNextContact(ContactType):
 		related_customers = get_customers_by_contact_key(self.name)
 		for customer_key in related_customers:
 			frappe.db.set_value("Customer", customer_key, 'mobile_no', self.mobile_no)
-			frappe.db.commit()
 
 
 def get_customers_by_contact_key(contact_key):

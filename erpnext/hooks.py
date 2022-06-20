@@ -271,7 +271,8 @@ doc_events = {
 	},
 	"Contact": {
 		"on_trash": "erpnext.support.doctype.issue.issue.update_issue",
-		"after_insert": "erpnext.telephony.doctype.call_log.call_log.link_existing_conversations",
+	# Datahenge: Removing this hook, which contains a SQL commit(), and is harming the Anonymous Customer Registration by preventing rollbacks.
+	#	"after_insert": "erpnext.telephony.doctype.call_log.call_log.link_existing_conversations",
 		"validate": "erpnext.crm.utils.update_lead_phone_numbers"
 	},
 	"Email Unsubscribe": {

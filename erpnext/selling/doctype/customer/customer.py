@@ -787,7 +787,6 @@ class Customer(Customer):  # pylint: disable=function-redefined
 
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.
-		# frappe.in_sql_transaction()
 		super().on_update()
 		self.on_update_children(child_docfield_name='pauses')
 
@@ -796,11 +795,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Find a Customer based on email address.
 		"""
-		# before = frappe.in_sql_transaction()
 		customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
-		# after = frappe.in_sql_transaction()
-		#if before != after:
-		#	raise Exception("Inside SQL transaction.")
 
 		# Rule: There Can Only Be One
 		if len(customers) == 0:
