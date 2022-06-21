@@ -66,6 +66,13 @@ class HolidayList(Document):
 	def clear_table(self):
 		self.set('holidays', [])
 
+def on_doctype_update():
+	""" Create additional indexes and constraints. """
+	# Yes, this code belongs here, outside of the Document class.  :/
+	# Holiday child document.
+	frappe.db.add_index("Holiday", ["parent", "holiday_date"], index_name='holiday_date_idx')
+
+
 @frappe.whitelist()
 def get_events(start, end, filters=None):
 	"""Returns events for Gantt / Calendar view rendering.

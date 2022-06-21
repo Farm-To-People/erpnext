@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "holiday_date",
+  "shift_to_date",
   "column_break_2",
   "weekly_off",
   "section_break_4",
@@ -44,12 +45,18 @@
   {
    "fieldname": "section_break_4",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "shift_to_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Shift to Date"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2020-04-18 19:03:23.507845",
+ "modified": "2022-06-20 18:17:10.158787",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Holiday",
