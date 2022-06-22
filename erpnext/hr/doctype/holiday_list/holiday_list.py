@@ -66,6 +66,22 @@ class HolidayList(Document):
 	def clear_table(self):
 		self.set('holidays', [])
 
+	@frappe.whitelist()
+	def shift_daily_orders(self):
+
+		for each_holiday in self.holidays:
+			frappe.msgprint(f"Enqueued a background job for Holiday shift from {each_holiday.holiday_date} to {each_holiday.shift_to_date}...")
+			frappe.enqueue(
+				method="erpnext.hr.doctype.holiday_list.holiday_list.enqueue_holiday_shift",
+				queue="default",
+				timeout="3600",
+				is_async=True,
+				holiday_date=each_holiday.holiday_date,
+				shift_to_date=each_holiday.shift_to_date
+			)
+		# end of function
+
+
 def on_doctype_update():
 	""" Create additional indexes and constraints. """
 	# Yes, this code belongs here, outside of the Document class.  :/
@@ -105,3 +121,31 @@ def is_holiday(holiday_list, date=today()):
 			dict(name=holiday_list, holiday_date=date)))
 	else:
 		return False
+
+
+def enqueue_holiday_shift(holiday_date, shift_to_date):
+	"""
+	This function is normally enqueued by HolidayList.shift_daily_orders()
+	"""
+	from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log
+
+	frappe.msgprint(f"Shifting from {holiday_date} to {shift_to_date}")
+	daily_order_names = frappe.get_list("Daily Order", filters={"delivery_date": holiday_date}, pluck="name")
+	print(f"Holiday Shift: Start to process {len(daily_order_names)} orders...")
+	for each_name in daily_order_names:
+		try:
+			doc_daily_order = frappe.get_doc("Daily Order", each_name)
+			print(f"Holiday shift for Daily Order = {doc_daily_order.name} ...")
+			doc_daily_order.change_order_delivery_date(shift_to_date, validate_only=False, raise_on_errors=True)
+			print("...success")
+			frappe.db.commit()
+
+		except Exception as ex:
+			frappe.db.rollback()
+			new_error_log(customer_key=doc_daily_order.customer, activity_type='Change Order Date', 
+				short_message="Holiday Shift", long_message=ex, ref_doctype='Daily Order',
+				ref_docname = doc_daily_order.name)
+			print(ex)
+			continue
+
+	print(f"Holiday Shift: Finished processing {len(daily_order_names)} orders...")
