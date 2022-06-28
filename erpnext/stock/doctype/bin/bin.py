@@ -51,6 +51,8 @@ class Bin(Document):
 
 			# Reposts only current voucher SL Entries
 			# Updates valuation rate, stock value, stock queue for current transaction
+
+			# TODO: Performance Culprit
 			update_entries_after({
 				"item_code": self.item_code,
 				"warehouse": self.warehouse,

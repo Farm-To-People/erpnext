@@ -257,9 +257,9 @@ class update_entries_after(object):
 				self.update_bin()
 		else:
 			entries_to_fix = self.get_future_entries_to_fix()
-
 			i = 0
 			while i < len(entries_to_fix):
+				print(f"{len(entries_to_fix)} iterations remaining in entries_to_fix List.")
 				sle = entries_to_fix[i]
 				i += 1
 
@@ -345,6 +345,9 @@ class update_entries_after(object):
 		return sorted(entries_to_fix, key=lambda k: k['timestamp'])
 
 	def process_sle(self, sle):
+		"""
+		Datahenge: This function is called a LOT in a loop, by process_sle_against_current_timestamp()
+		"""
 		# previous sle data for this warehouse
 		self.wh_data = self.data[sle.warehouse]
 
