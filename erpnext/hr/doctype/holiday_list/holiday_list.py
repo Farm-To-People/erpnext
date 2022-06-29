@@ -129,8 +129,9 @@ def enqueue_holiday_shift(holiday_date, shift_to_date):
 	"""
 	from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log
 	from ftp.ftp_module.generics import get_calculation_date
+	from temporal import any_to_date
 
-	if holiday_date < get_calculation_date():
+	if any_to_date(holiday_date) < get_calculation_date():
 		frappe.msgprint(f"Holiday {holiday_date} is in the past; cannot alter Orders.")
 		return
 
