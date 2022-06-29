@@ -128,6 +128,11 @@ def enqueue_holiday_shift(holiday_date, shift_to_date):
 	This function is normally enqueued by HolidayList.shift_daily_orders()
 	"""
 	from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log
+	from ftp.ftp_module.generics import get_calculation_date
+
+	if holiday_date < get_calculation_date():
+		frappe.msgprint(f"Holiday {holiday_date} is in the past; cannot alter Orders.")
+		return
 
 	frappe.msgprint(f"Shifting from {holiday_date} to {shift_to_date}")
 	daily_order_names = frappe.get_list("Daily Order", filters={"delivery_date": holiday_date}, pluck="name")
@@ -136,7 +141,8 @@ def enqueue_holiday_shift(holiday_date, shift_to_date):
 		try:
 			doc_daily_order = frappe.get_doc("Daily Order", each_name)
 			print(f"Holiday shift for Daily Order = {doc_daily_order.name} ...")
-			doc_daily_order.change_order_delivery_date(shift_to_date, validate_only=False, raise_on_errors=True)
+			doc_daily_order.change_order_delivery_date(shift_to_date, validate_only=False,
+			                                           raise_on_errors=True, ignore_stock_quantity=True)
 			print("...success")
 			frappe.db.commit()
 
