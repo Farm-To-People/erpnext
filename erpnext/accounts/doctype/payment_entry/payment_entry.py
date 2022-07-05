@@ -74,7 +74,10 @@ class PaymentEntry(AccountsController):
 		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
-		self.acquire_stripe_payment_intent()  # FTP and Pinstripe
+		payment_intent_id = self.acquire_stripe_payment_intent()  # FTP and Pinstripe
+		# If there is a Payment Intent ID, we -must- write the Payment Entry to disk at this time?
+		if payment_intent_id:
+			frappe.db.commit()
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
 		self.update_advance_paid()
@@ -107,6 +110,7 @@ class PaymentEntry(AccountsController):
 				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API (no payment intent returned)"))
 			self.db_set('reference_no', payment_intent_id, update_modified = True)
 			self._log_stripe_on_success(payment_intent_id)
+			return payment_intent_id
 		except Exception as ex:
 			frappe.db.rollback() # rollback any changes that happened?
 			# Write the Error response to the Activity Log.
