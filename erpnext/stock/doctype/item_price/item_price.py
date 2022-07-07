@@ -39,6 +39,10 @@ class ItemPrice(Document):
 		if self.valid_from and self.valid_upto:
 			if self.valid_from > self.valid_upto:
 				frappe.throw(_("Valid From Date must be lesser than Valid Upto Date."))
+		if self.valid_from_price_date and self.valid_to_price_date:
+			if self.valid_from_price_date > self.valid_to_price_date:
+				frappe.throw(_("'Valid From Price Date' must be lesser than 'Valid To Price Date'"))
+
 
 	def update_price_list_details(self):
 		if self.price_list:
@@ -48,7 +52,7 @@ class ItemPrice(Document):
 
 			if not price_list_details:
 				link = frappe.utils.get_link_to_form('Price List', self.price_list)
-				frappe.throw("The price list {0} does not exist or is disabled".format(link))
+				frappe.throw(f"The price list {link} does not exist or is disabled")
 
 			self.buying, self.selling, self.currency = price_list_details
 
@@ -63,6 +67,8 @@ class ItemPrice(Document):
 			"uom",
 			"valid_from",
 			"valid_upto",
+			"valid_from_price_date",
+			"valid_to_price_date",
 			"packing_unit",
 			"customer",
 			"supplier",
@@ -111,28 +117,32 @@ class ItemPrice(Document):
 		if self.customer:
 			filters['customer'] = self.customer
 
-		fields = [ "name", "item_code", "valid_from", "valid_upto" ]
+		fields = [ "name", "item_code", "valid_from", "valid_upto", "valid_from_price_date", "valid_to_price_date" ]
 		related_lines = frappe.get_list("Item Price", filters=filters, fields=fields)
 
-		# print(related_lines)
-
-		this_valid_from = any_to_date(self.valid_from or MIN_DATE)
-		this_valid_upto = any_to_date(self.valid_upto or MAX_DATE)
+		this_valid_from_delivery_date = any_to_date(self.valid_from or MIN_DATE)
+		this_valid_to_delivery_date = any_to_date(self.valid_upto or MAX_DATE)
+		this_valid_from_price_date = any_to_date(self.valid_from_price_date or MIN_DATE)
+		this_valid_to_price_date = any_to_date(self.valid_to_price_date or MAX_DATE)
 
 		for line in related_lines:
-			related_valid_from = line.valid_from or MIN_DATE
-			related_valid_upto = line.valid_upto or MAX_DATE
+			related_valid_from_delivery_date = line.valid_from or MIN_DATE
+			related_valid_to_delivery_date = line.valid_upto or MAX_DATE
+			related_valid_from_price_date = line.valid_from_price_date or MIN_DATE
+			related_valid_to_price_date = line.valid_to_price_date or MAX_DATE
 
-			overlaps = this_valid_from <= related_valid_upto and \
-				       this_valid_upto >= related_valid_from
+			overlaps = this_valid_from_delivery_date <= related_valid_to_delivery_date and \
+				       this_valid_to_delivery_date >= related_valid_from_delivery_date and \
+					   this_valid_from_price_date <= related_valid_to_price_date and \
+					   this_valid_to_price_date >= related_valid_from_price_date
 			if overlaps:
-				return line.name, line.valid_from, line.valid_upto
+				return line.name, line.valid_from, line.valid_upto, line.valid_from_price_date, line.valid_to_price_date
 
-		return None, None, None
+		return None, None, None, None, None
 
 	def on_change(self):
 		"""
-		Farm To People: Update redis after Item Price touched.
+		Farm To People: Update website item availability (Redis) after Item Price touched.
 		"""
 		from ftp.ftp_invent import try_update_redis_inventory
 		if self.selling:

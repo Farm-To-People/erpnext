@@ -22,15 +22,17 @@
   "column_break_3",
   "buying",
   "selling",
+  "lead_time_days",
   "item_details",
   "price_list_rate",
-  "currency",
   "col_br_1",
+  "currency",
   "section_break_15",
   "valid_from",
-  "lead_time_days",
+  "valid_from_price_date",
   "column_break_18",
   "valid_upto",
+  "valid_to_price_date",
   "section_break_24",
   "note",
   "reference"
@@ -181,7 +183,7 @@
    "fieldname": "valid_from",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Valid From"
+   "label": "Valid From Delivery"
   },
   {
    "default": "0",
@@ -198,7 +200,7 @@
    "fieldname": "valid_upto",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Valid Upto"
+   "label": "Valid Upto Delivery"
   },
   {
    "fieldname": "section_break_24",
@@ -219,13 +221,23 @@
    "fieldtype": "Link",
    "label": "Batch No",
    "options": "Batch"
+  },
+  {
+   "fieldname": "valid_from_price_date",
+   "fieldtype": "Date",
+   "label": "Valid From Price Date"
+  },
+  {
+   "fieldname": "valid_to_price_date",
+   "fieldtype": "Date",
+   "label": "Valid Upto Price Date"
   }
  ],
  "icon": "fa fa-flag",
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-03-31 21:45:32.949491",
+ "modified": "2022-07-05 13:52:50.382210",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
