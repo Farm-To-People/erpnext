@@ -341,12 +341,12 @@
    "default": "Today",
    "fieldname": "valid_from",
    "fieldtype": "Date",
-   "label": "Valid From Delivery"
+   "label": "Valid From Delivery Date"
   },
   {
    "fieldname": "valid_upto",
    "fieldtype": "Date",
-   "label": "Valid Upto Delivery"
+   "label": "Valid Upto Delivery Date"
   },
   {
    "fieldname": "col_break1",
@@ -635,7 +635,7 @@
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2022-07-05 13:58:49.620750",
+ "modified": "2022-07-07 19:44:39.888594",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",

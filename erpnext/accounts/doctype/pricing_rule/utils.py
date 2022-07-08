@@ -266,6 +266,12 @@ def get_other_conditions(conditions, values, args):
 			and ifnull(`tabPricing Rule`.valid_upto, '2500-12-31')"""
 		values['transaction_date'] = args.get('transaction_date')
 
+	# July 7th, 2022: New field "price_date"
+	if args.get("price_date"):
+		conditions += """ and %(price_date)s between IFNULL(`tabPricing Rule`.valid_from_price_date, '2000-01-01')
+			AND IFNULL(`tabPricing Rule`.valid_to_price_date, '2500-12-31')"""
+		values['price_date'] = args.get('price_date')
+
 	return conditions
 
 def filter_pricing_rules(args, pricing_rules, doc=None):
