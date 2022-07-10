@@ -76,6 +76,7 @@
   "item_defaults",
   "purchase_details",
   "is_purchase_item",
+  "delivered_by_supplier",
   "purchase_uom",
   "min_order_qty",
   "safety_stock",
@@ -85,8 +86,6 @@
   "is_customer_provided_item",
   "customer",
   "supplier_details",
-  "delivered_by_supplier",
-  "column_break2",
   "supplier_items",
   "foreign_trade_details",
   "country_of_origin",
@@ -586,6 +585,7 @@
    "fieldname": "purchase_uom",
    "fieldtype": "Link",
    "label": "Default Purchase Unit of Measure",
+   "mandatory_depends_on": "eval: doc.is_purchase_item == 1",
    "options": "UOM"
   },
   {
@@ -649,12 +649,6 @@
    "fieldtype": "Check",
    "label": "Delivered by Supplier (Drop Ship)",
    "print_hide": 1
-  },
-  {
-   "fieldname": "column_break2",
-   "fieldtype": "Column Break",
-   "oldfieldtype": "Column Break",
-   "width": "50%"
   },
   {
    "fieldname": "supplier_items",
@@ -1202,7 +1196,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2022-04-25 15:53:41.265830",
+ "modified": "2022-07-10 17:11:27.912674",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
