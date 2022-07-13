@@ -165,3 +165,12 @@ class ItemPrice(Document):
 			except Exception as ex:
 				print(ex)
 				frappe.msgprint("Unable to update Redis.<br>To resolve, continue editing Item Prices.  There should be an active Selling Price for the next 28 days.")
+
+	@frappe.whitelist()
+	def validate_by_item_code(self):
+		"""
+		Validates the entire Item Code, not just this single record.  Called by a button at the top of an Item Price
+		"""
+		from ftp.utilities.pricing import ItemPriceValidation
+		ItemPriceValidation(self.item_code).validate_item_prices()
+
