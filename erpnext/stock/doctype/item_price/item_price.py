@@ -29,7 +29,7 @@ class ItemPrice(Document):
 		self.update_price_list_details()
 		self.update_item_details()
 		self.check_duplicates()
-		self.check_overlaps_ftp()
+		# self.check_overlaps_ftp()
 
 	def validate_item(self):
 		if not frappe.db.exists("Item", self.item_code):
@@ -169,7 +169,7 @@ class ItemPrice(Document):
 	@frappe.whitelist()
 	def validate_by_item_code(self):
 		"""
-		Validates the entire Item Code, not just this single record.  Called by a button at the top of an Item Price
+		Validates the -entire- Item Code, not just this single record.  Called by a button at the top of an Item Price
 		"""
 		from ftp.utilities.pricing import ItemPriceValidation
 		ItemPriceValidation(self.item_code).validate_item_prices()
