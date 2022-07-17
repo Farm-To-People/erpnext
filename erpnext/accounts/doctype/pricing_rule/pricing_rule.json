@@ -58,9 +58,13 @@
   "free_item_uom",
   "is_recursive",
   "section_break_23",
+  "delivery_date_column",
   "valid_from",
   "valid_upto",
   "col_break1",
+  "valid_from_price_date",
+  "valid_to_price_date",
+  "column_break_57",
   "company",
   "currency",
   "margin",
@@ -337,16 +341,17 @@
    "default": "Today",
    "fieldname": "valid_from",
    "fieldtype": "Date",
-   "label": "Valid From"
+   "label": "Valid From Delivery Date"
   },
   {
    "fieldname": "valid_upto",
    "fieldtype": "Date",
-   "label": "Valid Upto"
+   "label": "Valid Upto Delivery Date"
   },
   {
    "fieldname": "col_break1",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "label": "<b>Price Date</b>"
   },
   {
    "fieldname": "company",
@@ -606,12 +611,31 @@
    "fieldname": "nth_order_only",
    "fieldtype": "Int",
    "label": "Apply to N-th Order Only"
+  },
+  {
+   "fieldname": "valid_from_price_date",
+   "fieldtype": "Date",
+   "label": "Valid From Price Date"
+  },
+  {
+   "fieldname": "valid_to_price_date",
+   "fieldtype": "Date",
+   "label": "Valid Upto Price Date"
+  },
+  {
+   "fieldname": "column_break_57",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "delivery_date_column",
+   "fieldtype": "Column Break",
+   "label": "<b>Delivery Date</b>"
   }
  ],
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2022-04-19 10:42:00.933608",
+ "modified": "2022-07-07 19:44:39.888594",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",

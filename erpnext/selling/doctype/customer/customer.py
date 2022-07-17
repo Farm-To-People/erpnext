@@ -1049,7 +1049,7 @@ def read_ar_summary_query():
 	this_path = pathlib.Path(__file__)  # path to this Python module
 	query_path = this_path.parent / 'ar_summary_by_type.sql'
 	if not query_path.exists():
-		raise FileNotFoundError(f"Cannot ready query file '{query_path}'")
+		raise FileNotFoundError(f"Cannot read query file '{query_path}'")
 	with open(query_path, encoding="utf-8") as fstream:
 		AR_SUMMARY_QUERY = fstream.readlines()
 	AR_SUMMARY_QUERY = ''.join(AR_SUMMARY_QUERY)

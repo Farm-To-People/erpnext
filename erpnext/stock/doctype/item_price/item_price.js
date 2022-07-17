@@ -87,4 +87,14 @@ frappe.ui.form.on("Item Price", {
 			my_dialog.show();
 		});
 	}
+
+	,refresh: function(frm) {
+		// Farm To People: Add a button that validates the entire range of Item Price permutations and combinations.
+		frm.add_custom_button(__("Validate Item Prices"), function() {
+			frappe.call({
+				method: "validate_by_item_code",
+				doc: frm.doc
+			})
+		}, __("")).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});
+	}
 });

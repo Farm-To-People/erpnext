@@ -22,15 +22,19 @@
   "column_break_3",
   "buying",
   "selling",
+  "lead_time_days",
   "item_details",
   "price_list_rate",
-  "currency",
   "col_br_1",
+  "currency",
   "section_break_15",
+  "delivery_date_column",
   "valid_from",
-  "lead_time_days",
-  "column_break_18",
   "valid_upto",
+  "price_date_column",
+  "valid_from_price_date",
+  "valid_to_price_date",
+  "section_break_28",
   "section_break_24",
   "note",
   "reference"
@@ -181,7 +185,7 @@
    "fieldname": "valid_from",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Valid From"
+   "label": "Valid From Delivery Date"
   },
   {
    "default": "0",
@@ -190,15 +194,11 @@
    "label": "Lead Time in days"
   },
   {
-   "fieldname": "column_break_18",
-   "fieldtype": "Column Break"
-  },
-  {
    "columns": 1,
    "fieldname": "valid_upto",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Valid Upto"
+   "label": "Valid Upto Delivery Date"
   },
   {
    "fieldname": "section_break_24",
@@ -207,7 +207,8 @@
   {
    "fieldname": "note",
    "fieldtype": "Text",
-   "label": "Note"
+   "label": "Note",
+   "width": "50px"
   },
   {
    "fieldname": "reference",
@@ -219,13 +220,38 @@
    "fieldtype": "Link",
    "label": "Batch No",
    "options": "Batch"
+  },
+  {
+   "fieldname": "valid_from_price_date",
+   "fieldtype": "Date",
+   "label": "Valid From Price Date"
+  },
+  {
+   "fieldname": "valid_to_price_date",
+   "fieldtype": "Date",
+   "label": "Valid Upto Price Date"
+  },
+  {
+   "fieldname": "delivery_date_column",
+   "fieldtype": "Column Break",
+   "label": "<b>Delivery Date</b>"
+  },
+  {
+   "fieldname": "price_date_column",
+   "fieldtype": "Column Break",
+   "label": "<b>Price Date</b>"
+  },
+  {
+   "description": "Instructions will go here",
+   "fieldname": "section_break_28",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-flag",
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-03-31 21:45:32.949491",
+ "modified": "2022-07-08 14:45:20.735366",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
