@@ -74,10 +74,7 @@ class PaymentEntry(AccountsController):
 		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
-		payment_intent_id = self.acquire_stripe_payment_intent()  # FTP and Pinstripe
-		# If there is a Payment Intent ID, we -must- write the Payment Entry to disk at this time?
-		if payment_intent_id:
-			frappe.db.commit()
+		self.acquire_stripe_payment_intent()  # FTP and Pinstripe, must happen before anything else in the Payment Entry.
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
 		self.update_advance_paid()
@@ -96,19 +93,24 @@ class PaymentEntry(AccountsController):
 		"""
 		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
 		from ftp.ftp_module.payments import LoggedError
-		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log
+		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log, new_info_log
 
 		if self.mode_of_payment != 'Stripe':
-			return
+			return None
 
 		if self.reference_no:
-			raise Exception(f"Skipping Stripe integration; Payment Entry already has a value in 'reference_no' ('{self.reference_no}')")
+			frappe.msgprint(f"Warning: Not re-collecting payment from Stripe.  Payment Entry already has a value in 'reference_no' ('{self.reference_no}')", to_console=True)
+			new_info_log(customer_key=self.party, activity_type='Stripe Payment',
+			             message=f"Re-Submit of PE {self.name} with Stripe Payment Intent: {self.reference_no}",
+						 message_long=f"This is a manual re-submit of Payment {self.name } associated with Daily Order {self.daily_order}, with Payment Intent {self.reference_no}" if self.daily_order else None,
+						 ref_doctype='Payment Entry', ref_docname=self.name)
+			return None
 
 		try:
 			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name)
 			if not payment_intent_id:
 				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API (no payment intent returned)"))
-			self.db_set('reference_no', payment_intent_id, update_modified = True)
+			self.db_set('reference_no', payment_intent_id, update_modified = True, commit=True)  # commit SQL immediately
 			self._log_stripe_on_success(payment_intent_id)
 			return payment_intent_id
 		except Exception as ex:
@@ -120,11 +122,11 @@ class PaymentEntry(AccountsController):
 			raise LoggedError from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
 
 	def _log_stripe_on_success(self, payment_intent_id):
-		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_info_log
 		"""
 		Write the log inside its own try/except.
 		If the log fails to write, that shouldn't invalidate Submitting the payment entry.
 		"""
+		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_info_log
 		try:
 			# Write the Success response to the Activity Log.
 			new_info_log(customer_key=self.party, activity_type='Stripe Payment',
@@ -159,7 +161,8 @@ class PaymentEntry(AccountsController):
 			raise Exception(okay.message)
 
 	def on_cancel(self):
-		from ftp.ftp_module.payments import reapply_customer_credits, get_owned_payment_amount  # late import due to cross-Module code
+		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
+		# from ftp.ftp_module.payments import get_owned_payment_amount  # late import due to cross-Module code
 
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
 		self.make_gl_entries(cancel=1)
@@ -1089,6 +1092,8 @@ class PaymentEntry(AccountsController):
 		return email_address
 
 	def on_trash(self):
+		if self.mode_of_payment == 'Stripe' and self.reference_no:
+			raise Exception("Cannot delete a Payment Entry that contains a Stripe Payment Intent.  Can only Submit or Cancel.")
 		self.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
 
 # ----------------

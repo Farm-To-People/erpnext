@@ -445,7 +445,8 @@
    "depends_on": "eval:(doc.paid_from && doc.paid_to)",
    "fieldname": "reference_no",
    "fieldtype": "Data",
-   "label": "Cheque/Reference No"
+   "label": "Cheque/Reference No",
+   "read_only_depends_on": "eval:(doc.mode_of_payment == \"Stripe\")"
   },
   {
    "fieldname": "column_break_23",
@@ -610,7 +611,8 @@
    "fieldname": "daily_order",
    "fieldtype": "Link",
    "label": "Daily Order",
-   "options": "Daily Order"
+   "options": "Daily Order",
+   "read_only_depends_on": "eval:(doc.mode_of_payment == \"Stripe\")"
   },
   {
    "depends_on": "eval:doc.apply_tax_withholding_amount",
@@ -723,7 +725,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-04-29 12:37:23.792763",
+ "modified": "2022-07-15 20:44:19.100390",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
