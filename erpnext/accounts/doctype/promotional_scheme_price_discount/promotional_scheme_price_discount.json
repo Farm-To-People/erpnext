@@ -44,8 +44,7 @@
    "fieldname": "rule_description",
    "fieldtype": "Small Text",
    "label": "Rule Description",
-   "no_copy": 1,
-   "reqd": 1
+   "no_copy": 1
   },
   {
    "fieldname": "section_break_2",
@@ -171,7 +170,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-03-25 12:11:50.312414",
+ "modified": "2022-07-17 23:25:05.902121",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Promotional Scheme Price Discount",

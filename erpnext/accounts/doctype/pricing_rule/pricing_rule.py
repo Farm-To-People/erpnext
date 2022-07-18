@@ -23,6 +23,10 @@ apply_on_dict = {"Item Code": "items",
 other_fields = ["other_item_code", "other_item_group", "other_brand"]
 
 class PricingRule(Document):
+
+	def before_save(self):
+		self.validate_applied_rule = False  # Farm To People - Never want this box marked (18 Jul 2022)
+
 	def validate(self):
 		self.validate_mandatory()
 		self.validate_duplicate_apply_on()
