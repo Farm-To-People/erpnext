@@ -25,6 +25,10 @@ from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category 
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (validate_inter_company_party,
 	update_linked_doc, unlink_inter_company_doc)
 
+from erpnext.accounts.custom.address import get_shipping_address
+from frappe.contacts.doctype.address.address import get_address_display
+
+
 from temporal import any_to_date
 from ftp.ftp_invent import try_update_redis_inventory
 
@@ -50,6 +54,16 @@ class PurchaseOrder(BuyingController):
 	def onload(self):
 		supplier_tds = frappe.db.get_value("Supplier", self.supplier, "tax_withholding_category")
 		self.set_onload("supplier_tds", supplier_tds)
+
+	def before_insert(self):
+
+		# Farm To People: Set the warehouse shipping address on the Purchase Order.
+		if not self.shipping_address:
+			address_document = get_shipping_address(self.company)
+			if address_document:
+				address_display = get_address_display(address_document.as_dict())
+				self.shipping_address = address_document.name
+				self.shippping_address_display = address_display
 
 	def before_validate(self):
 		# Farm To People:  Ensure that Stock Use Date is related to the Required By Date (schedule_date)
