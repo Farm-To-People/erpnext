@@ -732,6 +732,9 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		# FTP: If customer's name changed, then update Web Subscription names
 		# Datahenge: This is why 1) We shouldn't store DocType attributes in secondary tables.
 		#            And also 2) Why ERPNext really needs the concept of 'Display Methods'
+
+		from ftp.ftp_module.generics import caller_is_proxy  # Late Import due to cross-module dependency.
+
 		if (not self.is_anon()) and self.has_value_changed('customer_name'):
 			statement = """ UPDATE `tabWeb Subscription`
 			SET customer_name = %(customer_name)s
@@ -761,7 +764,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			AND status_delivery NOT IN ('Delivered', 'Cancelled')
 			"""
 			frappe.db.sql(statement, values={"delivery_instructions": self.delivery_instructions, "customer_id": self.name })
-			frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
+			if not caller_is_proxy():
+				frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
 
 	def before_insert(self):
 		if not self.referral_code:
