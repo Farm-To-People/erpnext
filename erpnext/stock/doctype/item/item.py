@@ -35,7 +35,7 @@ class StockExistsForTemplate(frappe.ValidationError):
 class InvalidBarcode(frappe.ValidationError):
 	pass
 
-# Datahenge: Seriously...it inherits WebSiteGenerator?
+# Datahenge: Why does this inherit WebSiteGenerator?  What a strange decision.
 class Item(WebsiteGenerator):
 	website = frappe._dict(
 		page_title_field="item_name",
@@ -91,7 +91,7 @@ class Item(WebsiteGenerator):
 		if self.opening_stock:
 			self.set_opening_stock()
 
-		self.create_item_sales_controls()
+		self.create_item_sales_controls()  # FTP
 
 	def validate(self):
 		super(Item, self).validate()
@@ -154,16 +154,23 @@ class Item(WebsiteGenerator):
 					where parentfield='website_item_groups' and parenttype='Item' and parent=%s""", self.name)
 
 	def on_update(self):
-		from ftp.ftp_invent import try_update_redis_inventory
-
 		invalidate_cache_for_item(self)
 		self.validate_name_with_item_group()
 		self.update_variants()
 		self.update_item_price()
 		self.update_template_item()
+
+	def on_change(self):
+		"""
+		Should be happening after SQL transaction commit.
+		"""
+		# Late imports due to cross-module dependency:
+		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.sanity import update_sanity_by_item_code
+
 		# Farm To People: Update redis after Item Price touched.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
-		# frappe.msgprint("Website inventory updated. (Redis)")
+		update_sanity_by_item_code(self.item_code)
 
 	def validate_description(self):
 		'''Clean HTML description if set'''
