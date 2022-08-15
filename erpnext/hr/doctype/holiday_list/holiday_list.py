@@ -3,13 +3,14 @@
 # License: GNU General Public License v3. See license.txt
 
 from __future__ import unicode_literals
-import frappe
 import json
+import frappe
 from frappe.utils import cint, getdate, formatdate, today
 from frappe import throw, _
 from frappe.model.document import Document
 
-class OverlapError(frappe.ValidationError): pass
+class OverlapError(frappe.ValidationError):
+	pass
 
 class HolidayList(Document):
 	def validate(self):
@@ -81,6 +82,20 @@ class HolidayList(Document):
 			)
 		# end of function
 
+	@frappe.whitelist()
+	def shift_orders_by_delivery_zone(self, args):  # Yes, it's actually args here and not *args.
+		frappe.enqueue(
+			method="erpnext.hr.doctype.holiday_list.holiday_list.enqueue_delivery_zone_shift",
+			queue="default",
+			timeout="3600",
+			is_async=True,
+			current_delivery_date=args['current_delivery_date'],
+			new_delivery_date=args['new_delivery_date'],
+			delivery_zone=args['delivery_zone']
+		)
+		frappe.msgprint(f"Enqueued a background job for Holiday Shift by Delivery Zone from {args['current_delivery_date']} to {args['new_delivery_date']}...")		
+		# end of function
+
 
 def on_doctype_update():
 	""" Create additional indexes and constraints. """
@@ -136,6 +151,44 @@ def enqueue_holiday_shift(holiday_date, shift_to_date):
 		return
 
 	frappe.msgprint(f"Shifting from {holiday_date} to {shift_to_date}")
+	daily_order_names = frappe.get_list("Daily Order", filters={"delivery_date": holiday_date}, pluck="name")
+	print(f"Holiday Shift: Start to process {len(daily_order_names)} orders...")
+	for each_name in daily_order_names:
+		try:
+			doc_daily_order = frappe.get_doc("Daily Order", each_name)
+			print(f"Holiday shift for Daily Order = {doc_daily_order.name} ...")
+			doc_daily_order.change_order_delivery_date(shift_to_date, validate_only=False,
+			                                           raise_on_errors=True, ignore_stock_quantity=True)
+			print("...success")
+			frappe.db.commit()
+
+		except Exception as ex:
+			frappe.db.rollback()
+			new_error_log(customer_key=doc_daily_order.customer, activity_type='Change Order Date', 
+				short_message="Holiday Shift", long_message=ex, ref_doctype='Daily Order',
+				ref_docname = doc_daily_order.name)
+			print(ex)
+			continue
+
+	print(f"Holiday Shift: Finished processing {len(daily_order_names)} orders...")
+
+
+def enqueue_delivery_zone_shift(current_delivery_date, new_delivery_date, delivery_zone):
+	"""
+	This function is normally enqueued by HolidayList.shift_daily_orders()
+	"""
+	from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log
+	from ftp.ftp_module.generics import get_calculation_date
+	from temporal import any_to_date
+
+	if any_to_date(current_delivery_date) < get_calculation_date():
+		print(f"Holiday {current_delivery_date} is in the past; cannot shift the Orders.")
+		return
+
+	print(f"For delivery zone {delivery_zone}, shifting from {current_delivery_date} to {new_delivery_date}")
+
+	return
+
 	daily_order_names = frappe.get_list("Daily Order", filters={"delivery_date": holiday_date}, pluck="name")
 	print(f"Holiday Shift: Start to process {len(daily_order_names)} orders...")
 	for each_name in daily_order_names:
