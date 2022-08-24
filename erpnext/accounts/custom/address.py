@@ -35,6 +35,9 @@ class ERPNextAddress(Address):
 
 @frappe.whitelist()
 def get_shipping_address(company, address = None):
+	"""
+	Returns a tuple with Address key and Address Template.
+	"""
 	filters = [
 		["Dynamic Link", "link_doctype", "=", "Company"],
 		["Dynamic Link", "link_name", "=", company],

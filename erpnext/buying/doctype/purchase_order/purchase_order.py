@@ -59,11 +59,15 @@ class PurchaseOrder(BuyingController):
 
 		# Farm To People: Set the warehouse shipping address on the Purchase Order.
 		if not self.shipping_address:
-			address_document = get_shipping_address(self.company)
-			if address_document:
-				address_display = get_address_display(address_document.as_dict())
-				self.shipping_address = address_document.name
-				self.shippping_address_display = address_display
+			try:
+				address_key = get_shipping_address(self.company)  # returns a tuple, but we need just the 0th component
+				if address_key:
+					doc_address = frappe.get_doc("Address", address_key[0])
+					address_display = get_address_display(doc_address.as_dict())
+					self.shipping_address = doc_address.name
+					self.shipping_address_display = address_display
+			except Exception as ex:
+				print(f"Purchase Order before_insert error = {repr(ex)}")
 
 	def before_validate(self):
 		# Farm To People:  Ensure that Stock Use Date is related to the Required By Date (schedule_date)
