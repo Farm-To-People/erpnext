@@ -46,7 +46,7 @@ def validate_for_items(doc):
 		if not d.qty:
 			if doc.doctype == "Purchase Receipt" and d.rejected_qty:
 				continue
-			frappe.throw(_("Please enter quantity for Item {0}").format(d.item_code))
+			frappe.throw(_("Please enter quantity for Item {0}, or delete this Line.").format(d.item_code))
 
 		# update with latest quantities
 		bin = frappe.db.sql("""select projected_qty from `tabBin` where

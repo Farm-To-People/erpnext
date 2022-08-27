@@ -122,6 +122,12 @@ class PurchaseReceipt(BuyingController):
 		if getdate(self.posting_date) > getdate(nowdate()):
 			throw(_("Posting Date cannot be future date"))
 
+		# Farm To People: Prevent receiving problems, August 27th 2022
+		if self.rejected_warehouse and self.rejected_warehouse == self.set_warehouse:
+			throw(_("Cannot use the same Warehouse for Accepted and Rejected quantities.<br><i>(contact Shelby or Brian Pond for assistance)</i>"))
+		for item in self.get("items"):
+			if item.rejected_warehouse and item.rejected_warehouse == item.warehouse:
+				throw(_(f"Receipt Line #{item.idx}. Cannot use the same Warehouse for Accepted and Rejected quantities.<br><i>(contact Shelby or Brian Pond for assistance)</i>"))
 
 	def validate_cwip_accounts(self):
 		for item in self.get('items'):
