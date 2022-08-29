@@ -2,6 +2,9 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+# Copyright (c) 2022, Farm To People LLC and contributors
+# For license information, please see license.txt
+
 from __future__ import unicode_literals
 import frappe
 from frappe import _
@@ -9,28 +12,34 @@ from frappe.model.document import Document
 from frappe.utils import (strip)
 from frappe.utils import getdate
 
+# Farm To People:  Vanilla ERPNext had 4 different fields:
+# 1. name
+# 2. coupon_name
+# 3. coupon_code
+# 4. description
+
+# This is very confusing, so we've removed 'coupon_name'
 
 class CouponCode(Document):
 
 
 	def before_rename(self, olddn, newdn, merge=False):
-		raise Exception("Coupon Codes cannot be renamed (please see Shelby for details)")
+		self.coupon_code = newdn
 
 	def autoname(self):
 		self.coupon_code = strip(self.coupon_code)
 		self.name = self.coupon_code
 
-		if not self.coupon_code:
-			if self.coupon_type == "Promotional":
-				self.coupon_code =''.join(i for i in self.coupon_code if not i.isdigit())[0:8].upper()
-			elif self.coupon_type == "Gift Card":
-				self.coupon_code = frappe.generate_hash()[:10].upper()
+		if (not self.coupon_code) and self.coupon_type == "Promotional":
+			self.coupon_code =''.join(i for i in self.coupon_code if not i.isdigit())[0:8].upper()
+			# elif self.coupon_type == "Gift Card":
+			#	self.coupon_code = frappe.generate_hash()[:10].upper()
 
 	def validate(self):
-		if self.coupon_type == "Gift Card":
-			self.maximum_use = 1
-			if not self.customer:
-				frappe.throw(_("Please select the customer."))
+		#if self.coupon_type == "Gift Card":
+		#	self.maximum_use = 1
+		#	if not self.customer:
+		#		frappe.throw(_("Please select the customer."))
 		if self.coupon_type == 'Multi-Code':  # Farm To People
 			self._validate_multi()
 

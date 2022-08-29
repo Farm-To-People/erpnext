@@ -28,7 +28,7 @@ class TaxRule(Document):
 		self.validate_tax_template()
 		self.validate_date()
 		self.validate_filters()
-		self.validate_use_for_shopping_cart()
+		# self.validate_use_for_shopping_cart()
 
 	def validate_tax_template(self):
 		if self.tax_type== "Sales":

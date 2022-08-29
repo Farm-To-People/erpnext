@@ -176,11 +176,6 @@ class SalesOrder(SellingController):
 		self.update_blanket_order()
 
 		update_linked_doc(self.doctype, self.name, self.inter_company_order_reference)
-		# Begin: FTP Coupon Codes #1
-		for coupon_code_link in self.coupon_code_set:
-			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
-			update_coupon_code_count(coupon_code_link.coupon_code,'used')
-		# End: FTP Coupon Codes #1			
 
 	def on_cancel(self):
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
@@ -489,7 +484,7 @@ def close_or_unclose_sales_orders(names, status):
 					so.update_status('Draft')
 			so.update_blanket_order()
 
-	frappe.local.message_log = []
+	frappe.local.message_log = []  # pylint: disable=assigning-non-slot
 
 def get_requested_item_qty(sales_order):
 	return frappe._dict(frappe.db.sql("""

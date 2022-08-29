@@ -258,8 +258,8 @@ class update_entries_after(object):
 		else:
 			entries_to_fix = self.get_future_entries_to_fix()
 			i = 0
+			print(f"stock_ledger.update_entries_after().  Total entries to fix = {len(entries_to_fix)}.")
 			while i < len(entries_to_fix):
-				print(f"{len(entries_to_fix)} iterations remaining in entries_to_fix List.")
 				sle = entries_to_fix[i]
 				i += 1
 
