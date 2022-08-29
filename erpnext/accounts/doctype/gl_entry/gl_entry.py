@@ -290,7 +290,8 @@ def rename_gle_sle_docs():
 def rename_temporarily_named_docs(doctype):
 	"""Rename temporarily named docs using autoname options"""
 	docs_to_rename = frappe.get_all(doctype, {"to_rename": "1"}, order_by="creation", limit=50000)
-	print(f"Number of {doctype} to rename = {len(docs_to_rename)}")  # DH: Summarize what is about to happen.
+	if len(docs_to_rename) > 0:
+		print(f"Number of {doctype} to rename = {len(docs_to_rename)}")  # DH: Summarize what is about to happen.
 	for doc in docs_to_rename:
 		try:
 			oldname = doc.name
@@ -303,4 +304,5 @@ def rename_temporarily_named_docs(doctype):
 			)
 		except Exception as ex:
 			print(f"Error 'rename_temporarily_named_docs()': {ex}")
-	print("Finished renaming temporarily named documents.")
+	if len(docs_to_rename) > 0:
+		print("Finished renaming temporarily named documents.")
