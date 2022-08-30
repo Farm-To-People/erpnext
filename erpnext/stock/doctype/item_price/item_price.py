@@ -89,9 +89,10 @@ class ItemPrice(Document):
 			frappe.throw(_("Item Price appears multiple times based on Price List, Supplier/Customer, Currency, Item, Batch, UOM, Qty, and Dates."), ItemPriceDuplicateItem,)
 
 	def before_save(self):
-		if self.selling:
+		# Datahenge: Improved on this, so it doesn't wipe out the Reference field.
+		if self.selling and self.customer and not self.reference:
 			self.reference = self.customer
-		if self.buying:
+		if self.buying and self.supplier and not self.reference:
 			self.reference = self.supplier
 
 		if self.selling and not self.buying:
