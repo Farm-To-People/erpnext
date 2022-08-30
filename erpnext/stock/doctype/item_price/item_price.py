@@ -36,11 +36,13 @@ class ItemPrice(Document):
 			frappe.throw(_("Item {0} not found.").format(self.item_code))
 
 	def validate_dates(self):
+		# Delivery Dates
 		if self.valid_from and self.valid_upto:
-			if self.valid_from > self.valid_upto:
-				frappe.throw(_("Valid From Date must be lesser than Valid Upto Date."))
+			if any_to_date(self.valid_from) > any_to_date(self.valid_upto):
+				frappe.throw(_(f"Valid From Date ({self.valid_from}) must be lesser than Valid Upto Date ({self.valid_upto})."))
+		# Price Dates
 		if self.valid_from_price_date and self.valid_to_price_date:
-			if self.valid_from_price_date > self.valid_to_price_date:
+			if any_to_date(self.valid_from_price_date) > any_to_date(self.valid_to_price_date):
 				frappe.throw(_("'Valid From Price Date' must be lesser than 'Valid To Price Date'"))
 
 
