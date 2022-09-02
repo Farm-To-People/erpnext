@@ -27,7 +27,6 @@
   "dn_required",
   "disabled",
   "is_internal_customer",
-  "referral_code",
   "sb_1",
   "tax_id",
   "lead_name",
@@ -570,11 +569,6 @@
    "label": "Misc"
   },
   {
-   "fieldname": "referral_code",
-   "fieldtype": "Read Only",
-   "label": "Referral Code"
-  },
-  {
    "fieldname": "cb_primary_contact",
    "fieldtype": "Column Break"
   },
@@ -635,7 +629,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2022-04-04 20:40:16.310876",
+ "modified": "2022-09-01 16:30:19.466039",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

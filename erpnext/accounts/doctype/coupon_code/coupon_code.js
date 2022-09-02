@@ -14,32 +14,9 @@ frappe.ui.form.on('Coupon Code', {
 			};
 		});
 	},
-	coupon_name:function(frm){
-		if (frm.doc.__islocal===1) {
-			frm.trigger("make_coupon_code");
-		}
-	},
 	coupon_type:function(frm){
-		if (frm.doc.__islocal===1) {
-			frm.trigger("make_coupon_code");
-		}
-	},
-	make_coupon_code: function(frm) {
-		var coupon_name=frm.doc.coupon_name;
-		var coupon_code;
-		// FTP : Removing the 'Gift Card' type, since it's barely used anywhere in ERPNext.
-		/*
-		if (frm.doc.coupon_type=='Gift Card') {
-			coupon_code=Math.random().toString(12).substring(2, 12).toUpperCase();
-		}
-		*/
-		coupon_name=coupon_name.replace(/\s/g,'');
-		coupon_code=coupon_name.toUpperCase().slice(0,8);
-		frm.doc.coupon_code=coupon_code;
-		frm.refresh_field('coupon_code');
 	},
 	refresh: function(frm) {
-
 		// Datahenge: No longer possible, because 1 Coupon Code has many Pricing Rules.
 
 		/*
@@ -56,6 +33,10 @@ frappe.ui.form.on('Coupon Code', {
 		}, __( ))
 		//.addClass("btn-warning").css({'color':'black','font-weight': 'regular'});
 		// End: FTP
+		
+		frm.add_custom_button(__("Referral Log"), function() {
+			frappe.set_route("List", "Customer Referral Log", {"referred_by": frm.doc.customer});
+		}, __( ))		
 	}
 
 });

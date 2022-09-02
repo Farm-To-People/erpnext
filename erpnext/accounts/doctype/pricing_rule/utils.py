@@ -683,15 +683,15 @@ def validate_coupon_code(coupon_name):
 	elif coupon.used >= coupon.maximum_use:
 		frappe.throw(_("Sorry, this coupon code is no longer valid"))
 
-def update_coupon_code_count(coupon_name,transaction_type):
-	coupon=frappe.get_doc("Coupon Code",coupon_name)
+def update_coupon_code_count(coupon_name, transaction_type):
+	coupon=frappe.get_doc("Coupon Code", coupon_name)
 	if coupon:
 		if transaction_type=='used':
-			if coupon.used<coupon.maximum_use:
+			if coupon.maximum_use == 0 or (coupon.used < coupon.maximum_use):    # Datahenge: Zero means unlimited usage.
 				coupon.used=coupon.used+1
 				coupon.save(ignore_permissions=True)
 			else:
-				frappe.throw(_("{0} Coupon used are {1}. Allowed quantity is exhausted").format(coupon.coupon_code,coupon.used))
+				frappe.throw(_(f"Coupon '{coupon.coupon_code}' used {coupon.used} times. Allowed quantity ({coupon.maximum_use}) is exhausted."))
 		elif transaction_type=='cancelled':
 			if coupon.used>0:
 				coupon.used=coupon.used-1

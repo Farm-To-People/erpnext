@@ -7,7 +7,6 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _
 from frappe.model.document import Document
 from frappe.utils import (strip)
 from frappe.utils import getdate
@@ -23,7 +22,7 @@ from frappe.utils import getdate
 class CouponCode(Document):
 
 
-	def before_rename(self, olddn, newdn, merge=False):
+	def before_rename(self, olddn, newdn, merge=False):  # pylint: disable=unused-argument
 		self.coupon_code = newdn
 
 	def autoname(self):
@@ -65,26 +64,10 @@ class CouponCode(Document):
 			return True
 		return False
 
-# Farm To People
-def calc_coupon_code_type(coupon_code_str):
+# Yes, 'on_doctype_update' belongs here, outside the Document class.
+def on_doctype_update():
 	"""
-	Returns a Result, where the message is one of 3 values:
-		* Standard
-		* Referral
-		* Error
+	Create additional indexes and constraints.
 	"""
-
-	from ftp.ftp_module.generics import Result
-
-	# Cannot use 'frappe.db.exists' because we're filtering by other than 'name'
-	coupon_code = frappe.db.get_value("Coupon Code", filters={"coupon_code": coupon_code_str}, fieldname="coupon_code")
-	if coupon_code:
-		return Result(success=True, message={"coupon_type": "Standard", "reference": coupon_code})
-
-	# Cannot use 'frappe.db.exists' because we're filtering by other than 'name'
-	customer = frappe.db.get_value("Customer", filters={"referral_code": coupon_code_str}, fieldname="name")
-	if bool(customer):
-		return Result(success=True, message={"coupon_type": "Referral", "reference": customer })
-
-	# String is not a known Coupon Code or Referral Code:
-	return Result(success=False, message=f"Error: Value '{coupon_code_str}' is neither a Coupon or Referral code.")
+	# FTP : Performance index for finding a customer's Referral Code
+	frappe.db.add_index("Coupon Code", ["coupon_type", "customer", "valid_upto"], index_name="referral_code_IDX")

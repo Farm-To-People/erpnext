@@ -85,6 +85,7 @@ class Customer(TransactionBase):
 
 	@frappe.whitelist()
 	def get_customer_group_details(self):
+		# Datahenge: This seems dangerous to call this from JS, without first asking for Confirmation?
 		doc = frappe.get_doc('Customer Group', self.customer_group)
 		self.accounts = self.credit_limits = []
 		self.payment_terms = self.default_price_list = ""
@@ -94,14 +95,16 @@ class Customer(TransactionBase):
 
 		for row in tables:
 			table, field = row[0], row[1]
-			if not doc.get(table): continue
+			if not doc.get(table):
+				continue
 
 			for entry in doc.get(table):
 				child = self.append(table)
 				child.update({"company": entry.company, field: entry.get(field)})
 
 		for field in fields:
-			if not doc.get(field): continue
+			if not doc.get(field):
+				continue
 			self.update({field: doc.get(field)})
 
 		self.save()
@@ -522,8 +525,8 @@ def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=F
 		lft, rgt = frappe.get_cached_value("Cost Center",
 			cost_center, ['lft', 'rgt'])
 
-		cond = """ and cost_center in (select name from `tabCost Center` where
-			lft >= {0} and rgt <= {1})""".format(lft, rgt)
+		cond = f""" and cost_center in (select name from `tabCost Center` where
+			lft >= {lft} and rgt <= {rgt})"""
 
 	# Datahenge: Ignored cancelled Ledger Transactions.
 	outstanding_based_on_gle = frappe.db.sql("""
@@ -768,8 +771,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 				frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
 
 	def before_insert(self):
-		if not self.referral_code:
-			self.set_referral_code()
+		if not self.get_referral_code():
+			self.reset_referral_code()
 
 	def before_validate(self):
 		# https://github.com/Farm-To-People/app_ftp/issues/37
@@ -779,8 +782,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if self.email_id:
 			self.email_id = self.email_id.strip()
 
-		if not self.referral_code:
-			self.set_referral_code()
+		if not self.get_referral_code():
+			self.reset_referral_code()
 
 	def after_insert(self):
 		# from ftp.utilities.mandrill import send_welcome_to_ftp
@@ -863,8 +866,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		This message does --not-- include a breakdown about Credit Allocations to Daily Orders.
 		"""
 		balance_per_gl = self.get_ar_balance_per_gl()
-
-		message = f"<b>Accounts Receivable</b>"
+		message = "<b>Accounts Receivable</b>"
 		message += f"\n{self.customer_name}&nbsp;({self.name})\n"
 		message += ar_summary_to_html(self.calc_ar_summary_by_type(), balance_per_gl)
 		message = message.replace("\n","<br>")
@@ -899,24 +901,26 @@ class Customer(Customer):  # pylint: disable=function-redefined
 				return True
 		return False
 
-	# Farm To People
 	@frappe.whitelist()
 	def collect_daily_order_payments(self):
 		from ftp.ftp_module.payments import PaymentProcessor
 		PaymentProcessor(disable_prechecks=True).pay_all_by_customer(self)
 
 	@frappe.whitelist()
-	def set_referral_code(self, force_save=False):
+	def get_referral_code(self):
 		"""
-		Generate and set a new referral code for this Customer.
+		Lookup the Customer's current Referral Code from the 'Coupon Code' table.
 		"""
-		from ftp.utilities.referral_code import generate_code
-		self.referral_code = generate_code()
+		from ftp.utilities.referral_code import get_current_code_by_customer
+		return get_current_code_by_customer(self.name)
 
-		if force_save:
-			# Typically used when called from JavaScript, to force an immediate save on the Customer record.
-			self.save()
-		return self.referral_code  # used by JS callback.
+	@frappe.whitelist()
+	def reset_referral_code(self):
+		"""
+		Generate and set a new referral code for this Customer (writes to Coupon Code document)
+		"""
+		from ftp.utilities.referral_code import generate_code_for_customer
+		return generate_code_for_customer(self)
 
 	def get_default_shipping_address_key(self):
 		"""
@@ -997,7 +1001,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			try:
 				doc_contact = frappe.get_doc("Contact", self.customer_primary_contact)
 			except Exception:
-				print(f"Integrity Error. Customer's primary contact '{self.customer_primary_contact}' was not found in Contact table.")			
+				print(f"Integrity Error. Customer's primary contact '{self.customer_primary_contact}' was not found in Contact table.")
 				return
 
 			if doc_contact.mobile_no:
@@ -1006,7 +1010,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 				frappe.db.commit()
 				print(f"\u2713 Updated the Customer's mobile number, based on the value found in Primary Contact. {self.name}.")
 			else:
-				print(f"Error! Customer {self.name} has no mobile number, and neither does its Primary Contact.")			
+				print(f"Error! Customer {self.name} has no mobile number, and neither does its Primary Contact.")
 			return
 
 		# Scenario 4: Neither field is populated.
@@ -1048,7 +1052,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
-	global AR_SUMMARY_QUERY
+	global AR_SUMMARY_QUERY  # pylint: disable=global-statement
 
 	this_path = pathlib.Path(__file__)  # path to this Python module
 	query_path = this_path.parent / 'ar_summary_by_type.sql'
@@ -1122,3 +1126,4 @@ def update_order_phone_numbers(customer_key: str, mobile_number: str=None):
 	except Exception as ex:
 		print(f"Error in update_order_phone_numbers(): {ex}")
 		raise ex
+

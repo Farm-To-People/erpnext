@@ -131,9 +131,14 @@ frappe.ui.form.on("Customer", {
 				erpnext.utils.make_pricing_rule(frm.doc.doctype, frm.doc.name);
 			}, __('Create'));
 
+			// Datahenge: Commenting out, because it seems dangerous to update Customer settings,
+			// without asking for confirmation and explaining to the User what is about to happen??
+
+			/*
 			frm.add_custom_button(__('Get Customer Group Details'), function () {
 				frm.trigger("get_customer_group_details");
 			}, __('Actions'));
+			*/
 
 			// indicator
 			erpnext.utils.set_party_dashboard_indicators(frm);
