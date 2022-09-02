@@ -911,7 +911,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Lookup the Customer's current Referral Code from the 'Coupon Code' table.
 		"""
-		from ftp.utilities.referral_code import get_current_code_by_customer
+		from ftp.ftp_module.referrals import get_current_code_by_customer
 		return get_current_code_by_customer(self.name)
 
 	@frappe.whitelist()
@@ -919,7 +919,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Generate and set a new referral code for this Customer (writes to Coupon Code document)
 		"""
-		from ftp.utilities.referral_code import generate_code_for_customer
+		from ftp.ftp_module.referrals import get_current_code_by_customer
 		return generate_code_for_customer(self)
 
 	def get_default_shipping_address_key(self):
