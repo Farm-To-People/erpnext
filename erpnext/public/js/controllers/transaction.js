@@ -2268,7 +2268,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 	/*
 		Datahenge Note 1: The 'coupon_code' function below is commented-out because FTP requires the option
-		for *multiple* Coupon Codes, per Order.  Thus the single DocField 'coupon_code' is repalced with
+		for *multiple* Coupon Codes, per Order.  The out-of-the-box DocField 'coupon_code' is replaced with
 		a Child DocType: 'Coupon Code Set'
 		
 		Datahenge Note 2: The original code seems broken anyway: if the User already set 'ignore_pricing_rule' = 1,

@@ -295,7 +295,7 @@ def apply_pricing_rule(args, doc=None):
 	for item in item_list:
 		args_copy = copy.deepcopy(args)
 		args_copy.update(item)	# merge the Order Line dictionary (item) into the 'args' dictionary.
-		# Datahenge Requirements:  The 'args_copy' must contain the Coupon Code Set as a List of String.
+		# Datahenge Requirements:  The 'args_copy' must contain the 'Coupon Code Set' as a List of String.
 		# Also, removed an unused argument below:
 		data = get_pricing_rule_for_item(args_copy, doc=doc)
 		out.append(data)
@@ -506,12 +506,13 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 				continue
 			if pricing_rule.limit_to_origin == 'Subscription' and doc.origin_code != 'Subscription':
 				continue
-		# ------------------------------------
 
 		# ------------------------------------
 		# Farm To People: Pricing Rule based on Coupon Codes.
 		# ------------------------------------
-		# NOTE: Standard code never accomplished this.  Coupon Codes (if they worked at all), only worked with ERPNext shopping carts.
+		# NOTE: Standard code never accomplished this.
+		# Coupon Codes (if they actually worked at all), only worked with ERPNext shopping carts.
+
 		if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
 			# But what if a rule already exists on the Order.  And now then Coupon is deleted?
 			# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)

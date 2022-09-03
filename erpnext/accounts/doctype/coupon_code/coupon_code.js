@@ -14,11 +14,8 @@ frappe.ui.form.on('Coupon Code', {
 			};
 		});
 	},
-	coupon_type:function(frm){
-	},
 	refresh: function(frm) {
 		// Datahenge: No longer possible, because 1 Coupon Code has many Pricing Rules.
-
 		/*
 		if (frm.doc.pricing_rule) {
 			frm.add_custom_button(__("Add/Edit Coupon Conditions"), function(){
