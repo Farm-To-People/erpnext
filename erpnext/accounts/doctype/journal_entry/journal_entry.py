@@ -690,6 +690,10 @@ class JournalEntry(AccountsController):
 		"""
 		If this Journal Entry credits the customers Receivables, then update all Open orders.
 		"""
+		# The flag "skip_order_credits_ftp" instructs the Document to bypass this code.
+		if hasattr(self, "flags") and hasattr(self.flags, "skip_order_credits_ftp") and self.flags.skip_order_credits_ftp is True:
+			return
+
 		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module
 
 		customers_to_recalc = set()
