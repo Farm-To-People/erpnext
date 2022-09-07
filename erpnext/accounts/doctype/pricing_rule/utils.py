@@ -783,7 +783,7 @@ def remove_coupon_dependent_rules(pricing_rules, doc, effective_date=None, debug
 		coupon_code_list = [ row.coupon_code for row in doc.coupon_code_set]
 		if not coupon_code_list:
 			if debug:
-				print(f"Coupon-based Pricing Rule '{pricing_rule.name}' cannot be activated by these Coupons: {coupon_code_list}.")
+				print(f"Order has no Coupons; coupon-based Pricing Rule '{pricing_rule.name}' cannot be activated.")
 			continue
 
 		if is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective_date):
