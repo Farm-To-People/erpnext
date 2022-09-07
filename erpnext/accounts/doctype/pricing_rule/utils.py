@@ -794,7 +794,7 @@ def remove_coupon_dependent_rules(pricing_rules, doc, effective_date=None, debug
 
 	return new_rules
 
-
+# pylint: disable=pointless-string-statement
 """
 def validate_args_schema_PY1(doc, args):
 

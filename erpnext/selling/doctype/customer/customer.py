@@ -771,8 +771,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 				frappe.msgprint("\u2713 Delivery Instructions updated on open orders.")
 
 	def before_insert(self):
-		if not self.get_referral_code():
-			self.reset_referral_code()
+		pass
 
 	def before_validate(self):
 		# https://github.com/Farm-To-People/app_ftp/issues/37
@@ -782,15 +781,15 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if self.email_id:
 			self.email_id = self.email_id.strip()
 
-		if not self.get_referral_code():
+	def after_insert(self):
+		super().after_insert()
+
+		# For non-anonymous Customers, ensure a Referral Code exists.
+		if (not self.is_anon()) and (not self.get_referral_code()):
 			self.reset_referral_code()
 
-	def after_insert(self):
 		# from ftp.utilities.mandrill import send_welcome_to_ftp
-		super().after_insert()
 		# Do not sent Welcome Emails, outside of the Customer Registration and Anonymous Registration.
-		#if not self.is_anon():
-		#	send_welcome_to_ftp(self.name)  # Farm to People + Mandrill welcome email via Redis Queue.
 
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.
