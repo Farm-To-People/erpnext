@@ -68,6 +68,7 @@
    "in_list_view": 1,
    "label": "Coupon Code",
    "no_copy": 1,
+   "reqd_in_database": 1,
    "set_only_once": 1,
    "unique": 1
   },
@@ -213,7 +214,7 @@
   }
  ],
  "links": [],
- "modified": "2022-09-01 22:04:43.394395",
+ "modified": "2022-09-10 15:24:24.975437",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",

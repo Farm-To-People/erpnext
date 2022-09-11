@@ -790,7 +790,7 @@ def remove_coupon_dependent_rules(pricing_rules, doc, effective_date=None, debug
 			new_rules.append(pricing_rule)
 		else:
 			if debug:
-				print(f"Coupon-based Pricing Rule '{pricing_rule.name}' cannot be activated by these Coupons: {coupon_code_list}.")
+				print(f"  Coupon-based Pricing Rule '{pricing_rule.name}' cannot be activated by these Coupons: {coupon_code_list}.")
 
 	return new_rules
 
