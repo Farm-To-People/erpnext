@@ -26,6 +26,11 @@ class PricingRule(Document):
 
 	def before_save(self):
 		self.validate_applied_rule = False  # Farm To People - Never want this box marked (18 Jul 2022)
+		if self.apply_on == 'Transaction':
+			self.apply_discount_on_rate = False  # FTP : Doesn't make sense for Transaction Level discounts.
+			self.valid_from_price_date = None
+			self.valid_to_price_date = None
+			self.margin_type = None
 
 	def validate(self):
 		self.validate_mandatory()
@@ -41,8 +46,19 @@ class PricingRule(Document):
 		self.validate_condition()
 		self.validate_nth()  # Farm To People
 		self.validate_child_foo()
+		# Farm To People, additional Validation:
 
-		if not self.margin_type: self.margin_rate_or_amount = 0.0
+		if self.apply_on == 'Transaction':
+			if self.price_or_product_discount != "Price":
+				frappe.throw("Transaction discounts are only compatible with Price Discounts, not Product.")
+			if self.is_cumulative:
+				frappe.throw("Transaction discounts are not compatible with 'Is Cumulative'")
+			if self.applicable_for and self.applicable_for not in ['Customer', 'Customer Group', 'Territory']:
+				frappe.throw(f"Transaction discounts are not compatible with Applicable For = '{self.applicable_for}'")
+			if self.rate_or_discount == 'Rate':
+				frappe.throw(f"Transaction discounts are not compatible with 'Rate or Discount' = '{self.rate_or_discount}'")
+		if not self.margin_type:
+			self.margin_rate_or_amount = 0.0
 
 	def validate_duplicate_apply_on(self):
 		field = apply_on_dict.get(self.apply_on)
@@ -158,7 +174,10 @@ class PricingRule(Document):
 			frappe.throw(_("Valid from and valid upto fields are mandatory for the cumulative"))
 
 		if self.valid_from and self.valid_upto and getdate(self.valid_from) > getdate(self.valid_upto):
-			frappe.throw(_("Valid from date must be less than valid upto date"))
+			frappe.throw(_("'Valid From Delivery Date' must be less than 'Valid UpTo Delivery Date'"))
+
+		if self.valid_from_price_date and self.valid_to_price_date and getdate(self.valid_from_price_date) > getdate(self.valid_to_price_date):
+			frappe.throw(_("'Valid From Price Date' must be less than 'Valid To Price Date'"))
 
 	def validate_condition(self):
 		if self.condition and ("=" in self.condition) and re.match(r"""[\w\.:_]+\s*={1}\s*[\w\.@'"]+""", self.condition):
@@ -606,6 +625,7 @@ def apply_price_discount_rule(pricing_rule, item_details, args):
 		item_details.margin_type = pricing_rule.margin_type
 		item_details.has_margin = True
 
+		# Margin Rate/Amounts are aggregated when 'Apply Multiple Pricing Rules' is enabled.
 		if pricing_rule.apply_multiple_pricing_rules and item_details.margin_rate_or_amount is not None:
 			item_details.margin_rate_or_amount += pricing_rule.margin_rate_or_amount
 		else:
@@ -627,7 +647,8 @@ def apply_price_discount_rule(pricing_rule, item_details, args):
 		})
 
 	for apply_on in ['Discount Amount', 'Discount Percentage']:
-		if pricing_rule.rate_or_discount != apply_on: continue
+		if pricing_rule.rate_or_discount != apply_on:
+			continue
 
 		field = frappe.scrub(apply_on)
 		if pricing_rule.apply_discount_on_rate and item_details.get("discount_percentage"):
