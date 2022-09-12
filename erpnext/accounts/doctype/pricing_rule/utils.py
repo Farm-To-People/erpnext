@@ -482,7 +482,9 @@ def get_qty_and_rate_for_other_item(doc, pr_doc, pricing_rules):
 				return pricing_rules
 
 
-def get_qty_amount_data_for_cumulative(pr_doc, doc, items=[]):
+def get_qty_amount_data_for_cumulative(pr_doc, doc, items=None):
+	if not items:
+		items = []
 	sum_qty, sum_amt = [0, 0]
 	doctype = doc.get('parenttype') or doc.doctype
 
@@ -732,12 +734,16 @@ def is_coupon_based_pricing_rule_valid(pricing_rule, coupon_code_list, effective
 		# frappe.dprint(f"* Checking if coupon code '{each_coupon_code}' enables pricing rule '{pricing_rule.name}' ...", check_env='FTP_DEBUG_PRICING_RULE')
 		doc_coupon_code = frappe.get_doc("Coupon Code", each_coupon_code)
 
-		if not doc_coupon_code.valid_for_date(effective_date):
-			frappe.dprint(f"Coupon code {doc_coupon_code.name} is not valid for this Effective Date ({effective_date}).", check_env='FTP_DEBUG_PRICING_RULE')
-			continue  # coupon code is not valid for this Effective Date, so this Pricing Rule cannot be active.
+		# NOTE: September 12th 2022 : Removing this logic.  Coupon Code dates are -not- equivalent to Delivery Dates or Pricing Dates.
+		# Once applied to an Order, the Coupons *themselves* are always valid.  (the Pricing Rule may or may not be, though)
+		# Yes, Change Order Date may have an impact. But even if it does, Coupon Date validation wouldn't happen -here-
+		#
+		#if not doc_coupon_code.valid_for_date(effective_date):
+		#	frappe.dprint(f"Coupon code {doc_coupon_code.name} is not valid for this Effective Date ({effective_date}).", check_env='FTP_DEBUG_PRICING_RULE')
+		#	continue  # coupon code is not valid for this Effective Date, so this Pricing Rule cannot be active.
 
-		# Each coupon code can 1 or more Pricing Rules (April 8th 2022)
-		applicable_rules = [ row.pricing_rule for row in doc_coupon_code.pricing_rule ]
+		# Coupon Code can be associated with 1 or more Pricing Rules (April 8th 2022)
+		applicable_rules = [ child.pricing_rule for child in doc_coupon_code.pricing_rule ]
 		if pricing_rule.name in applicable_rules:
 			frappe.dprint(f"\u2713 Coupon code '{each_coupon_code}' enabled pricing rule '{pricing_rule.name}'", check_env='FTP_DEBUG_PRICING_RULE')
 			result = True
