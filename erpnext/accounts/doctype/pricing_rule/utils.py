@@ -696,7 +696,7 @@ def update_coupon_code_count(coupon_name, transaction_type):
 				frappe.throw(_(f"Coupon '{coupon.coupon_code}' used {coupon.used} times. Allowed quantity ({coupon.maximum_use}) is exhausted."))
 		elif transaction_type=='cancelled':
 			if coupon.used>0:
-				coupon.used=coupon.used-1
+				coupon.used = coupon.used - 1
 				coupon.save(ignore_permissions=True)
 
 

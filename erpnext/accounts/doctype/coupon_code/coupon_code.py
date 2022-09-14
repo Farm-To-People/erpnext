@@ -64,6 +64,13 @@ class CouponCode(Document):
 			return True
 		return False
 
+	def recalc_usage(self):
+		"""
+		Datahenge: Recalculate the Coupon Code usage.
+		"""
+		pass
+		# TODO: Make it so.
+
 # Yes, 'on_doctype_update' belongs here, outside the Document class.
 def on_doctype_update():
 	"""
