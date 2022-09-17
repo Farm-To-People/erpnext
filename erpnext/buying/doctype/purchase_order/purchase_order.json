@@ -1174,9 +1174,8 @@
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
- "is_submittable": 1,
  "links": [],
- "modified": "2022-03-08 00:58:19.800446",
+ "modified": "2022-09-16 21:57:10.394566",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
@@ -1188,7 +1187,6 @@
    "role": "Stock User"
   },
   {
-   "amend": 1,
    "cancel": 1,
    "create": 1,
    "delete": 1,
@@ -1198,12 +1196,9 @@
    "report": 1,
    "role": "Purchase Manager",
    "share": 1,
-   "submit": 1,
    "write": 1
   },
   {
-   "amend": 1,
-   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -1212,7 +1207,6 @@
    "report": 1,
    "role": "Purchase User",
    "share": 1,
-   "submit": 1,
    "write": 1
   },
   {

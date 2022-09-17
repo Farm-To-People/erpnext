@@ -1,9 +1,12 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // For license information, please see license.txt
 
+// Datahenge: No inline documentation, so having to reverse engineer...
+
 frappe.provide("erpnext.accounts");
 
 frappe.ui.form.on("Payment Reconciliation Payment", {
+
 	invoice_number: function(frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
 		if(row.invoice_number) {

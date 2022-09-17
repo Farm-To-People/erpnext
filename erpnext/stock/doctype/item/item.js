@@ -807,7 +807,7 @@ frappe.ui.form.on("UOM Conversion Detail", {
 })
 
 function py_update_sanity_cms(frm) {
-	frappe.msgprint("Transmitted request to Sanity.  Please standby...")
+	frappe.msgprint("Request for update transmitted to Sanity.")
 	frappe.call({
 		method: "ftp.utilities.doc_extensions.post_ndjson_to_sanity",
 		args: {

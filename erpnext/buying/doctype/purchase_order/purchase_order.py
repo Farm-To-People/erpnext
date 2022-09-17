@@ -3,6 +3,20 @@
 
 # pylint: disable=invalid-name
 
+# Farm To People modifications
+# Disable the ability to Submit PO's.  That's no longer a thing.
+'''
+SELECT * FROM tabDocPerm
+WHERE parent = 'Purchase Order'
+AND (submit = 1 OR cancel = 1);
+
+UPDATE
+tabDocPerm
+SET submit = 0, cancel = 0
+WHERE parent = 'Purchase Order'
+AND (submit = 1 or cancel = 1);
+'''
+
 from __future__ import unicode_literals
 from datetime import timedelta
 

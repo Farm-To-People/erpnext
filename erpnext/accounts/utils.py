@@ -662,7 +662,7 @@ def get_outstanding_invoices(party_type, party, account, condition=None, filters
 		dr_or_cr = "credit_in_account_currency - debit_in_account_currency"
 		payment_dr_or_cr = "debit_in_account_currency - credit_in_account_currency"
 
-	held_invoices = get_held_invoices(party_type, party)
+	held_invoices = get_held_invoices(party_type, party)  # DH: Purchase invoices with a future release date
 
 	invoice_list = frappe.db.sql("""
 		select
