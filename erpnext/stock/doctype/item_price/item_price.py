@@ -11,12 +11,32 @@ from temporal import MIN_DATE, MAX_DATE, any_to_date
 class ItemPriceDuplicateItem(frappe.ValidationError):
 	pass
 
+"""
+
+UPDATE `tabItem Price`
+SET item_price_type =
+	CASE WHEN selling then 'Selling'
+		WHEN buying then 'Buying'
+		ELSE 'Deposit'
+END
+
+"""
+
 
 class ItemPrice(Document):
 
 	def before_validate(self):
 		# Farm to People Rule : No Customer-Specific Pricing allowed in Item Price table.
+
 		self.customer = None
+		if self.item_price_type == 'Selling':
+			self.selling = True
+			self.buying = False
+
+		elif self.item_price_type == 'Buying':
+			self.selling = False
+			self.buying = True
+
 
 	def validate(self):
 		# FTP Rules for choosing which Price:
@@ -181,4 +201,3 @@ class ItemPrice(Document):
 		"""
 		from ftp.utilities.pricing import ItemPriceValidation
 		ItemPriceValidation(self.item_code).validate_item_prices()
-
