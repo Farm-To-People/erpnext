@@ -1,5 +1,6 @@
 // Copyright (c) 2016, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
+
 {% include "erpnext/public/js/controllers/accounts.js" %}
 frappe.provide("erpnext.accounts.dimensions");
 
@@ -105,8 +106,10 @@ frappe.ui.form.on('Payment Entry', {
 		});
 
 		frm.set_query("reference_doctype", "references", function() {
+			// Datahenge: Removing Dunning, because it's extremely unlikely FTP needs to create Payment Entries with that right now.
+			//            Adding "Daily Order", since that's the primary use case.
 			if (frm.doc.party_type == "Customer") {
-				var doctypes = ["Sales Order", "Sales Invoice", "Journal Entry", "Dunning"];
+				var doctypes = ["Daily Order", "Sales Order", "Sales Invoice", "Journal Entry"];
 			} else if (frm.doc.party_type == "Supplier") {
 				var doctypes = ["Purchase Order", "Purchase Invoice", "Journal Entry"];
 			} else if (frm.doc.party_type == "Employee") {
@@ -142,8 +145,9 @@ frappe.ui.form.on('Payment Entry', {
 		frm.set_query("reference_name", "references", function(doc, cdt, cdn) {
 			const child = locals[cdt][cdn];
 			const filters = {"docstatus": 1, "company": doc.company};
-			const party_type_doctypes = ['Sales Invoice', 'Sales Order', 'Purchase Invoice',
-				'Purchase Order', 'Expense Claim', 'Fees', 'Dunning', 'Donation'];
+			// Datahenge: Remove Dunning, add Daily Order
+			const party_type_doctypes = ['Daily Order', 'Sales Invoice', 'Sales Order', 'Purchase Invoice',
+				'Purchase Order', 'Expense Claim', 'Fees', 'Donation'];
 
 			if (in_list(party_type_doctypes, child.reference_doctype)) {
 				filters[doc.party_type.toLowerCase()] = doc.party;
@@ -152,6 +156,12 @@ frappe.ui.form.on('Payment Entry', {
 			if(child.reference_doctype == "Expense Claim") {
 				filters["docstatus"] = 1;
 				filters["is_paid"] = 0;
+			}
+
+			// Farm To People: Daily Orders are never Submitted, their docstatus is perpetually zero
+			if(child.reference_doctype == "Daily Order") {
+				filters["docstatus"] = 0;
+				filters["status_delivery"] = "Ready";
 			}
 
 			return {
@@ -741,7 +751,8 @@ frappe.ui.form.on('Payment Entry', {
 						c.payment_term = d.payment_term;
 						c.allocated_amount = d.allocated_amount;
 
-						if(!in_list(["Sales Order", "Purchase Order", "Expense Claim", "Fees"], d.voucher_type)) {
+						// Datahenge: Add Daily Order
+						if(!in_list(["Daily Order", "Sales Order", "Purchase Order", "Expense Claim", "Fees"], d.voucher_type)) {
 							if(flt(d.outstanding_amount) > 0)
 								total_positive_outstanding += flt(d.outstanding_amount);
 							else
@@ -952,12 +963,12 @@ frappe.ui.form.on('Payment Entry', {
 			if (!row.reference_doctype) {
 				return;
 			}
-
+			// Datahenge: Remove Dunning, add Daily Order.
 			if(frm.doc.party_type=="Customer" &&
-				!in_list(["Sales Order", "Sales Invoice", "Journal Entry", "Dunning"], row.reference_doctype)
+				!in_list(["Daily Order", "Sales Order", "Sales Invoice", "Journal Entry"], row.reference_doctype)
 			) {
 				frappe.model.set_value(row.doctype, row.name, "reference_doctype", null);
-				frappe.msgprint(__("Row #{0}: Reference Document Type must be one of Sales Order, Sales Invoice, Journal Entry or Dunning", [row.idx]));
+				frappe.msgprint(__("Row #{0}: Reference Document Type must be one of Daily Order, Sales Order, Sales Invoice, or Journal Entry", [row.idx]));
 				return false;
 			}
 

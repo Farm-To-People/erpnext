@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 import json
 from six import string_types, iteritems
 # Frappe Library
-import frappe, erpnext
+import frappe
+import erpnext
 from frappe import _, scrub, ValidationError
 from frappe.utils import flt, comma_or, nowdate, getdate, cint
 from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on
@@ -21,6 +22,9 @@ from erpnext.accounts.doctype.invoice_discounting.invoice_discounting import get
 from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category import get_party_tax_withholding_details
 
 from erpnext.controllers.accounts_controller import validate_taxes_and_charges
+
+# Datahenge: The number of bad naming conventions in here is large: ignoring the messages for now
+# pylint: disable=invalid-name, unused-argument
 
 class InvalidPaymentEntry(ValidationError):
 	pass
@@ -72,6 +76,8 @@ class PaymentEntry(AccountsController):
 
 	def on_submit(self):
 		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
+		from ftp.ftp_module.doctype.customer_account_settlement.customer_account_settlement import CustomerAccountSettlement
+
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
 		self.acquire_stripe_payment_intent()  # FTP and Pinstripe, must happen before anything else in the Payment Entry.
@@ -82,6 +88,8 @@ class PaymentEntry(AccountsController):
 		self.update_donation()
 		self.update_payment_schedule()
 		self.set_status()
+		# Datahenge: Create a new record in Customer Account Settlement
+		CustomerAccountSettlement.create_from_payment_entry(self)
 		# FTP : Recalculate a customer's account balance.
 		if self.party and self.party_type in ("Customer"):
 			reapply_customer_credits(customer_key=self.party)
@@ -116,7 +124,7 @@ class PaymentEntry(AccountsController):
 		except Exception as ex:
 			frappe.db.rollback() # rollback any changes that happened?
 			# Write the Error response to the Activity Log.
-			new_error_log(customer_key=self.party, activity_type='Stripe Payment', 
+			new_error_log(customer_key=self.party, activity_type='Stripe Payment',
 			              short_message=ex, ref_doctype='Daily Order' if self.daily_order else 'Payment Entry',
 						  ref_docname = self.daily_order if self.daily_order else self.name)
 			raise LoggedError from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
@@ -350,7 +358,8 @@ class PaymentEntry(AccountsController):
 		if self.party_type == "Student":
 			valid_reference_doctypes = ("Fees")
 		elif self.party_type == "Customer":
-			valid_reference_doctypes = ("Sales Order", "Sales Invoice", "Journal Entry", "Dunning")
+			# Datahenge Modification: Remove Dunning, add Daily Order
+			valid_reference_doctypes = ("Daily Order", "Sales Order", "Sales Invoice", "Journal Entry")
 		elif self.party_type == "Supplier":
 			valid_reference_doctypes = ("Purchase Order", "Purchase Invoice", "Journal Entry")
 		elif self.party_type == "Employee":
@@ -394,7 +403,12 @@ class PaymentEntry(AccountsController):
 							frappe.throw(_("{0} {1} is associated with {2}, but Party Account is {3}")
 								.format(d.reference_doctype, d.reference_name, ref_party_account, self.party_account))
 
-					if ref_doc.docstatus != 1:
+					# FTP : Daily Orders never need to be Submitted.
+					if ref_doc.doctype == "Daily Order":
+						allowed_delivery_status = ["Ready", "Delivered", "For Review", "Good Faith"]
+						if ref_doc.status_delivery not in allowed_delivery_status:
+							frappe.throw(_(f"Daily Order delivery status must be one of {', '.join(allowed_delivery_status)}"))
+					elif ref_doc.doctype != "Daily Order" and ref_doc.docstatus != 1:
 						frappe.throw(_("{0} {1} must be submitted")
 							.format(d.reference_doctype, d.reference_name))
 
@@ -422,7 +436,7 @@ class PaymentEntry(AccountsController):
 			if d.allocated_amount and d.reference_doctype == "Journal Entry":
 				je_accounts = frappe.db.sql("""select debit, credit from `tabJournal Entry Account`
 					where account = %s and party=%s and docstatus = 1 and parent = %s
-					and (reference_type is null or reference_type in ("", "Sales Order", "Purchase Order"))
+					and (reference_type is null or reference_type in ("", "Sales Order", "Purchase Order", "Daily Order"))
 					""", (self.party_account, self.party, d.reference_name), as_dict=True)
 
 				if not je_accounts:
@@ -1431,7 +1445,13 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
 	ref_doc = frappe.get_doc(reference_doctype, reference_name)
 	company_currency = ref_doc.get("company_currency") or erpnext.get_company_currency(ref_doc.company)
 
-	if reference_doctype == "Fees":
+	# FTP : Adding Daily Order
+	if reference_doctype == "Daily Order":
+		total_amount = ref_doc.get("amount_grandtotal_post_discounts")
+		exchange_rate = 1
+		outstanding_amount = ref_doc.get("total_amount_due")
+	# FTP : End
+	elif reference_doctype == "Fees":
 		total_amount = ref_doc.get("grand_total")
 		exchange_rate = 1
 		outstanding_amount = ref_doc.get("outstanding_amount")
