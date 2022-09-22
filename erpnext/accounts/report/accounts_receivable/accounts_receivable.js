@@ -41,6 +41,7 @@ frappe.query_reports["Accounts Receivable"] = {
 			"fieldname":"customer",
 			"label": __("Customer"),
 			"fieldtype": "Link",
+			"reqd": 1,  // FTP to prevent performance hits in PROD.
 			"options": "Customer",
 			on_change: () => {
 				var customer = frappe.query_report.get_filter_value('customer');
