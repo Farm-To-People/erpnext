@@ -23,7 +23,9 @@
   "over_transfer_allowance",
   "sb_ftp",
   "stock_use_days_offset",
-  "use_header_required_by"
+  "use_header_required_by",
+  "column_break_19",
+  "default_target_warehouse"
  ],
  "fields": [
   {
@@ -138,6 +140,16 @@
    "fieldname": "use_header_required_by",
    "fieldtype": "Check",
    "label": "Prioritize Header 'Required By'"
+  },
+  {
+   "fieldname": "default_target_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Target Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_19",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-cog",
@@ -145,7 +157,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-03-01 16:56:21.696860",
+ "modified": "2022-09-22 22:02:23.265611",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Buying Settings",

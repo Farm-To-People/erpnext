@@ -82,6 +82,9 @@ class PurchaseOrder(BuyingController):
 					self.shipping_address_display = address_display
 			except Exception as ex:
 				print(f"Purchase Order before_insert error = {repr(ex)}")
+		# Farm To People: Add the default Buying Warehouse.
+		if not self.set_warehouse:
+			self.set_warehouse = frappe.db.get_single_value("Buying Settings", "default_target_warehouse")
 
 	def before_validate(self):
 		# Farm To People:  Ensure that Stock Use Date is related to the Required By Date (schedule_date)

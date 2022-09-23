@@ -28,6 +28,7 @@ frappe.ui.form.on("Purchase Order", {
 			}
 		});
 
+		set_target_warehouse(frm);  // Farm To People
 	},
 
 	company: function(frm) {
@@ -45,6 +46,12 @@ frappe.ui.form.on("Purchase Order", {
 		});
 
 		erpnext.accounts.dimensions.setup_dimension_filters(frm, frm.doctype);
+
+		// Farm To People
+		//if (!frm.doc.supplier) {
+		//	console.log("Setting focus on Supplier field...");
+		//	frm.get_field('supplier').$input.focus();
+		//}
 	},
 
 	apply_tds: function(frm) {
@@ -61,26 +68,10 @@ frappe.ui.form.on("Purchase Order", {
 		/* FTP: Hide the standard Submit Button: */
 		// $('.primary-action').prop('hidden', true);
 
-		if (frm.doc.docstatus == 0) {
-
-			// Document is in Draft.  Need to create first custom Submit button:
-			/*
-			frm.page.add_action_item(__('Submit'), function() {
-				frappe.call({
-					method: "submit",
-					doc: frm.doc,
-					callback: function(r) {
-						if (r.message) {
-							frappe.msgprint(__("{0} Result submittted", [r.message]));
-						}
-						cur_frm.reload_doc();
-					}
-				});
-			});
-			*/
+		if (!frm.doc.__unsaved && frm.doc.docstatus == 0 && frm.doc.status != "Closed") {
 
 			// Custom Submit button #2
-			frm.add_custom_button(__('Email & Submit'),
+			frm.add_custom_button(__('Email'),
 
 				function() {
 					frappe.db.get_value("Supplier", {"name": frm.doc.supplier}, "emails_for_purchase_order").then(val => {
@@ -205,7 +196,6 @@ frappe.ui.form.on("Purchase Order", {
 	create_lines_from_daily_orders: function(frm) {
 
 		// First, open a Dialog Box with a date range.
-		let me = this;
 		let mydialog = new frappe.ui.Dialog({
 			title: __('Add PO lines based on Daily Orders'),
 			fields: [
@@ -446,32 +436,6 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			get_query_method: "erpnext.stock.doctype.material_request.material_request.get_material_requests_based_on_supplier"
 		});
 	},
-
-	// Begin: Datahenge LLC
-
-	/*
-	get_items_from_daily_orders: function() {
-		erpnext.utils.map_current_doc({
-			method: "ftp.ftp_module.doctype.daily_order.to_purchase_order.make_purchase_order_based_on_supplier",
-			args: {
-				supplier: this.frm.doc.supplier
-			},
-			source_doctype: "Daily Order",
-			source_name: this.frm.doc.supplier,
-			target: this.frm,
-			setters: {
-				company: me.frm.doc.company
-			},
-			get_query_filters: {
-				docstatus: ["!=", 2],
-				supplier: this.frm.doc.supplier
-			},
-			// get_query_method: "erpnext.stock.doctype.material_request.material_request.get_material_requests_based_on_supplier"
-			get_query_method: "ftp.ftp_module.doctype.daily_order.to_purchase_order.get_daily_orders_based_on_supplier"
-		});
-	},	
-	// End: Datahenge LLC
-	*/
 
 	validate: function() {
 		set_schedule_date(this.frm);
@@ -860,6 +824,16 @@ cur_frm.fields_dict['items'].grid.get_field('bom').get_query = function(doc, cdt
 function set_schedule_date(frm) {
 	if(frm.doc.schedule_date){
 		erpnext.utils.copy_value_in_all_rows(frm.doc, frm.doc.doctype, frm.doc.name, "items", "schedule_date");
+	}
+}
+
+function set_target_warehouse(frm) {
+	// Farm To People: Set the target Warehouse.
+	console.log("set_target_warehouse");
+	if(! frm.doc.set_warehouse){
+		frappe.db.get_single_value("Buying Settings", "default_target_warehouse").then(val => {
+			frm.doc.set_warehouse = val;
+		});
 	}
 }
 

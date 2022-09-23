@@ -10,8 +10,8 @@ import frappe.defaults
 
 class PriceList(Document):
 	def validate(self):
-		if not cint(self.buying) and not cint(self.selling):
-			throw(_("Price List must be applicable for Buying or Selling"))
+		if not cint(self.buying) and not cint(self.selling) and not cint(self.deposit):
+			throw(_("Price List must be applicable for Buying, Selling, or Deposit."))
 
 	def on_update(self):
 		self.set_default_if_missing()
@@ -28,9 +28,11 @@ class PriceList(Document):
 				frappe.set_value("Buying Settings", "Buying Settings", "buying_price_list", self.name)
 
 	def update_item_price(self):
-		frappe.db.sql("""update `tabItem Price` set currency=%s,
-			buying=%s, selling=%s, modified=NOW() where price_list=%s""",
-			(self.currency, cint(self.buying), cint(self.selling), self.name))
+		pass
+		# Datahenge: This seems incredibly dangerous: commenting it out.
+		#frappe.db.sql("""update `tabItem Price` set currency=%s,
+		#	buying=%s, selling=%s, modified=NOW() where price_list=%s""",
+		#	(self.currency, cint(self.buying), cint(self.selling), self.name))
 
 	def on_trash(self):
 		self.delete_price_list_details_key()

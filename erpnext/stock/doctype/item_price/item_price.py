@@ -27,7 +27,7 @@ class ItemPrice(Document):
 
 	def before_validate(self):
 		# Farm to People Rule : No Customer-Specific Pricing allowed in Item Price table.
-
+		# Not creating a separate flag "Deposit"; just use the new "Price Type"
 		self.customer = None
 		if self.item_price_type == 'Selling':
 			self.selling = True
@@ -36,6 +36,10 @@ class ItemPrice(Document):
 		elif self.item_price_type == 'Buying':
 			self.selling = False
 			self.buying = True
+
+		elif self.item_price_type == 'Deposit':
+			self.selling = False
+			self.buying = False
 
 
 	def validate(self):
