@@ -718,7 +718,7 @@ def is_customer_anon(customer_key_or_doc):
 	Return a boolean indicating if Customer is anonymous, or not.
 	"""
 	if isinstance(customer_key_or_doc, str):
-		customer_key = frappe.db.get_value('Customer',  customer_key_or_doc,  'name')
+		customer_key = frappe.db.get_value('Customer', customer_key_or_doc, fieldname='name')
 		return bool(customer_key.startswith('anon'))
 
 	return bool(customer_key_or_doc.name.startswith('anon'))

@@ -26,37 +26,57 @@ function collect_deposits(listview) {
 		title: 'Collect Deposits',
 		width: 100,
 		fields: [
+			/*
 			{
-				'fieldtype': 'Text',
-				'default': "Collect deposits from turkeys and hams",
-				'read_only': true
+				fieldname: "intro",
+				fieldtype: "HTML",
+				options: '<h3>'
+					+ __("Collect deposits from Orders")
+				+ '</h3>'
 			},
+			*/
 			{
 				'fieldtype': 'Date',
 				'label': __('From Delivery Date'),
 				'fieldname': 'from_delivery_date',
-				'default': frappe.datetime.nowdate(),				
+				//'default': frappe.datetime.nowdate(),
+				'default': "2022-11-20",
 			},
 			{
 				'fieldtype': 'Date',
 				'label': __('To Delivery Date'),
 				'fieldname': 'to_delivery_date',
-				'default': frappe.datetime.nowdate(),				
+				// 'default': frappe.datetime.nowdate(),
+				'default': "2022-11-23",
 			},
+			{
+				'fieldtype': 'Check',
+				'label': __('Pre-Order items only'),
+				'fieldname': 'only_pre_order_items',
+				'default': 1,				
+			},
+			{
+				fieldname: "help",
+				fieldtype: "HTML",
+				options: '<br><p>'
+					+ __("NOTE: One payment entry will be created, per Order.")
+				+ '</p>'
+			}
 		]
 	});
 
 	mydialog.set_primary_action(__('Create'), args => {
 		let foo = frappe.call({
-			method: 'ftp.ftp_module.doctype.farm_box.farm_box.create_demo_farmbox',
+			method: 'ftp.ftp_receivables.deposits.collect_deposits',
 			// Reminder: Argument names must match those in the Python function declaration.
-			args: { dlv_period_name: args.dlv_period_name,
-				    item_code:       args.item_code},
+			args: { from_delivery_date: args.from_delivery_date,
+				    to_delivery_date:   args.to_delivery_date,
+					only_pre_order_items: args.only_pre_order_items
+			},
 			callback: function(r) {
-				console.log("Callback 1: Created a new Farm Box document.");
+				console.log("Callback 1: Finished call to collect_deposits()");
 				if (r.message) {
-					console.log("Callback 2: Created a new Farm Box document.");
-					// Brian: Have to refresh in the callback.  Otherwise will get called early!
+					console.log(`Callback 2: Message returned was ${r}`);
 					listview.refresh();  // This refreshes the List, but does -not- Reload each Doc :/
 				}
 			}
@@ -64,17 +84,6 @@ function collect_deposits(listview) {
 		mydialog.hide();  // After callback, close dialog regardless of result.
 	});
 
-	// Ask Python for the current Delivery Period, then run the dialog.
-	frappe.call({
-		method: "ftp.ftp_module.doctype.delivery_period.delivery_period.get_current_period_name",
-		args: null,
-		callback: (r) => {
-			if (r.message) {
-				mydialog.set_values({'dlv_period_current': r.message});  // just for user reference
-				mydialog.show();
-			}
-		},
-	});
-	// end
+	mydialog.show();
 
-};
+};  // end of function collect_deposits()

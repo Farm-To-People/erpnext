@@ -489,7 +489,7 @@ class PaymentEntry(AccountsController):
 					(allocated_amount - discounted_amt, discounted_amt, allocated_amount, key[1], key[0]))
 			else:
 				if allocated_amount > outstanding:
-					frappe.throw(_('Cannot allocate more than {0} against payment term {1}').format(outstanding, key[0]))
+					frappe.throw(_('Cannot allocate {0} against outstanding amount {1} with payment term {1}').format(allocated_amount, outstanding, key[0]))
 
 				if allocated_amount and outstanding:
 					frappe.db.sql("""
@@ -527,7 +527,7 @@ class PaymentEntry(AccountsController):
 			net_total_for_tds = 0
 			if reference.reference_doctype == 'Purchase Order':
 				net_total_for_tds += flt(frappe.db.get_value('Purchase Order', reference.reference_name, 'net_total'))
-		
+
 			if net_total_for_tds:
 				net_total = net_total_for_tds
 

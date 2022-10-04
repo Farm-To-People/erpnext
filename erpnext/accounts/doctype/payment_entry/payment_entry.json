@@ -45,6 +45,7 @@
   "target_exchange_rate",
   "base_received_amount",
   "base_received_amount_after_tax",
+  "preorder_deposit",
   "section_break_14",
   "get_outstanding_invoice",
   "references",
@@ -731,12 +732,19 @@
    "options": "Dynamic\nStatic",
    "reqd": 1,
    "reqd_in_database": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "preorder_deposit",
+   "fieldtype": "Check",
+   "label": "Preorder Deposit",
+   "search_index": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-09-20 20:07:30.813204",
+ "modified": "2022-10-03 18:05:38.449300",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
