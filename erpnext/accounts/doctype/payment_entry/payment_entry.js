@@ -178,7 +178,9 @@ frappe.ui.form.on('Payment Entry', {
 
 		// Begin: Farm To People
 		// Add a button that enables the User to refund the Stripe payment.
-		if (cur_frm.doc.status == "Submitted" &&
+
+		/*
+		if (cur_frm.doc.status == "Cancelled" &&
 		    cur_frm.doc.mode_of_payment == "Stripe" &&
 			cur_frm.doc.payment_type == "Receive" &&
 			cur_frm.doc.reference_no) {
@@ -194,6 +196,7 @@ frappe.ui.form.on('Payment Entry', {
 			}, __( ));
 		}
 		// End: Farm To People
+		*/
 	},
 
 	validate_company: (frm) => {

@@ -94,11 +94,11 @@ class PaymentEntry(AccountsController):
 		if self.party and self.party_type in ("Customer"):
 			reapply_customer_credits(customer_key=self.party)
 
-
 	def acquire_stripe_payment_intent(self):
 		"""
 		Farm To People integration with Stripe payment processing.
 		"""
+		from temporal import any_to_date  # late import due to cross-App dependency.
 		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
 		from ftp.ftp_module.payments import LoggedError
 		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_error_log, new_info_log
@@ -106,16 +106,32 @@ class PaymentEntry(AccountsController):
 		if self.mode_of_payment != 'Stripe':
 			return None
 
+		order_number = self.get_daily_order_key()
+		if order_number:
+			delivery_date = any_to_date(frappe.get_value("Daily Order", order_number, "delivery_date"))
+
 		if self.reference_no:
+			# What if Stripe Payment Intent is already written to the Payment Entry?
 			frappe.msgprint(f"Warning: Not re-collecting payment from Stripe.  Payment Entry already has a value in 'reference_no' ('{self.reference_no}')", to_console=True)
 			new_info_log(customer_key=self.party, activity_type='Stripe Payment',
 			             message=f"Re-Submit of PE {self.name} with Stripe Payment Intent: {self.reference_no}",
-						 message_long=f"This is a manual re-submit of Payment {self.name } associated with Daily Order {self.daily_order}, with Payment Intent {self.reference_no}" if self.daily_order else None,
+						 message_long=f"This is a manual re-submit of Payment {self.name } \
+			associated with Daily Order {order_number}, \
+			with Payment Intent {self.reference_no}" if order_number else None,
 						 ref_doctype='Payment Entry', ref_docname=self.name)
 			return None
 
 		try:
-			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name)
+			if order_number:
+				if self.preorder_deposit:
+					date_string = delivery_date.strftime("%m/%d/%y")
+					description = f"This payment serves as a preorder item(s) deposit for your order scheduled for delivery on {date_string} ({order_number})"
+				else:
+					description=f"Payment for Order # {order_number}. Login to your account to view your itemized order summary."
+			else:
+				description = None
+
+			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name, order_number=self.get_daily_order_key(), description=description)
 			if not payment_intent_id:
 				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API (no payment intent returned)"))
 			self.db_set('reference_no', payment_intent_id, update_modified = True, commit=True)  # commit SQL immediately
@@ -125,11 +141,11 @@ class PaymentEntry(AccountsController):
 			frappe.db.rollback() # rollback any changes that happened?
 			# Write the Error response to the Activity Log.
 			new_error_log(customer_key=self.party, activity_type='Stripe Payment',
-			              short_message=ex, ref_doctype='Daily Order' if self.daily_order else 'Payment Entry',
-						  ref_docname = self.daily_order if self.daily_order else self.name)
+			              short_message=ex, ref_doctype='Daily Order' if self.get_daily_order_key() else 'Payment Entry',
+						  ref_docname = self.get_daily_order_key() if self.get_daily_order_key() else self.name)
 			raise LoggedError from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
 
-	def _log_stripe_on_success(self, payment_intent_id):
+	def _log_stripe_on_success(self, payment_intent_id, activity_type='Stripe Payment'):
 		"""
 		Write the log inside its own try/except.
 		If the log fails to write, that shouldn't invalidate Submitting the payment entry.
@@ -137,30 +153,22 @@ class PaymentEntry(AccountsController):
 		from ftp.ftp_module.doctype.customer_activity_log.customer_activity_log import new_info_log
 		try:
 			# Write the Success response to the Activity Log.
-			new_info_log(customer_key=self.party, activity_type='Stripe Payment',
-			             message=f"Payment Entry received a Stripe Payment Intent: {payment_intent_id}",
-						 message_long=f"Payment is associated with Daily Order {self.daily_order}" if self.daily_order else None,
-						 ref_doctype='Payment Entry', ref_docname=self.name)
+			new_info_log(customer_key=self.party, activity_type=activity_type,
+			             message=f"Payment Entry received a {activity_type} Intent: {payment_intent_id}",
+						 message_long=f"Payment is associated with Daily Order {self.get_daily_order_key()}" if self.get_daily_order_key() else None,
+						 ref_doctype='Payment Entry', ref_docname=self.name, msgprint=False)
 		except Exception as ex:
 			frappe.msgprint(f"Warning, failed to write Customer Activity Log while submitting a Stripe Payment Entry: {ex}")
 
 	def create_stripe_refund(self):
 		"""
-		This function should be called rarely.
-		The purpose is to reverse the Payment in Stripe, and cancel the ERPNext Payment Entry.
+		As part of Payment Entry cancellation, refund the Payment Intent in Stripe.
 		"""
-		# TODO: Figure out how to create refunds.
+		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
+		pinstripe_payment.refund_from_payment_entry(self)
 
 	def can_cancel(self):
 		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
-
-		 # We can never cancel a Payment Entry that references Stripe;
-		 # Instead, the solution is to create a second, opposite Payment Entry.
-
-		# TODO: Perform a real, Stripe refund.
-
-		#if (self.mode_of_payment == 'Stripe') and self.reference_no:
-		#	return Result(False, 'Cannot cancel a successful Stripe-based payment; perform a refund instead.')
 		return Result(True,"")
 
 	def before_cancel(self):
@@ -170,6 +178,7 @@ class PaymentEntry(AccountsController):
 
 	def on_cancel(self):
 		from ftp.ftp_module.payments import reapply_customer_credits  # late import due to cross-Module code
+		from ftp.ftp_module.doctype.customer_account_settlement.customer_account_settlement import CustomerAccountSettlement		
 		# from ftp.ftp_module.payments import get_owned_payment_amount  # late import due to cross-Module code
 
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
@@ -182,18 +191,22 @@ class PaymentEntry(AccountsController):
 		self.update_payment_schedule(cancel=1)
 		self.set_payment_req_status()
 		self.set_status()
+		# --------
+		# Farm To People:
+		# --------
 
+		# self.create_stripe_refund()
+		CustomerAccountSettlement.delete_cancelled_payment_entry(self)
 		if self.party and self.party_type in ("Customer"):
-			reapply_customer_credits(customer_key=self.party)  # FTP : Recalculate a customer's account balance.
+			reapply_customer_credits(customer_key=self.party)  # FTP : Recalculate customer's account balance.
 
 	def on_change(self):
 		from ftp.ftp_module.payments import get_owned_payment_amount  # late import due to cross-Module code
 		# FTP:  Update Daily Order's owned payment amount.
-		if self.daily_order:
+		if self.get_daily_order_key():
 			# At this point in Cancellation Workflow, the DB should already be updated.  So it 
 			# 'should' be safe to call get_owned_payment_amount(), which relies on a SQL query.
-			frappe.db.set_value("Daily Order", self.daily_order, "amount_paid", get_owned_payment_amount(self.daily_order))
-
+			frappe.db.set_value("Daily Order", self.get_daily_order_key(), "amount_paid", get_owned_payment_amount(self.get_daily_order_key()))
 
 	def set_payment_req_status(self):
 		from erpnext.accounts.doctype.payment_request.payment_request import update_payment_req_status
@@ -239,7 +252,7 @@ class PaymentEntry(AccountsController):
 				doc = frappe.get_doc(reference.reference_doctype, reference.reference_name)
 				doc.delink_advance_entries(self.name)
 
-	def set_missing_values(self):
+	def set_missing_values(self, for_validate=False):
 		if self.payment_type == "Internal Transfer":
 			for field in ("party", "party_balance", "total_allocated_amount",
 				"base_total_allocated_amount", "unallocated_amount"):
@@ -318,7 +331,8 @@ class PaymentEntry(AccountsController):
 			self.validate_account_type(self.paid_to, ["Bank", "Cash"])
 
 	def validate_account_type(self, account, account_types):
-		account_type = frappe.db.get_value("Account", account, "account_type")
+		pass  # Datahenge: Function is not doing anything, per official ERPNext repo.  This saves a call.
+		# account_type = frappe.db.get_value("Account", account, "account_type")
 		# if account_type not in account_types:
 		# 	frappe.throw(_("Account Type for {0} must be {1}").format(account, comma_or(account_types)))
 
@@ -1109,6 +1123,17 @@ class PaymentEntry(AccountsController):
 		if self.mode_of_payment == 'Stripe' and self.reference_no:
 			raise Exception("Cannot delete a Payment Entry that contains a Stripe Payment Intent.  Can only Submit or Cancel.")
 		self.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
+
+
+	def get_daily_order_key(self) -> str:
+		"""
+		Return a single Daily Order identifier associated with this Payment Entry.
+		"""
+		if hasattr(self, "daily_order") and self.daily_order:
+			return self.daily_order
+		if self.references and self.references[0] and self.references[0].reference_doctype == 'Daily Order':
+			return self.references[0].reference_name
+		return None
 
 # ----------------
 # STATIC METHODS
