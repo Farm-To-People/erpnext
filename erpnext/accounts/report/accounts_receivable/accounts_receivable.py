@@ -746,9 +746,10 @@ class ReceivablePayableReport(object):
 			self.add_column(_('{0} Name').format(self.party_type),
 				fieldname = scrub(self.party_type) + '_name', fieldtype='Data')
 
-		if self.party_type == 'Customer':
-			self.add_column(_("Customer Contact"), fieldname='customer_primary_contact',
-				fieldtype='Link', options='Contact')
+		# Datahenge: No, because showing Contacts on AR Aging Reports is weird.
+		#if self.party_type == 'Customer':
+		#	self.add_column(_("Customer Contact"), fieldname='customer_primary_contact',
+		#		fieldtype='Link', options='Contact')
 
 		self.add_column(label=_('Cost Center'), fieldname='cost_center', fieldtype='Data')
 		self.add_column(label=_('Voucher Type'), fieldname='voucher_type', fieldtype='Data')

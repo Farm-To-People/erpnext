@@ -1063,6 +1063,7 @@ def read_ar_summary_query():
 
 def ar_summary_to_html(data_rows, balance_per_gl):
 	"""
+	Datahenge Function.
 	Take the query results, and make them into a nice HTML format.
 	"""
 	from ftp.ftp_module.generics import value_to_currency  # deliberate late import, because it's cross-module
@@ -1125,4 +1126,3 @@ def update_order_phone_numbers(customer_key: str, mobile_number: str=None):
 	except Exception as ex:
 		print(f"Error in update_order_phone_numbers(): {ex}")
 		raise ex
-
