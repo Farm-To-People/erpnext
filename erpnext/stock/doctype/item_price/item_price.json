@@ -36,7 +36,6 @@
   "valid_from_price_date",
   "valid_to_price_date",
   "section_break_28",
-  "section_break_24",
   "note",
   "reference"
  ],
@@ -103,7 +102,6 @@
    "options": "fa fa-tags"
   },
   {
-   "columns": 1,
    "fieldname": "price_list",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -181,7 +179,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "default": "Today",
    "fieldname": "valid_from",
    "fieldtype": "Date",
@@ -200,10 +198,6 @@
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Upto Delivery Date"
-  },
-  {
-   "fieldname": "section_break_24",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "note",
@@ -264,7 +258,7 @@
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-09-19 12:22:23.380791",
+ "modified": "2022-10-12 14:15:13.251846",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",

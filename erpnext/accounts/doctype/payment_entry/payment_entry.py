@@ -142,7 +142,8 @@ class PaymentEntry(AccountsController):
 			# Write the Error response to the Activity Log.
 			new_error_log(customer_key=self.party, activity_type='Stripe Payment',
 			              short_message=ex, ref_doctype='Daily Order' if self.get_daily_order_key() else 'Payment Entry',
-						  ref_docname = self.get_daily_order_key() if self.get_daily_order_key() else self.name)
+						  ref_docname = self.get_daily_order_key() if self.get_daily_order_key() else self.name,
+						  auto_commit=True)
 			raise LoggedError from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
 
 	def _log_stripe_on_success(self, payment_intent_id, activity_type='Stripe Payment'):
