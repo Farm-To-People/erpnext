@@ -47,7 +47,7 @@ class AccountingDimension(Document):
 
 	def on_trash(self):
 		if frappe.flags.in_test:
-			delete_accounting_dimension(doc=self, queue='long')
+			delete_accounting_dimension(doc=self)  # DH : Bug Fix
 		else:
 			frappe.enqueue(delete_accounting_dimension, doc=self)
 

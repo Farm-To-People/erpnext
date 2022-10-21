@@ -9,13 +9,16 @@ import frappe.defaults
 from frappe.utils import nowdate, cstr, flt, cint, now, getdate
 from frappe import throw, _
 from frappe.utils import formatdate, get_number_format_info
-from six import iteritems
-# imported to enable erpnext.accounts.utils.get_account_currency
-from erpnext.accounts.doctype.account.account import get_account_currency
 from frappe.model.meta import get_field_precision
+# from six import iteritems
+
+# imported to enable erpnext.accounts.utils.get_account_currency
+from erpnext.accounts.doctype.account.account import get_account_currency  # pylint: disable=unused-import
 
 from erpnext.stock.utils import get_stock_value_on
 from erpnext.stock import get_warehouse_account_map
+
+# pylint: disable=consider-using-f-string, invalid-name
 
 class StockValueAndAccountBalanceOutOfSync(frappe.ValidationError): pass
 class FiscalYearError(frappe.ValidationError): pass
@@ -285,6 +288,7 @@ def get_count_on(account, fieldname, date):
 
 @frappe.whitelist()
 def add_ac(args=None):
+	# Datahenge: Why not just spell out 'account'  :eye_roll:
 	from frappe.desk.treeview import make_tree_args
 
 	if not args:
@@ -316,6 +320,7 @@ def add_ac(args=None):
 
 @frappe.whitelist()
 def add_cc(args=None):
+	# Datahenge: Why not just spell out cost_center  :eye_roll:
 	from frappe.desk.treeview import make_tree_args
 
 	if not args:
@@ -342,6 +347,10 @@ def reconcile_against_document(args):
 	"""
 		Cancel JV, Update aginst document, split if required and resubmit jv
 	"""
+
+	#TODO : Datahenge : Put a stop to this.
+	# raise frappe.exceptions.ForbiddenError("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
+
 	for d in args:
 
 		check_if_advance_entry_modified(d)

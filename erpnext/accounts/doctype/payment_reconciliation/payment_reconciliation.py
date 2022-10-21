@@ -1,6 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # For license information, please see license.txt
 
+# Datahenge: This entire line of thinking should be strongly questioned, and avoided for now.
+
 from __future__ import unicode_literals
 import frappe, erpnext
 from frappe.utils import flt, today
@@ -150,6 +152,9 @@ class PaymentReconciliation(Document):
 
 	@frappe.whitelist()
 	def reconcile(self, args):
+
+		raise frappe.exceptions.ForbiddenError("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
+
 		for e in self.get('payments'):
 			e.invoice_type = None
 			if e.invoice_number and " | " in e.invoice_number:
@@ -173,10 +178,10 @@ class PaymentReconciliation(Document):
 				reconciled_entry.append(self.get_payment_details(e, dr_or_cr))
 
 		if lst:
-			reconcile_against_document(lst)
+			reconcile_against_document(lst)  # Datahenge: This function is a crime against accounting and ERP software.
 
 		if dr_or_cr_notes:
-			reconcile_dr_cr_note(dr_or_cr_notes, self.company)
+			reconcile_dr_cr_note(dr_or_cr_notes, self.company)  # DH: Frightening creation of new Journal Entries.
 
 		msgprint(_("Successfully Reconciled"))
 		self.get_unreconciled_entries()
@@ -269,6 +274,8 @@ class PaymentReconciliation(Document):
 		return cond
 
 def reconcile_dr_cr_note(dr_cr_notes, company):
+
+	raise frappe.exceptions.ForbiddenError("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
 	for d in dr_cr_notes:
 		voucher_type = ('Credit Note'
 			if d.voucher_type == 'Sales Invoice' else 'Debit Note')
