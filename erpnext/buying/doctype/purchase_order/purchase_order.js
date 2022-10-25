@@ -68,10 +68,26 @@ frappe.ui.form.on("Purchase Order", {
 		/* FTP: Hide the standard Submit Button: */
 		// $('.primary-action').prop('hidden', true);
 
-		if (!frm.doc.__unsaved && frm.doc.docstatus == 0 && frm.doc.status != "Closed") {
+		if (frm.doc.docstatus == 0) {
+
+			// Document is in Draft.  Need to create first custom Submit button:
+			/*
+			frm.page.add_action_item(__('Submit'), function() {
+				frappe.call({
+					method: "submit",
+					doc: frm.doc,
+					callback: function(r) {
+						if (r.message) {
+							frappe.msgprint(__("{0} Result submittted", [r.message]));
+						}
+						cur_frm.reload_doc();
+					}
+				});
+			});
+			*/
 
 			// Custom Submit button #2
-			frm.add_custom_button(__('Email'),
+			frm.add_custom_button(__('Email & Submit'),
 
 				function() {
 					frappe.db.get_value("Supplier", {"name": frm.doc.supplier}, "emails_for_purchase_order").then(val => {
