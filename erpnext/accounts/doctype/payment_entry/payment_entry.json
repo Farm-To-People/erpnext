@@ -73,6 +73,7 @@
   "deductions",
   "transaction_references",
   "reference_no",
+  "reference_2",
   "column_break_23",
   "reference_date",
   "daily_order",
@@ -739,12 +740,17 @@
    "fieldtype": "Check",
    "label": "Preorder Deposit",
    "search_index": 1
+  },
+  {
+   "fieldname": "reference_2",
+   "fieldtype": "Data",
+   "label": "Additional References"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-10-03 18:05:38.449300",
+ "modified": "2022-10-24 17:26:33.754073",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
