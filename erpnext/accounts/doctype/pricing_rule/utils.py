@@ -125,7 +125,7 @@ def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 	else:
 		filtered_pricing_rules = pricing_rules
 
-	# dprint(f"filter_pricing_rule_based_on_condition.  Result Pricing Rules: {len(pricing_rules)}")
+	# dprint(f"filter_pricing_rule_based_on_condition() is returning {len(pricing_rules)} Pricing Rules.")
 	return filtered_pricing_rules
 
 def _get_pricing_rules(apply_on, args, values):
