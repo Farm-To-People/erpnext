@@ -345,6 +345,14 @@ class DeliveryNote(SellingController):
 		except:
 			frappe.throw(_("Could not create Credit Note automatically, please uncheck 'Issue Credit Note' and submit again"))
 
+
+def on_doctype_update():
+	"""
+	Create additional indexes and constraints.
+	Yes, 'on_doctype_update' belongs here, outside the Document class.
+	"""
+	frappe.db.add_index("Delivery Note", ["daily_order", "name"], index_name="daily_order_idx")
+
 def update_billed_amount_based_on_so(so_detail, update_modified=True):
 	# Billed against Sales Order directly
 	billed_against_so = frappe.db.sql("""select sum(amount) from `tabSales Invoice Item`

@@ -337,6 +337,7 @@ class SalesOrder(SellingController):
 		tot_qty, delivered_qty = 0.0, 0.0
 
 		for item in self.items:
+			# Brian - Looks like some Drop Ship code.
 			if item.delivered_by_supplier:
 				item_delivered_qty  = frappe.db.sql("""select sum(qty)
 					from `tabPurchase Order Item` poi, `tabPurchase Order` po

@@ -200,6 +200,33 @@ class Lead(SellingController):
 			})
 			self.contact_doc.save()
 
+	# DATAHENGE
+	@staticmethod
+	def get_key_by_email_address(email_address) -> str:
+		"""
+		Returns either a Lead 'name', or None.
+		"""
+		if not email_address:
+			raise ValueError("Function argument 'email_address' is mandatory.")
+		lead_keys = frappe.db.get_all("Lead", filters=[ {"email_id": email_address} ], pluck='name', update=False)
+		if (not lead_keys) or (not lead_keys[0]):
+			return None
+		return lead_keys[0]  # just the first string
+
+	@staticmethod
+	def get_doc_by_email_address(email_address, err_on_missing=False):
+		"""
+		Find a Lead based on email address.
+		"""
+		lead_key = Lead.get_key_by_email_address(email_address)
+		if not lead_key:
+			if err_on_missing:
+				frappe.throw(_(f"No CRM lead found with email address = '{email_address}'"))
+			return None
+
+		return frappe.get_doc("Lead", lead_key)
+
+
 @frappe.whitelist()
 def make_customer(source_name, target_doc=None):
 	return _make_customer(source_name, target_doc)
@@ -297,7 +324,7 @@ def get_lead_details(lead, posting_date=None, company=None):
 		return {}
 
 	from erpnext.accounts.party import set_address_details
-	out = frappe._dict()
+	out = frappe._dict()  # pylint: disable=protected-access
 
 	lead_doc = frappe.get_doc("Lead", lead)
 	lead = lead_doc
@@ -348,7 +375,8 @@ def make_lead_from_communication(communication, ignore_communication_links=False
 	return lead_name
 
 def get_lead_with_phone_number(number):
-	if not number: return
+	if not number:
+		return
 
 	leads = frappe.get_all('Lead', or_filters={
 		'phone': ['like', '%{}'.format(number)],

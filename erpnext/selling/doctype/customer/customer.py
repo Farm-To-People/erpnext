@@ -19,6 +19,7 @@ from erpnext.utilities.transaction_base import TransactionBase
 from erpnext import get_default_company
 from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data # keep this
 
+# pylint: disable=consider-using-f-string
 
 AR_SUMMARY_QUERY = None  # Datahenge: Save SQL query in memory, instead of reading from disk each time.
 
@@ -797,22 +798,29 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		self.on_update_children(child_docfield_name='pauses')
 
 	@staticmethod
+	def get_key_by_email_address(email_address) -> str:
+		"""
+		Returns either a Customer 'name', or None.
+		"""
+		if not email_address:
+			raise ValueError("Function argument 'email_address' is mandatory.")
+		customer_keys = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
+		if (not customer_keys) or (not customer_keys[0]):
+			return None
+		return customer_keys[0]
+
+	@staticmethod
 	def get_customer_by_emailid(email_address, err_on_missing=False):
 		"""
 		Find a Customer based on email address.
 		"""
-		customers = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
-
-		# Rule: There Can Only Be One
-		if len(customers) == 0:
+		customer_key = Customer.get_key_by_email_address(email_address)
+		if not customer_key:
 			if err_on_missing:
 				frappe.throw(_(f"No customer found with email address = '{email_address}'"))
 			return None
-		if len(customers) > 1:
-			frappe.throw(_(f"Unexpected Error: More than 1 customer found with email address '{email_address}'"))
 
-		customer = frappe.get_doc("Customer", customers[0])
-		return customer
+		return frappe.get_doc("Customer", customer_key)
 
 	def is_anon(self):
 		"""
