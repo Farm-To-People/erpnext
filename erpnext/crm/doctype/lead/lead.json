@@ -12,6 +12,8 @@
   "organization_lead",
   "lead_details",
   "naming_series",
+  "first_name",
+  "last_name",
   "lead_name",
   "company_name",
   "email_id",
@@ -22,6 +24,7 @@
   "designation",
   "gender",
   "source",
+  "source_other_description",
   "customer",
   "campaign_name",
   "image",
@@ -83,22 +86,26 @@
    "no_copy": 1,
    "oldfieldname": "naming_series",
    "oldfieldtype": "Select",
-   "options": "CRM-LEAD-.YYYY.-",
+   "options": "LEAD-.YYYY.-",
    "set_only_once": 1
   },
   {
+   "fetch_from": "first_name + last_name",
    "fieldname": "lead_name",
    "fieldtype": "Data",
    "in_global_search": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Person Name",
    "oldfieldname": "lead_name",
    "oldfieldtype": "Data",
+   "read_only": 1,
+   "reqd_in_database": 1,
    "search_index": 1
   },
   {
    "fieldname": "company_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Organization Name",
    "oldfieldname": "company_name",
    "oldfieldtype": "Data"
@@ -106,6 +113,8 @@
   {
    "fieldname": "email_id",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Email Address",
    "oldfieldname": "email_id",
    "oldfieldtype": "Data",
@@ -121,7 +130,6 @@
    "default": "__user",
    "fieldname": "lead_owner",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Lead Owner",
    "oldfieldname": "lead_owner",
    "oldfieldtype": "Link",
@@ -454,13 +462,30 @@
    "fieldtype": "Link",
    "label": "Print Language",
    "options": "Language"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
+  },
+  {
+   "depends_on": "eval: doc.source == 'Other'",
+   "fieldname": "source_other_description",
+   "fieldtype": "Data",
+   "label": "Source Description (if Other)",
+   "mandatory_depends_on": "eval: doc.source == 'Other'"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2021-01-06 19:39:58.748978",
+ "modified": "2022-12-01 23:33:03.080553",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

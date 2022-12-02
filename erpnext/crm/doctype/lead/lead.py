@@ -61,6 +61,19 @@ class Lead(SellingController):
 			(getdate(self.ends_on) < getdate(self.contact_date))):
 			frappe.throw(_("Ends On date cannot be before Next Contact Date."))
 
+	def before_save(self):
+		# Farm To People: First and Last name are custom fields.  Concatenate into the standard 'lead_name' field.
+		if self.first_name or self.last_name:
+			self.lead_name = self.first_name or ''
+			self.lead_name += f" {self.last_name}"
+			self.lead_name = self.lead_name.strip()
+		else:
+			self.lead_name = None
+
+		# Nullify the description, if the Source is anything except 'Other'.
+		if self.source != 'Other':
+			self.source_other_description = None
+
 	def on_update(self):
 		self.add_calendar_event()
 
