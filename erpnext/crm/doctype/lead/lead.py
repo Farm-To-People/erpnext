@@ -24,7 +24,7 @@ class Lead(SellingController):
 	def before_insert(self):
 		if self.address_title and self.address_type:
 			self.address_doc = self.create_address()
-		self.contact_doc = self.create_contact()
+		self.contact_doc = self.create_contact()  # NOTE: Not a DocField, just a temporary class variable.
 
 	def after_insert(self):
 		self.update_links()
@@ -212,6 +212,19 @@ class Lead(SellingController):
 				"link_title": self.lead_name
 			})
 			self.contact_doc.save()
+
+
+	def get_doc_contact_keys(self):
+		"""
+		Datahenge: Return a list of Contact Document keys.
+		"""
+		contact_doc_keys = frappe.get_all('Dynamic Link', {
+			'link_doctype': self.doctype,
+			'link_name': self.name,
+			'parenttype': 'Contact',
+		}, ['parent'], limit=20)
+
+		return contact_doc_keys
 
 	# DATAHENGE
 	@staticmethod

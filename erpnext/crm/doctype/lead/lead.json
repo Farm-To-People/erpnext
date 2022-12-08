@@ -466,12 +466,14 @@
   {
    "fieldname": "first_name",
    "fieldtype": "Data",
-   "label": "First Name"
+   "label": "First Name",
+   "reqd_in_database": 1
   },
   {
    "fieldname": "last_name",
    "fieldtype": "Data",
-   "label": "Last Name"
+   "label": "Last Name",
+   "reqd_in_database": 1
   },
   {
    "depends_on": "eval: doc.source == 'Other'",
@@ -485,7 +487,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2022-12-01 23:33:03.080553",
+ "modified": "2022-12-08 16:35:49.637931",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
