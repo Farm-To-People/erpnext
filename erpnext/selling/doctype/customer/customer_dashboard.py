@@ -24,6 +24,10 @@ def get_data():
 			#	'items': ['Opportunity', 'Quotation']
 			#},
 			{
+				'label': _('Website'),
+				'items': ['Auth User']
+			},
+			{
 				'label': _('Orders'),
 				'items': ['Daily Order', 'Sales Order', 'Delivery Note', 'Sales Invoice']
 			},
