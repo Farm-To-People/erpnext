@@ -1,10 +1,6 @@
 {
  "category": "Modules",
- "charts": [
-  {
-   "chart_name": "Territory Wise Sales"
-  }
- ],
+ "charts": [],
  "creation": "2020-01-23 14:48:30.183272",
  "developer_mode_only": 0,
  "disable_user_customization": 0,
@@ -14,6 +10,7 @@
  "hide_custom": 0,
  "icon": "crm",
  "idx": 0,
+ "is_default": 0,
  "is_standard": 1,
  "label": "CRM",
  "links": [
@@ -363,7 +360,7 @@
    "type": "Link"
   }
  ],
- "modified": "2020-12-01 13:38:36.871352",
+ "modified": "2022-12-12 18:36:15.707656",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "CRM",
@@ -377,7 +374,7 @@
    "format": "{} Open",
    "label": "Lead",
    "link_to": "Lead",
-   "stats_filter": "{\"status\":\"Open\"}",
+   "stats_filter": "",
    "type": "DocType"
   },
   {

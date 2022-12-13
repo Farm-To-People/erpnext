@@ -224,7 +224,7 @@ class Lead(SellingController):
 			'parenttype': 'Contact',
 		}, ['parent'], limit=20)
 
-		return contact_doc_keys
+		return [ each['parent'] for each in contact_doc_keys ]
 
 	# DATAHENGE
 	@staticmethod

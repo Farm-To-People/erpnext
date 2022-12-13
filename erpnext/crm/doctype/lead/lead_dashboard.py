@@ -5,6 +5,7 @@ def get_data():
 	return {
 		'fieldname': 'lead',
 		'non_standard_fieldnames': {
+			'Customer': 'lead_name',
 			'Quotation': 'party_name',
 			'Opportunity': 'party_name'
 		},
@@ -13,6 +14,11 @@ def get_data():
 		},
 		'transactions': [
 			{
+				'label': _('Selling'),
+				'items': ['Customer']
+			},
+			{
+				'label': _('CRM'),
 				'items': ['Opportunity', 'Quotation']
 			},
 		]
