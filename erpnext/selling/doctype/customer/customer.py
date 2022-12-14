@@ -277,7 +277,7 @@ class Customer(TransactionBase):
 		if self.lead_name:
 			frappe.db.sql("update `tabLead` set status='Interested' where name=%s", self.lead_name)
 
-		self.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
+		self.flags.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
 
 	def after_rename(self, olddn, newdn, merge=False):
 		if frappe.defaults.get_global_default('cust_master_name') == 'Customer Name':
@@ -783,14 +783,14 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			self.email_id = self.email_id.strip()
 
 	def after_insert(self):
+		"""
+		NOTE: Not sending Welcome Emails, outside of Website Registration via API calls.
+		"""
 		super().after_insert()
-
 		# For non-anonymous Customers, ensure a Referral Code exists.
 		if (not self.is_anon()) and (not self.get_referral_code()):
 			self.reset_referral_code()
 
-		# from ftp.utilities.mandrill import send_welcome_to_ftp
-		# Do not sent Welcome Emails, outside of the Customer Registration and Anonymous Registration.
 
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.

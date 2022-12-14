@@ -1123,7 +1123,7 @@ class PaymentEntry(AccountsController):
 	def on_trash(self):
 		if self.mode_of_payment == 'Stripe' and self.reference_no:
 			raise Exception("Cannot delete a Payment Entry that contains a Stripe Payment Intent.  Can only Submit or Cancel.")
-		self.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
+		self.flags.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
 
 
 	def get_daily_order_key(self) -> str:
