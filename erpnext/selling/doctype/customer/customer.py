@@ -752,15 +752,14 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			"""
 			frappe.db.sql(statement, values={"customer_name": self.customer_name, "customer_id": self.name } )
 
-		# December 14th 2022, if this Customer refers to a Lead, then update that too.
-		if self.lead_name:
+		# If this Customer refers to a Lead, then update that too (December 14th 2022)
+		name_changed = bool(self.has_value_changed('first_name') or self.has_value_changed('last_name'))
+		if name_changed and self.lead_name and (not self.is_anon()):
 			doc_lead = frappe.get_doc("Lead", self.lead_name)
-			if (not self.is_anon()) and self.has_value_changed('first_name'):
-				doc_lead.first_name = self.first_name
-				doc_lead.db_update()
-			if (not self.is_anon()) and self.has_value_changed('last_name'):
-				doc_lead.last_name = self.last_name
-				doc_lead.db_update()
+			doc_lead.first_name = self.first_name
+			doc_lead.last_name = self.last_name
+			doc_lead.lead_name = doc_lead.first_name + ' ' + doc_lead.last_name
+			doc_lead.db_update()
 
 		if self.customer_primary_contact:
 			doc_primary_contact = frappe.get_doc("Contact", self.customer_primary_contact)
