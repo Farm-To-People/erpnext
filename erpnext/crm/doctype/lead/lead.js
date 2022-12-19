@@ -12,7 +12,8 @@ erpnext.LeadController = frappe.ui.form.Controller.extend({
 			'Opportunity': this.make_opportunity
 		};
 
-		this.frm.toggle_reqd("lead_name", !this.frm.doc.organization_lead);
+		// Datahenge: Disabling this JS that makes 'lead_name" required.  That's being handled now server-side.
+		// this.frm.toggle_reqd("lead_name", !this.frm.doc.organization_lead);
 	},
 
 	onload: function () {
