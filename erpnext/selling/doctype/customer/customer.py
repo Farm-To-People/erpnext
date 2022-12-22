@@ -1,6 +1,7 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
+# pylint: disable=too-many-lines
 from __future__ import unicode_literals
 import json
 import pathlib
@@ -167,7 +168,7 @@ class Customer(TransactionBase):
 				contact = make_contact(self)
 				self.db_set('customer_primary_contact', contact.name)
 				self.db_set('mobile_no', self.mobile_no)
-				# Farm To People - Disabling this so that email does not change.
+				# Farm To People - Commenting out the next line of code, so that email does not change:
 				# self.db_set('email_id', self.email_id)
 
 	def create_primary_address(self):
@@ -789,7 +790,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		self.first_name = self.first_name.strip() if self.first_name else None
 		self.last_name = self.last_name.strip() if self.last_name else None
 		if self.email_id:
-			self.email_id = self.email_id.strip()
+			self.email_id = self.email_id.strip().lower()  # Datahenge: Force emails to lowercase
 
 	def after_insert(self):
 		"""
@@ -807,12 +808,13 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		self.on_update_children(child_docfield_name='pauses')
 
 	@staticmethod
-	def get_key_by_email_address(email_address) -> str:
+	def get_key_by_email_address(email_address: str) -> str:
 		"""
 		Returns either a Customer 'name', or None.
 		"""
 		if not email_address:
 			raise ValueError("Function argument 'email_address' is mandatory.")
+		email_address = email_address.strip().lower()  # Datahenge: Enforce lowercase email addresses.
 		customer_keys = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
 		if (not customer_keys) or (not customer_keys[0]):
 			return None
@@ -823,6 +825,8 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Find a Customer based on email address.
 		"""
+		if email_address:
+			email_address = email_address.strip().lower()  # Datahenge: Enforce lowercase email addresses.
 		customer_key = Customer.get_key_by_email_address(email_address)
 		if not customer_key:
 			if err_on_missing:
