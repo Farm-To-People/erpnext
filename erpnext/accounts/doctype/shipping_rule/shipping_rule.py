@@ -3,6 +3,9 @@
 
 # For license information, please see license.txt
 
+# NOTES:
+# In the code below, self.conditions refers to a Child table on Shipping Rule
+
 from __future__ import unicode_literals
 import frappe
 import erpnext
@@ -62,28 +65,27 @@ class ShippingRule(Document):
 
 	def apply(self, doc):
 		'''Apply shipping rule on given doc. Called from accounts controller'''
-
+		# DATAHENGE: Frappe makes -huge- assumptions about the names of fields on 'doc'
+		# Examples: base_net_total, total_net_weight, shipping_amount, conversion_rate, company_currency
+		# Instead of receiving a 'doc', it should receive a Dictionary with a predefined schema.
+		# Regardless, I am simplifying Frappe's code a bit.
 		shipping_amount = 0.0
-		by_value = False
 
 		if doc.get_shipping_address():
 			# validate country only if there is address
 			self.validate_countries(doc)
 
 		if self.calculate_based_on == 'Net Total':
-			value = doc.base_net_total
-			by_value = True
+			shipping_amount = self.get_shipping_amount_from_rules(doc.base_net_total)
 
 		elif self.calculate_based_on == 'Net Weight':
-			value = doc.total_net_weight
-			by_value = True
+			shipping_amount = self.get_shipping_amount_from_rules(doc.total_net_weight)
 
 		elif self.calculate_based_on == 'Fixed':
 			shipping_amount = self.shipping_amount
 
-		# shipping amount by value, apply conditions
-		if by_value:
-			shipping_amount = self.get_shipping_amount_from_rules(value)
+		else:
+			raise ValueError(f"Unknown value {self.calculate_based_on}' for Shipping Rule field 'calculate_based_on'")
 
 		# convert to order currency
 		if doc.currency != doc.company_currency:
@@ -175,30 +177,3 @@ class ShippingRule(Document):
 					_("and") + " %s-%s = %s" % (d2.from_value, d2.to_value, fmt_money(d2.shipping_amount, currency=company_currency)))
 
 			msgprint("\n".join(messages), raise_exception=OverlappingConditionError)
-
-
-def get_default_shipping_rule_id(customer_key=None):
-	"""
-	Datahenge: Return the ID of the default Shipping Rule.
-	"""
-	if customer_key:
-		query_result = frappe.db.get_values("Customer", {"name": customer_key}, fieldname=["customer_group", "default_shipping_rule"])
-		customer_group, customer_shipping_rule = query_result[0]
-
-		# Customer-specific Shipping Rule
-		if customer_shipping_rule:
-			return customer_shipping_rule
-
-		# Customer Group-specific Shipping Rule
-		customer_group_shipping_rule = frappe.db.get_value("Customer Group", customer_group, "default_shipping_rule")
-		if customer_group_shipping_rule:
-			return customer_group_shipping_rule
-
-	# Otherwise, return the global, default rule:
-	filters = { "is_default_rule": 1 }
-	default_shipping_rule = frappe.get_list("Shipping Rule", filters=filters, pluck='name', ignore_permissions=True)
-	if not default_shipping_rule:
-		raise Exception("Error; system has not been configured with a default Shipping Rule.")
-	default_shipping_rule = default_shipping_rule[0]  # assuming there is only 1 record marked as default.
-
-	return default_shipping_rule
