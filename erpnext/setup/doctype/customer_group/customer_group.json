@@ -11,6 +11,7 @@
   "customer_group_name",
   "parent_customer_group",
   "is_group",
+  "disable_order_minimum_emails",
   "cb0",
   "default_price_list",
   "payment_terms",
@@ -141,13 +142,20 @@
    "fieldtype": "Link",
    "label": "Default Shipping Rule",
    "options": "Shipping Rule"
+  },
+  {
+   "default": "0",
+   "description": "When marked, customers in this Group will not receive any Order Minimum warning emails.",
+   "fieldname": "disable_order_minimum_emails",
+   "fieldtype": "Check",
+   "label": "Disable Order Minimum Emails"
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2022-03-28 15:28:28.692006",
+ "modified": "2022-12-29 12:42:46.495651",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",

@@ -18,10 +18,8 @@
   "email_id",
   "customer_type",
   "image",
-  "has_special_pricing",
   "column_break0",
   "customer_group",
-  "default_shipping_rule",
   "territory",
   "so_required",
   "dn_required",
@@ -33,6 +31,7 @@
   "tax_category",
   "default_bank_account",
   "pan",
+  "column_break_23",
   "gender",
   "represents_company",
   "salutation",
@@ -47,19 +46,20 @@
   "primary_address_and_contact_detail",
   "customer_primary_address",
   "primary_address",
+  "default_shipping_rule",
   "delivery_instructions",
   "disable_postal_code_validation",
   "cb_primary_contact",
   "customer_primary_contact",
   "mobile_no",
   "website",
+  "packing_notes_ftp",
   "address_contacts",
   "heading_addresses",
   "address_html",
   "column_break1",
   "heading_contacts",
   "contact_html",
-  "packing_notes_ftp",
   "default_receivable_accounts",
   "accounts",
   "credit_limit_section",
@@ -81,11 +81,13 @@
   "default_sales_partner",
   "default_commission_rate",
   "sales_team_section",
-  "opted_into_promotional_emails",
   "sales_team",
   "customer_pos_id",
   "sb_pauses",
   "pauses",
+  "ftp_custom_controls_section",
+  "disable_order_minimum_emails",
+  "column_break_78",
   "sb_item_preferences",
   "preferences"
  ],
@@ -551,12 +553,6 @@
   },
   {
    "default": "0",
-   "fieldname": "opted_into_promotional_emails",
-   "fieldtype": "Check",
-   "label": "Subscribed to Promotional Emails"
-  },
-  {
-   "default": "0",
    "description": "This can be used to ship products out of the typical geography.\nIt will disable the Postal Code Validation on Daily Orders.",
    "fieldname": "disable_postal_code_validation",
    "fieldtype": "Check",
@@ -583,12 +579,7 @@
    "label": "Contacts"
   },
   {
-   "default": "0",
-   "fieldname": "has_special_pricing",
-   "fieldtype": "Check",
-   "label": "Has Special Pricing"
-  },
-  {
+   "description": "This text is printed on the customer's Packing Slips.",
    "fieldname": "packing_notes_ftp",
    "fieldtype": "Small Text",
    "label": "Packing Notes"
@@ -611,6 +602,25 @@
    "fieldtype": "Link",
    "label": "Default Shipping Rule",
    "options": "Shipping Rule"
+  },
+  {
+   "fieldname": "column_break_23",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ftp_custom_controls_section",
+   "fieldtype": "Section Break",
+   "label": "FTP Custom Controls"
+  },
+  {
+   "default": "0",
+   "fieldname": "disable_order_minimum_emails",
+   "fieldtype": "Check",
+   "label": "Disable Order Minimum Emails"
+  },
+  {
+   "fieldname": "column_break_78",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-user",
@@ -629,7 +639,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2022-09-01 16:30:19.466039",
+ "modified": "2022-12-29 12:33:19.897316",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

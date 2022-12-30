@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_import": 1,
+ "allow_rename": 1,
  "autoname": "field:label",
  "creation": "2013-06-25 11:48:03",
  "description": "Specify conditions to calculate shipping amount",
@@ -151,7 +152,7 @@
  "icon": "fa fa-truck",
  "idx": 1,
  "links": [],
- "modified": "2021-08-10 10:17:31.844776",
+ "modified": "2022-12-28 16:28:35.434441",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Shipping Rule",
