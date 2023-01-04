@@ -11,17 +11,6 @@ from temporal import MIN_DATE, MAX_DATE, any_to_date
 class ItemPriceDuplicateItem(frappe.ValidationError):
 	pass
 
-"""
-
-UPDATE `tabItem Price`
-SET item_price_type =
-	CASE WHEN selling then 'Selling'
-		WHEN buying then 'Buying'
-		ELSE 'Deposit'
-END
-
-"""
-
 
 class ItemPrice(Document):
 
@@ -41,19 +30,20 @@ class ItemPrice(Document):
 			self.selling = False
 			self.buying = False
 
-
 	def validate(self):
 		# FTP Rules for choosing which Price:
 		# 1. Allow smart date overlapping (specific ranges > empties)
 		# 2. Specific ranges can never overlap other specific ranges.
 		# 3. Empties can never overlap other empties.  This is handled by check_duplicates()
 
-		self.validate_item()
+		# Datahenge: Not sure why self.validate_item() is necessary, when we have built-in Link Validation.
+		# self.validate_item()
+
 		self.validate_dates()
 		self.update_price_list_details()
 		self.update_item_details()
-		self.check_duplicates()
-		# self.check_overlaps_ftp()
+		self.check_duplicates()  # standard Frappe function.
+		# self.validate_overlapping_prices_ftp()  # commented out July 2022, because it was causing headaches for FTP data entry.
 
 	def validate_item(self):
 		if not frappe.db.exists("Item", self.item_code):
@@ -63,12 +53,11 @@ class ItemPrice(Document):
 		# Delivery Dates
 		if self.valid_from and self.valid_upto:
 			if any_to_date(self.valid_from) > any_to_date(self.valid_upto):
-				frappe.throw(_(f"Valid From Date ({self.valid_from}) must be lesser than Valid Upto Date ({self.valid_upto})."))
+				frappe.throw(_(f"Valid From Date ({self.valid_from}) must be less than Valid Upto Date ({self.valid_upto})."))
 		# Price Dates
 		if self.valid_from_price_date and self.valid_to_price_date:
 			if any_to_date(self.valid_from_price_date) > any_to_date(self.valid_to_price_date):
-				frappe.throw(_("'Valid From Price Date' must be lesser than 'Valid To Price Date'"))
-
+				frappe.throw(_("'Valid From Price Date' must be less than 'Valid To Price Date'"))
 
 	def update_price_list_details(self):
 		if self.price_list:
@@ -100,16 +89,16 @@ class ItemPrice(Document):
 			"supplier",
 			"batch_no"]:
 			if self.get(field):
-				conditions += " and {0} = %({0})s ".format(field)
+				conditions += f" and {field} = %({field})s "
 			else:
-				conditions += "and (isnull({0}) or {0} = '')".format(field)
+				conditions += f"and (isnull({field}) or {field} = '')"
 
-		price_list_rate = frappe.db.sql("""
-				select price_list_rate
-				from `tabItem Price`
+		price_list_rate = frappe.db.sql(f"""
+				SELECT price_list_rate
+				FROM `tabItem Price`
 				{conditions}
-			""".format(conditions=conditions),
-			self.as_dict(),)
+			""",
+			self.as_dict())
 
 		if price_list_rate:
 			frappe.throw(_("Item Price appears multiple times based on Price List, Supplier/Customer, Currency, Item, Batch, UOM, Qty, and Dates."), ItemPriceDuplicateItem,)
@@ -128,42 +117,46 @@ class ItemPrice(Document):
 			# if only buying then remove customer
 			self.customer = None
 
-	def check_overlaps_ftp(self):
+	def validate_overlapping_prices_ftp(self):
+		"""
+		If this Item Price record overlaps with others, throw an error.
+		"""
 		overlapping_prices = self.get_overlapping_prices_ftp()
 		if overlapping_prices[0]:
-			raise ValueError(f"Overlap with related Item Price name '{overlapping_prices[0]}'<br>Date range: {overlapping_prices[1]} to {overlapping_prices[2]}")
+			raise ValueError(f"Overlap with related Item Price name '{overlapping_prices[0]}'<br>Date Range: {overlapping_prices[1]} to {overlapping_prices[2]}")
 
-	def get_overlapping_prices_ftp(self):
-		# NOTE: Need to use MIN_DATE and MAX_DATE to replace NULL values in the table.
-		filters = { "item_code": self.item_code,
-		            "selling": self.selling,
-					"buying": self.buying,
-		            "name": ["!=", self.name]
-		}
-
-		if self.customer:
-			filters['customer'] = self.customer
-
-		fields = [ "name", "item_code", "valid_from", "valid_upto", "valid_from_price_date", "valid_to_price_date" ]
-		related_lines = frappe.get_list("Item Price", filters=filters, fields=fields)
-
+	def get_overlapping_prices_ftp(self) -> tuple:
+		"""
+		Search for adjacent Item Prices.  For each found, verify there is no overlap with the current record.
+		"""
+		# 1. For the current Item Price, convert empty/null dates into either MIN_DATE (beginning of time) or MAX_DATE (end of time)
 		this_valid_from_delivery_date = any_to_date(self.valid_from or MIN_DATE)
 		this_valid_to_delivery_date = any_to_date(self.valid_upto or MAX_DATE)
 		this_valid_from_price_date = any_to_date(self.valid_from_price_date or MIN_DATE)
 		this_valid_to_price_date = any_to_date(self.valid_to_price_date or MAX_DATE)
 
-		for line in related_lines:
-			related_valid_from_delivery_date = line.valid_from or MIN_DATE
-			related_valid_to_delivery_date = line.valid_upto or MAX_DATE
-			related_valid_from_price_date = line.valid_from_price_date or MIN_DATE
-			related_valid_to_price_date = line.valid_to_price_date or MAX_DATE
+		# 2. Read the related Item Prices from the SQL database.
+		fields = [ "name", "item_code", "valid_from", "valid_upto", "valid_from_price_date", "valid_to_price_date" ]
+		filters = { "item_code": self.item_code,
+		            "selling": self.selling,
+					"buying": self.buying,
+		            "name": ["!=", self.name]  # do not fetch this record itself
+		}
+		if self.customer:
+			filters['customer'] = self.customer
+		related_records = frappe.get_list("Item Price", filters=filters, fields=fields)
 
-			overlaps = this_valid_from_delivery_date <= related_valid_to_delivery_date and \
-				       this_valid_to_delivery_date >= related_valid_from_delivery_date and \
-					   this_valid_from_price_date <= related_valid_to_price_date and \
-					   this_valid_to_price_date >= related_valid_from_price_date
+		# 3. Loop through the related, adjacent Item Prices.
+		for each_record in related_records:
+			# Convert NULL dates into minimums (beginning of time) or maximums (end of time)
+			overlaps = (
+				this_valid_from_delivery_date <= (each_record.valid_upto or MAX_DATE) and \
+				this_valid_to_delivery_date >= (each_record.valid_from or MIN_DATE) and \
+				this_valid_from_price_date <= (each_record.valid_to_price_date or MAX_DATE) and \
+				this_valid_to_price_date >= (each_record.valid_from_price_date or MIN_DATE)
+			)
 			if overlaps:
-				return line.name, line.valid_from, line.valid_upto, line.valid_from_price_date, line.valid_to_price_date
+				return each_record.name, each_record.valid_from, each_record.valid_upto, each_record.valid_from_price_date, each_record.valid_to_price_date
 
 		return None, None, None, None, None
 
@@ -201,7 +194,9 @@ class ItemPrice(Document):
 	@frappe.whitelist()
 	def validate_by_item_code(self):
 		"""
-		Validates the -entire- Item Code, not just this single record.  Called by a button at the top of an Item Price
+		Validates the -entire- Item Code, not just this single record.
+		Caller: ERP UI button at the top of an Item Price.
 		"""
 		from ftp.utilities.pricing import ItemPriceValidation
+		# self.validate_overlapping_prices_ftp()
 		ItemPriceValidation(self.item_code).validate_item_prices()
