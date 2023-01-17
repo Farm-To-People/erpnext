@@ -362,6 +362,7 @@
    "options": "fa fa-truck"
   },
   {
+   "default": "999",
    "fieldname": "shelf_life_in_days",
    "fieldtype": "Int",
    "label": "Shelf Life In Days"
@@ -1196,7 +1197,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2022-07-10 17:11:27.912674",
+ "modified": "2023-01-15 17:38:26.909383",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
