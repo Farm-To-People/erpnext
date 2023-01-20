@@ -446,18 +446,6 @@ class PurchaseOrder(BuyingController):
 		Returns a boolean True if the purchase order has activity (receipts, invoices)
 		"""
 
-	@frappe.whitelist()
-	def reverse_submit_ftp(self):
-		"""
-		Change a Purchase Order from 'Submitted' to 'Draft'.
-		"""
-		# This function is called via JavaScript on 'purchase_order.js'
-		if self.status != "To Receive and Bill":
-			frappe.throw(_("Purchase Order can only be reset to 'Draft' when status is 'To Receive and Bill'"))
-		frappe.db.set_value("Purchase Order", self.name, "docstatus", 0)
-		self.reload()
-
-
 	def after_delete(self):
 		"""
 		After deleting a Purchase Order, try to update Redis.
@@ -474,6 +462,21 @@ class PurchaseOrder(BuyingController):
 
 		for item_code in item_codes:
 			try_update_redis_inventory(item_code)
+
+
+	@frappe.whitelist()
+	def revert_to_draft_ftp(self):
+		"""
+		Change a Purchase Order from 'Submitted' to 'Draft'.
+		"""
+		# This function is called via JavaScript on 'purchase_order.js'
+		if self.status != "To Receive and Bill":
+			frappe.throw(_("Purchase Order can only be reset to 'Draft' when status is 'To Receive and Bill'"))
+		frappe.db.set_value("Purchase Order", self.name, "docstatus", 0)
+		frappe.db.set_value(self.doctype, self.name, "status", "Draft")
+		frappe.db.sql("""UPDATE `tabPurchase Order Item` SET docstatus = 0 WHERE parent = %s""", self.name)  # child Order Lines
+		self.reload()
+
 
 # ----------------------------------------
 # 			END CONTROLLER METHODS

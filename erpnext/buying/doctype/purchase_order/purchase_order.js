@@ -70,23 +70,7 @@ frappe.ui.form.on("Purchase Order", {
 
 		if (frm.doc.docstatus == 0) {
 
-			// Document is in Draft.  Need to create first custom Submit button:
-			/*
-			frm.page.add_action_item(__('Submit'), function() {
-				frappe.call({
-					method: "submit",
-					doc: frm.doc,
-					callback: function(r) {
-						if (r.message) {
-							frappe.msgprint(__("{0} Result submittted", [r.message]));
-						}
-						cur_frm.reload_doc();
-					}
-				});
-			});
-			*/
-
-			// Custom Submit button #2
+			// Custom Submit button #1
 			frm.add_custom_button(__('Email & Submit'),
 
 				function() {
@@ -155,20 +139,25 @@ frappe.ui.form.on("Purchase Order", {
 		// FTP: Add the ability to reverse a Submit.
 		if (frm.doc.docstatus == 1) {
 
-			cur_frm.set_df_property("Submit", "hidden", true);  // Try to hide the custom Submit button.
+			// cur_frm.set_df_property("Submit", "hidden", true);  // Try to hide the custom Submit button.
 
-			frm.add_custom_button(__('Reverse Submit'), () => {
-				frappe.call({
-					method: "reverse_submit_ftp",
-					doc: frm.doc,
-					callback: function(r) {
-						if (r.message) {
-							frappe.msgprint(__("{0}", [r.message]));
-						}
-						frm.reload_doc();  // Because the docstatus changed.
-					}
-				});
-			}, __("Status"));
+			frm.add_custom_button(
+				__('Revert to Draft'),
+				() => {
+					frappe.call({
+						method: "revert_to_draft_ftp",
+						doc: frm.doc,
+						callback: function(r) {
+							if (r.message) {
+								frappe.msgprint(__("{0}", [r.message]));
+							}
+							frm.reload_doc();  // Because the docstatus changed.
+							}
+						});
+					}, 
+				__('Status'),
+				{ icon: 'full-page' }
+			)
 		}
 
 	// end of refresh()
