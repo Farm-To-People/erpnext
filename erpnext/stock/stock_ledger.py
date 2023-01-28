@@ -1,21 +1,26 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
+
 from __future__ import unicode_literals
+import copy
+import datetime
+import json
+from schema import Schema, And, Or, Optional  # pylint: disable=unused-import
+from six import iteritems
 
 import frappe
-import erpnext
-import copy
 from frappe import _
 from frappe.utils import cint, flt, cstr, now, get_link_to_form, getdate
 from frappe.model.meta import get_field_precision
+import erpnext
 from erpnext.stock.utils import get_valuation_method, get_incoming_outgoing_rate_for_cancel
 from erpnext.stock.utils import get_bin
-import json
-from six import iteritems
 
+# pylint: disable=protected-access
 
 # future reposting
-class NegativeStockError(frappe.ValidationError): pass
+class NegativeStockError(frappe.ValidationError):
+	pass
 class SerialNoExistsInFutureTransaction(frappe.ValidationError):
 	pass
 
@@ -112,7 +117,7 @@ def validate_cancellation(args):
 				doc.delete()
 
 def set_as_cancel(voucher_type, voucher_no):
-	frappe.db.sql("""update `tabStock Ledger Entry` set is_cancelled=1,
+	frappe.db.sql("""UPDATE `tabStock Ledger Entry` SET is_cancelled=1,
 		modified=%s, modified_by=%s
 		where voucher_type=%s and voucher_no=%s and is_cancelled = 0""",
 		(now(), frappe.session.user, voucher_type, voucher_no))
@@ -171,7 +176,7 @@ def get_args_for_voucher(voucher_type, voucher_no):
 		group_by="item_code, warehouse"
 	)
 
-class update_entries_after(object):
+class update_entries_after(object):  # pylint: disable=invalid-name
 	"""
 		update valution rate and qty after transaction
 		from the current time-bucket onwards
@@ -256,7 +261,7 @@ class update_entries_after(object):
 			if not future_sle_exists(self.args):
 				self.update_bin()
 		else:
-			entries_to_fix = self.get_future_entries_to_fix()
+			entries_to_fix: list = self.get_future_entries_to_fix()
 			i = 0
 			print(f"stock_ledger.update_entries_after().  Total entries to fix = {len(entries_to_fix)}.")
 			while i < len(entries_to_fix):
@@ -274,29 +279,48 @@ class update_entries_after(object):
 			self.raise_exceptions()
 
 	def process_sle_against_current_timestamp(self):
-		sl_entries = self.get_sle_against_current_voucher()
+		"""
+		1. Find all Stock Ledger Entry records with a VERY specific timestamp, item, and warehouse.
+		2. 'Process' them
+		"""
+		sl_entries: list = self.get_sle_against_current_voucher()  # List of Dictionary
 		for sle in sl_entries:
 			self.process_sle(sle)
 
-	def get_sle_against_current_voucher(self):
-		self.args['time_format'] = '%H:%i:%s'
-
-		return frappe.db.sql("""
-			select
+	def get_sle_against_current_voucher(self) -> list:
+		"""
+		Datahenge: Refactoring Frappe's function.
+		Purpose: Find all Stock Ledger Entry posted at this *exact* moment in time, for this Warehouse.
+		"""
+		# Questions:  Why?  Who cares?
+		# Do we *really* need to sort in SQL by creation?
+		# What columns are truly needed?
+		# Why FOR UPDATE?
+		sql_query = """
+			SELECT
 				*, timestamp(posting_date, posting_time) as "timestamp"
-			from
+			FROM
 				`tabStock Ledger Entry`
-			where
+			WHERE
 				item_code = %(item_code)s
-				and warehouse = %(warehouse)s
-				and timestamp(posting_date, time_format(posting_time, %(time_format)s)) = timestamp(%(posting_date)s, time_format(%(posting_time)s, %(time_format)s))
-
-			order by
+				AND warehouse = %(warehouse)s
+				AND timestamp(posting_date, time_format(posting_time, %(time_format)s)) = 
+				    timestamp(%(posting_date)s, time_format(%(posting_time)s, %(time_format)s))
+			ORDER BY
 				creation ASC
-			for update
-		""", self.args, as_dict=1)
+			FOR UPDATE
+		"""
+		filters = {
+			"item_code": self.args["item_code"],
+			"warehouse": self.args["warehouse"],
+			"posting_date": self.args["posting_date"],
+			"posting_time": self.args["posting_time"],
+			"time_format": "%H:%i:%s"
+		}
+		result: list = frappe.db.sql(sql_query, values=filters, as_dict=1, debug=True)  # List of Dictionary
+		return result
 
-	def get_future_entries_to_fix(self):
+	def get_future_entries_to_fix(self) -> list:
 		# includes current entry!
 		args = self.data[self.args.warehouse].previous_sle \
 			or frappe._dict({"item_code": self.item_code, "warehouse": self.args.warehouse})
@@ -760,17 +784,40 @@ class update_entries_after(object):
 
 
 def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
-	"""get stock ledger entries filtered by specific posting datetime conditions"""
+	"""
+	get stock ledger entries filtered by specific posting datetime conditions
 
-	args['time_format'] = '%H:%i:%s'
-	if not args.get("posting_date"):
-		args["posting_date"] = "1900-01-01"
-	if not args.get("posting_time"):
-		args["posting_time"] = "00:00"
+	Datahenge:
+		* WTF - Why the wildcard?
+		* Why the forupdate?
+	    * Why the timestamp?
+	    * Sometimes a WHERE clause based on 'voucher_no' ?
+	"""
+	query_filter_dict = copy.deepcopy(args)  # accept the args, but clone them, so we don't modify them.
+	query_filter_dict['time_format'] = '%H:%i:%s'
+
+	args_schema = Schema({
+		'time_format': And(str, len),
+		'item_code': And(str, len),
+		'warehouse': And(str, len),
+		'posting_date': Or(datetime.date, And(str, len)),  # string or date are acceptable
+		'posting_time': Or(datetime.time, datetime.timedelta),  # for Reasons Unknown, ERPNext sometimes passes a timedelta
+		'voucher_type': And(str, len),
+		'voucher_no': And(str, len),
+		'sle_id': And(str, len),
+		'creation': Or(datetime.datetime, And(str, len)),  # string or datetime are acceptable
+		'name': And(str, len)
+	})
+	args_schema.validate(query_filter_dict)
+
+	if not query_filter_dict.get("posting_date"):
+		query_filter_dict["posting_date"] = "1900-01-01"
+	if not query_filter_dict.get("posting_time"):
+		query_filter_dict["posting_time"] = "00:00"
 
 	voucher_condition = ""
 	if exclude_current_voucher:
-		voucher_no = args.get("voucher_no")
+		voucher_no = query_filter_dict.get("voucher_no")
 		voucher_condition = f"and voucher_no != '{voucher_no}'"
 
 	sle = frappe.db.sql("""
@@ -783,7 +830,7 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 			and timestamp(posting_date, time_format(posting_time, %(time_format)s)) < timestamp(%(posting_date)s, time_format(%(posting_time)s, %(time_format)s))
 		order by timestamp(posting_date, posting_time) desc, creation desc
 		limit 1
-		for update""".format(voucher_condition=voucher_condition), args, as_dict=1)
+		for update""".format(voucher_condition=voucher_condition), query_filter_dict, as_dict=1)
 
 	return sle[0] if sle else frappe._dict()
 
@@ -808,6 +855,8 @@ def get_previous_sle(args, for_update=False):
 def get_stock_ledger_entries(previous_sle, operator=None,
 	order="desc", limit=None, for_update=False, debug=False, check_serial_no=True):
 	"""get stock ledger entries filtered by specific posting datetime conditions"""
+
+	# Datahenge: WTF?
 	conditions = " and timestamp(posting_date, posting_time) {0} timestamp(%(posting_date)s, %(posting_time)s)".format(operator)
 	if previous_sle.get("warehouse"):
 		conditions += " and warehouse = %(warehouse)s"
@@ -850,9 +899,15 @@ def get_stock_ledger_entries(previous_sle, operator=None,
 		}, previous_sle, as_dict=1, debug=debug)
 
 def get_sle_by_voucher_detail_no(voucher_detail_no, excluded_sle=None):
-	return frappe.db.get_value('Stock Ledger Entry',
-		{'voucher_detail_no': voucher_detail_no, 'name': ['!=', excluded_sle]},
-		['item_code', 'warehouse', 'posting_date', 'posting_time', 'timestamp(posting_date, posting_time) as timestamp'],
+	"""
+	Given a 'voucher_detail_no', return a few chosen columns from Stock Ledger Entry
+
+	Index: This is covered by 'voucher_detail_no_index'
+	Caller: Class 'update_entries_after', Method 'get_dependent_entries_to_fix'
+	"""
+	filters = {'voucher_detail_no': voucher_detail_no, 'name': ['!=', excluded_sle]}
+	return frappe.db.get_value('Stock Ledger Entry', filters=filters,
+		fieldname=['item_code', 'warehouse', 'posting_date', 'posting_time', 'timestamp(posting_date, posting_time) as timestamp'],
 		as_dict=1)
 
 def get_valuation_rate(item_code, warehouse, voucher_type, voucher_no,
@@ -899,7 +954,7 @@ def get_valuation_rate(item_code, warehouse, voucher_type, voucher_no,
 
 	if not allow_zero_rate and not valuation_rate and raise_error_if_no_rate \
 			and cint(erpnext.is_perpetual_inventory_enabled(company)):
-		frappe.local.message_log = []
+		frappe.local.message_log = []  # pylint: disable=assigning-non-slot
 		form_link = get_link_to_form("Item", item_code)
 
 		message = _("Valuation Rate for the Item {0}, is required to do accounting entries for {1} {2}.").format(form_link, voucher_type, voucher_no)
@@ -949,7 +1004,10 @@ def update_qty_in_future_sle(args, allow_negative_stock=None):
 
 	validate_negative_qty_in_future_sle(args, allow_negative_stock)
 
-def get_stock_reco_qty_shift(args):
+def get_stock_reco_qty_shift(args) -> float:
+	"""
+	Called when 'voucher_type' == 'Stock Reconciliation'
+	"""
 	stock_reco_qty_shift = 0
 	if args.get("is_cancelled"):
 		if args.get("previous_qty_after_transaction"):
@@ -961,7 +1019,7 @@ def get_stock_reco_qty_shift(args):
 	else:
 		# reco is being submitted
 		last_balance = get_previous_sle_of_current_voucher(args,
-			exclude_current_voucher=True).get("qty_after_transaction")
+			exclude_current_voucher=True).get("qty_after_transaction")  # DH: Expensive Function.
 
 		if last_balance is not None:
 			stock_reco_qty_shift = flt(args.qty_after_transaction) - flt(last_balance)

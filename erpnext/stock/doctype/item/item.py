@@ -166,7 +166,7 @@ class Item(WebsiteGenerator):
 		"""
 		# Late imports due to cross-module dependency:
 		from ftp.ftp_invent import try_update_redis_inventory
-		from ftp.ftp_invent.sanity import update_sanity_by_item_code
+		from ftp.sanity import update_sanity_by_item_code
 
 		# Farm To People: Update redis after Item Price touched.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.

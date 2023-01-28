@@ -2,7 +2,7 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-# Copyright (c) 2022, Farm To People LLC and contributors
+# Copyright (c) 2023, Farm To People LLC and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals

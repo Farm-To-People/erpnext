@@ -17,11 +17,11 @@ class ItemManufacturer(Document):
 		self.manage_default_item_manufacturer(delete=True)
 
 	def after_delete(self):
-		from ftp.ftp_invent.sanity import update_sanity_by_item_code
+		from ftp.sanity import update_sanity_by_item_code
 		update_sanity_by_item_code(self.item_code)
 
 	def on_change(self):
-		from ftp.ftp_invent.sanity import update_sanity_by_item_code
+		from ftp.sanity import update_sanity_by_item_code
 		update_sanity_by_item_code(self.item_code)
 
 	def validate_duplicate_entry(self):
