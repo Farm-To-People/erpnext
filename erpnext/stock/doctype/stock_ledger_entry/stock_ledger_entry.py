@@ -178,3 +178,6 @@ def on_doctype_update():
 	frappe.db.add_index("Stock Ledger Entry", ["voucher_no", "voucher_type"])
 	frappe.db.add_index("Stock Ledger Entry", ["batch_no", "item_code", "warehouse"])
 	frappe.db.add_index("Stock Ledger Entry", ["voucher_detail_no"])
+
+	# Farm To People
+	frappe.db.add_index("Stock Ledger Entry", ["warehouse", "item_code", "posting_date"], index_name='ftp_perf_idx_1')
