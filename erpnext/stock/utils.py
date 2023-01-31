@@ -83,8 +83,11 @@ def get_stock_balance(item_code, warehouse, posting_date=None, posting_time=None
 
 	from erpnext.stock.stock_ledger import get_previous_sle
 
-	if not posting_date: posting_date = nowdate()
-	if not posting_time: posting_time = nowtime()
+	if not posting_date:
+		posting_date = nowdate()
+	# Datahenge: This is not a great assumption.  If I backdate the posting date, I would not naturally "assume" I was talking about yesterday at 11:19AM
+	if not posting_time:
+		posting_time = nowtime()
 
 	args = {
 		"item_code": item_code,
@@ -292,7 +295,7 @@ def update_included_uom_in_report(columns, result, include_uom, conversion_facto
 	if not include_uom or not conversion_factors:
 		return
 
-	convertible_cols = {}
+	# convertible_cols = {}
 	is_dict_obj = False
 	if isinstance(result[0], dict):
 		is_dict_obj = True
@@ -396,8 +399,8 @@ def is_reposting_item_valuation_in_progress():
 # Datahenge
 # --------
 
-def allow_negative_stock(item_or_item_code, warehouse_id):
+def allow_negative_stock(item, warehouse_key: str):
 	"""
 	Instead of a global setting, let's decide whether Negative Stock is Allowed on a case-by-case basis.
 	"""
-	
+	# TODO: Make it so.
