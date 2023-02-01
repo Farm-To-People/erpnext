@@ -44,7 +44,7 @@ from frappe.contacts.doctype.address.address import get_address_display
 
 
 from temporal import any_to_date
-from ftp.ftp_invent import try_update_redis_inventory
+from ftp.ftp_invent.redis.api import try_update_redis_inventory
 
 form_grid_templates = {
 	"items": "templates/form_grid/item_grid.html"

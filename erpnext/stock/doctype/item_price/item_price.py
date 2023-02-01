@@ -164,7 +164,7 @@ class ItemPrice(Document):
 		"""
 		Farm To People: Update website item availability (Redis) after Item Price touched.
 		"""
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.sanity import update_sanity_by_item_code
 		if self.selling:
 			try:
@@ -179,7 +179,7 @@ class ItemPrice(Document):
 		"""
 		Farm To People: Update redis after Item Price touched.
 		"""
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.sanity import update_sanity_by_item_code
 
 		if self.selling:

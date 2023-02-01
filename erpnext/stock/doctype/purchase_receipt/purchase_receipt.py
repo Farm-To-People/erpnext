@@ -185,7 +185,7 @@ class PurchaseReceipt(BuyingController):
 
 	# on submit
 	def on_submit(self):
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		super(PurchaseReceipt, self).on_submit()
 
 		# Check for Approving Authority
@@ -223,7 +223,7 @@ class PurchaseReceipt(BuyingController):
 			frappe.throw(_("Purchase Invoice {0} is already submitted").format(self.submit_rv[0][0]))
 
 	def on_cancel(self):
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		super(PurchaseReceipt, self).on_cancel()
 
 		self.check_on_hold_or_closed_status()

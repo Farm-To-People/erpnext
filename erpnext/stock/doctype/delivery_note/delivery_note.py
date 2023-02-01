@@ -8,18 +8,19 @@ from __future__ import unicode_literals
 
 import frappe
 import frappe.defaults
-from erpnext.controllers.selling_controller import SellingController
-from erpnext.stock.doctype.batch.batch import set_batch_nos
-from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_no
 from frappe import _
 from frappe.contacts.doctype.address.address import get_company_address
 from frappe.desk.notifications import clear_doctype_notifications
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from frappe.utils import cint, flt
+
+from erpnext.controllers.selling_controller import SellingController
+from erpnext.stock.doctype.batch.batch import set_batch_nos
+from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_no
 from erpnext.controllers.accounts_controller import get_taxes_and_charges
 
-from ftp.ftp_invent import try_update_redis_inventory
+from ftp.ftp_invent.redis.api import try_update_redis_inventory
 
 form_grid_templates = {
 	"items": "templates/form_grid/item_grid.html"

@@ -229,7 +229,7 @@ class PricingRule(Document):
 				raise Exception("UOM is not allowed when Apply On = Item Group.")
 
 	def on_change(self, verbose=False):
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		if self.apply_on == 'Item Code' and self.items:
 			message = ""
 			for row in self.items:  # pylint: disable=not-an-iterable

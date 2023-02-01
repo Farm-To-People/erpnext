@@ -115,7 +115,7 @@ class StockEntry(StockController):
 		if self.purpose == 'Material Transfer' and self.outgoing_stock_entry:
 			self.set_material_request_transfer_status('Completed')
 		
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		for each in self.items:
 			try_update_redis_inventory(each.item_code)  # update Redis after Stock Entry has been submitted.
 
@@ -144,7 +144,7 @@ class StockEntry(StockController):
 		if self.purpose == 'Material Transfer' and self.outgoing_stock_entry:
 			self.set_material_request_transfer_status('In Transit')
 
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		for each in self.items:
 			try_update_redis_inventory(each.item_code)  # update Redis after Stock Entry has been cancelled.
 

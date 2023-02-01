@@ -6,7 +6,7 @@ import frappe
 from frappe.utils import flt, nowdate
 import frappe.defaults
 from frappe.model.document import Document
-from ftp.ftp_invent import try_update_redis_inventory
+from ftp.ftp_invent.redis.api import try_update_redis_inventory
 
 # tabBin: A table for storing On Hand Stock data.
 #

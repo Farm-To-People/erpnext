@@ -165,7 +165,7 @@ class Item(WebsiteGenerator):
 		Should be happening after SQL transaction commit.
 		"""
 		# Late imports due to cross-module dependency:
-		from ftp.ftp_invent import try_update_redis_inventory
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.sanity import update_sanity_by_item_code
 
 		# Farm To People: Update redis after Item Price touched.
