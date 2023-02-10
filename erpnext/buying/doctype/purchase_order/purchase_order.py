@@ -441,11 +441,6 @@ class PurchaseOrder(BuyingController):
 			self.db_set("per_received", 0, update_modified=False)
 
 
-	def has_activity_ftp(self):
-		"""
-		Returns a boolean True if the purchase order has activity (receipts, invoices)
-		"""
-
 	def after_delete(self):
 		"""
 		After deleting a Purchase Order, try to update Redis.

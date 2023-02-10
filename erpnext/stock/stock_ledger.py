@@ -317,7 +317,7 @@ class update_entries_after(object):  # pylint: disable=invalid-name
 			"posting_time": self.args["posting_time"],
 			"time_format": "%H:%i:%s"
 		}
-		result: list = frappe.db.sql(sql_query, values=filters, as_dict=1, debug=True)  # List of Dictionary
+		result: list = frappe.db.sql(sql_query, values=filters, as_dict=1, debug=False)  # List of Dictionary
 		return result
 
 	def get_future_entries_to_fix(self) -> list:

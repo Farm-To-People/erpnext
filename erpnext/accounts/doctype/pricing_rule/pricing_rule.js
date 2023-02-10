@@ -100,6 +100,10 @@ frappe.ui.form.on('Pricing Rule', {
 		frm.set_df_property('pricing_rule_help', 'options', help_content);
 		frm.events.set_options_for_applicable_for(frm);
 		frm.trigger("toggle_reqd_apply_on");
+		
+		frm.add_custom_button(__('Weighted Price Calculator'), () => {
+			weighted_price_calculator(frm);
+		},(''));
 	},
 
 	apply_on: function(frm) {
@@ -220,3 +224,60 @@ frappe.ui.form.on('Pricing Rule', {
 		})
 	}
 });
+
+
+function weighted_price_calculator(frm) {
+
+	const title = __("Weighted Price Calculator");
+	const fields = [
+		{
+			fieldname: 'item_code',
+			fieldtype: 'Link',
+			options: 'Item',
+			label: __('Item'),
+			reqd: 1
+		},
+		{
+			fieldname: 'as_of_date',
+			fieldtype:'Date',
+			label: __('Price Date'),
+			default: frappe.datetime.get_today(),
+			reqd: 1
+		},
+		{
+			fieldname: 'discount_price',
+			fieldtype: 'Float',
+			label: __('Discounted Unit Price'),
+			reqd: 1
+		},
+		{
+			fieldname: 'discount_per_qty',
+			fieldtype: 'Int',
+			label: __('Per Quantity'),
+			reqd: 1
+		},
+	];
+
+	var this_dialog = new frappe.ui.Dialog({
+		title: title,
+		fields: fields
+	});
+
+	this_dialog.set_primary_action(__('Calculate'), function() {
+		const dialog_data = this_dialog.get_values();
+		frappe.call({
+			'method': 'erpnext.accounts.doctype.pricing_rule.weighted_discounts.show_weighted_discounts',
+			'args': {
+				'item_code': dialog_data.item_code,
+				'discount_price': dialog_data.discount_price,
+				'discount_per_qty': dialog_data.discount_per_qty,
+				'as_of_date': dialog_data.as_of_date
+			},
+			'callback': (r) => {
+				console.log(r);
+			}
+		});
+		this_dialog.hide();
+	});
+	this_dialog.show();
+}
