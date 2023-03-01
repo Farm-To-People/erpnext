@@ -609,6 +609,7 @@ def get_currency_precision():
 	return precision
 
 def get_stock_rbnb_difference(posting_date, company):
+	# Datahenge: Absolutely Not; why would you ever DISTINCT on the entire Stock Ledger Entry??
 	stock_items = frappe.db.sql_list("""select distinct item_code
 		from `tabStock Ledger Entry` where company=%s""", company)
 
