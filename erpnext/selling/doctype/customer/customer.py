@@ -976,10 +976,17 @@ class Customer(Customer):  # pylint: disable=function-redefined
 
 	def update_order_shipping_rules(self):
 		"""
-		Useful when the Customer's default Shipping Rule is modified, to update all existing Orders.
+		Useful when certain Customer attributes are modified (Customer Group, default Shipping Rule)
 		"""
-		if not self.has_value_changed('default_shipping_rule'):
+		# Patch on March 20th 2023:
+		eligible_for_update = False
+		if self.has_value_changed('default_shipping_rule'):
+			eligible_for_update = True
+		elif self.has_value_changed('customer_group'):
+			eligible_for_update = True
+		if not eligible_for_update:
 			return
+		# End Patch
 
 		filters = { "status_delivery": ["in", ["Ready","Good Faith", "Skipped", "Paused"]],
 					"customer": self.name,

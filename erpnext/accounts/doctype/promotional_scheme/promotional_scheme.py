@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import cstr
+# from frappe.utils import cstr
 from frappe.model.naming import make_autoname
 from frappe.model.document import Document
 
