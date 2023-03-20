@@ -37,7 +37,7 @@ class CustomerGroup(NestedSet):
 		for customer_name in customer_names:
 			filters = { "status_delivery": ["in", ["Ready", "Good Faith", "Skipped", "Paused"]],
 						"customer": customer_name,
-						"status_billing": "Not Billed",
+						"is_past_cutoff": False,
 						"status_editing": "Unlocked" }
 
 			order_names = frappe.get_list("Daily Order", filters=filters, pluck='name')

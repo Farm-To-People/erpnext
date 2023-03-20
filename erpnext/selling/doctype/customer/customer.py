@@ -988,9 +988,9 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			return
 		# End Patch
 
-		filters = { "status_delivery": ["in", ["Ready","Good Faith", "Skipped", "Paused"]],
+		filters = { "status_delivery": ["in", ["Ready", "Good Faith", "Skipped", "Paused"]],
 					"customer": self.name,
-					"status_billing": "Not Billed",
+					"is_past_cutoff": False,
 					"status_editing": "Unlocked" }
 		order_names = frappe.get_list("Daily Order", filters=filters, pluck='name')
 		for order_name in order_names:
