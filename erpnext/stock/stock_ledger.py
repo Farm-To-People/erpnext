@@ -795,13 +795,13 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 	"""
 
 	query_filter_dict = copy.deepcopy(args)  # accept the args, but clone them, so we don't modify them.
-	query_filter_dict['time_format'] = '%H:%i:%s'
+	query_filter_dict['time_format'] = '%H:%M:%S'
 
 	if not query_filter_dict.get("posting_time"):
 		query_filter_dict["posting_time"] = "00:00"
 	elif isinstance(args['posting_time'], str):
 		# Datahenge: I don't want the Schema accepting any String in place of Time.  So converting to a timedelta:
-		posting_time = datetime.datetime.strptime(query_filter_dict["posting_time"] , "%I:%M:%S")
+		posting_time = datetime.datetime.strptime(query_filter_dict["posting_time"] , query_filter_dict['time_format'])
 		query_filter_dict["posting_time"] = datetime.timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
 
 	args_schema = Schema({
