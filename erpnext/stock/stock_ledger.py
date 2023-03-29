@@ -164,7 +164,7 @@ def repost_future_sle(args=None, voucher_type=None, voucher_no=None, allow_negat
 					args.append(data.sle)
 				elif data.sle_changed and not data.reposting_status:
 					args[data.args_idx] = data.sle
-				
+
 				data.sle_changed = False
 		i += 1
 
@@ -292,10 +292,11 @@ class update_entries_after(object):  # pylint: disable=invalid-name
 		Datahenge: Refactoring Frappe's function.
 		Purpose: Find all Stock Ledger Entry posted at this *exact* moment in time, for this Warehouse.
 		"""
-		# Questions:  Why?  Who cares?
-		# Do we *really* need to sort in SQL by creation?
+		# Questions: What's the point of this?
 		# What columns are truly needed?
-		# Why FOR UPDATE?
+		# Why the "FOR UPDATE"?
+
+		# NOTE:  Order by creation below, because that's the last hope of "uniqueness" if the Posting Date and Time are repeated for multiple entries.
 		sql_query = """
 			SELECT
 				*, timestamp(posting_date, posting_time) as "timestamp"
@@ -315,9 +316,9 @@ class update_entries_after(object):  # pylint: disable=invalid-name
 			"warehouse": self.args["warehouse"],
 			"posting_date": self.args["posting_date"],
 			"posting_time": self.args["posting_time"],
-			"time_format": "%H:%i:%s"
+			"time_format": "%H:%i:%s"  # NOTE: This is a SQL datetime format, NOT Python!
 		}
-		result: list = frappe.db.sql(sql_query, values=filters, as_dict=1, debug=False)  # List of Dictionary
+		result: list = frappe.db.sql(sql_query, values=filters, as_dict=1, debug=False)  # list of Dictionary
 		return result
 
 	def get_future_entries_to_fix(self) -> list:
@@ -788,19 +789,21 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 	get stock ledger entries filtered by specific posting datetime conditions
 
 	Datahenge:
-		* WTF - Why the wildcard?
+		* WTF - Why the wildcard in the SELECT?
 		* Why the forupdate?
 	    * Why the timestamp?
 	    * Sometimes a WHERE clause based on 'voucher_no' ?
 	"""
 
 	query_filter_dict = copy.deepcopy(args)  # accept the args, but clone them, so we don't modify them.
-	query_filter_dict['time_format'] = '%H:%M:%S'
+	query_filter_dict['time_format'] = "%H:%i:%s"  # NOTE: This is a MySQL string format, NOT Python.
 
 	if not query_filter_dict.get("posting_time"):
-		query_filter_dict["posting_time"] = "00:00"
+		query_filter_dict["posting_time"] = "00:00:00"
 	elif isinstance(args['posting_time'], str):
-		# Datahenge: I don't want the Schema accepting any String in place of Time.  So converting to a timedelta:
+		if '.' in query_filter_dict["posting_time"]:
+			query_filter_dict['time_format'] = "%H:%i:%s.%f"
+		# Datahenge: The schema should not accept any generic String.  So converting to a timedelta:
 		posting_time = datetime.datetime.strptime(query_filter_dict["posting_time"] , query_filter_dict['time_format'])
 		query_filter_dict["posting_time"] = datetime.timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
 
@@ -812,11 +815,11 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 		'posting_time': Or(datetime.time, datetime.timedelta),  # for Reasons Unknown, ERPNext sometimes passes a timedelta
 		'voucher_type': And(str, len),
 		'voucher_no': And(str, len),
-		'sle_id': And(str, len),
+		Optional('sle_id'): And(str, len),
 		'creation': Or(datetime.datetime, And(str, len)),  # string or datetime are acceptable
 		'name': And(str, len)
 	})
-	args_schema.validate(query_filter_dict)
+	# args_schema.validate(query_filter_dict)
 
 	if not query_filter_dict.get("posting_date"):
 		query_filter_dict["posting_date"] = "1900-01-01"
@@ -826,6 +829,7 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 		voucher_no = query_filter_dict.get("voucher_no")
 		voucher_condition = f"and voucher_no != '{voucher_no}'"
 
+	# pylint: disable=consider-using-f-string
 	sle = frappe.db.sql("""
 		select *, timestamp(posting_date, posting_time) as "timestamp"
 		from `tabStock Ledger Entry`

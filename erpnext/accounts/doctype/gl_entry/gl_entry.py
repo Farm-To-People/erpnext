@@ -284,6 +284,9 @@ def on_doctype_update():
 	frappe.db.add_index("GL Entry", ["voucher_type", "voucher_no"])
 
 def rename_gle_sle_docs():
+	"""
+	Datahenge: The purpose of these functions is to replace the hash 'name' values (e.g. ) with permanent names
+	"""
 	for doctype in ["GL Entry", "Stock Ledger Entry"]:
 		rename_temporarily_named_docs(doctype)
 
@@ -297,6 +300,7 @@ def rename_temporarily_named_docs(doctype):
 			oldname = doc.name
 			set_name_from_naming_options(frappe.get_meta(doctype).autoname, doc)
 			newname = doc.name
+			print(f"Renaming doctype {doctype} from {oldname} to {newname} ...")
 			frappe.db.sql(
 				f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0 where name = %s",
 				(newname, oldname),
