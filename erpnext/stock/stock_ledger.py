@@ -795,19 +795,20 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 	    * Sometimes a WHERE clause based on 'voucher_no' ?
 	"""
 
-	query_filter_dict = copy.deepcopy(args)  # accept the args, but clone them, so we don't modify them.
-	query_filter_dict['time_format'] = "%H:%i:%s"  # NOTE: This is a MySQL string format, NOT Python.
+	args_clone = copy.deepcopy(args)  # Clone the args so we don't modify the original
+	sql_time_format = "%H:%i:%s"  # NOTE: This is a MySQL string format, NOT Python.
+	python_time_format = "%H:%M:%S.%f"  # NOTE: PYTHON string format -only-, and it must contain a microsecond component.
 
-	if not query_filter_dict.get("posting_time"):
-		query_filter_dict["posting_time"] = "00:00:00"
-	elif isinstance(args['posting_time'], str):
-		if '.' in query_filter_dict["posting_time"]:
-			query_filter_dict['time_format'] = "%H:%i:%s"
-		# Datahenge: The schema should not accept any generic String.  So converting to a timedelta:
-		posting_time = datetime.datetime.strptime(query_filter_dict["posting_time"] , query_filter_dict['time_format'])
-		query_filter_dict["posting_time"] = datetime.timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
+	if not args_clone.get("posting_time"):
+		args_clone["posting_time"] = "00:00:00"
+	elif isinstance(args_clone['posting_time'], str):
+		posting_time = datetime.datetime.strptime(args_clone["posting_time"], python_time_format)
+		args_clone["posting_time"] = datetime.timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
 
-	args_schema = Schema({
+	if not args_clone.get("posting_date"):
+		args_clone["posting_date"] = "1900-01-01"
+
+	args_schema = Schema({  # pylint: disable=unused-variable
 		'time_format': And(str, len),
 		'item_code': And(str, len),
 		'warehouse': And(str, len),
@@ -821,15 +822,20 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 	})
 	# args_schema.validate(query_filter_dict)
 
-	if not query_filter_dict.get("posting_date"):
-		query_filter_dict["posting_date"] = "1900-01-01"
-
 	voucher_condition = ""
 	if exclude_current_voucher:
-		voucher_no = query_filter_dict.get("voucher_no")
+		voucher_no = args_clone.get("voucher_no")
 		voucher_condition = f"and voucher_no != '{voucher_no}'"
 
 	# pylint: disable=consider-using-f-string
+	query_filters = {
+		"item_code": args_clone["item_code"],
+		"warehouse": args_clone["warehouse"],
+		"time_format": sql_time_format,
+		"posting_date": args_clone["posting_date"],
+		"posting_time": args_clone["posting_time"],
+	}
+
 	sle = frappe.db.sql("""
 		select *, timestamp(posting_date, posting_time) as "timestamp"
 		from `tabStock Ledger Entry`
@@ -840,7 +846,7 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 			and timestamp(posting_date, time_format(posting_time, %(time_format)s)) < timestamp(%(posting_date)s, time_format(%(posting_time)s, %(time_format)s))
 		order by timestamp(posting_date, posting_time) desc, creation desc
 		limit 1
-		for update""".format(voucher_condition=voucher_condition), query_filter_dict, as_dict=1)
+		for update""".format(voucher_condition=voucher_condition), values=query_filters, as_dict=1)
 
 	return sle[0] if sle else frappe._dict()
 
