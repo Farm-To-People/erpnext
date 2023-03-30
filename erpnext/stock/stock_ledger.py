@@ -802,7 +802,7 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 		query_filter_dict["posting_time"] = "00:00:00"
 	elif isinstance(args['posting_time'], str):
 		if '.' in query_filter_dict["posting_time"]:
-			query_filter_dict['time_format'] = "%H:%i:%s.%f"
+			query_filter_dict['time_format'] = "%H:%i:%s"
 		# Datahenge: The schema should not accept any generic String.  So converting to a timedelta:
 		posting_time = datetime.datetime.strptime(query_filter_dict["posting_time"] , query_filter_dict['time_format'])
 		query_filter_dict["posting_time"] = datetime.timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
