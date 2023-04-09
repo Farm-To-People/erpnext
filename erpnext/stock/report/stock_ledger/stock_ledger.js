@@ -46,7 +46,8 @@ frappe.query_reports["Stock Ledger"] = {
 				return {
 					query: "erpnext.controllers.queries.item_query"
 				}
-			}
+			},
+			"reqd": 1 // Extremely Important!
 		},
 		{
 			"fieldname":"item_group",

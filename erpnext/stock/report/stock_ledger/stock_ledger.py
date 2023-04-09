@@ -5,11 +5,15 @@ from __future__ import unicode_literals
 
 import frappe
 from frappe.utils import cint, flt
-from erpnext.stock.utils import update_included_uom_in_report, is_reposting_item_valuation_in_progress
 from frappe import _
+
+from erpnext.stock.utils import update_included_uom_in_report, is_reposting_item_valuation_in_progress
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 def execute(filters=None):
+
+	if not filters.get("item_code"):
+		raise ValueError("Item is a mandatory filter for this report.")
 	is_reposting_item_valuation_in_progress()
 	include_uom = filters.get("include_uom")
 	columns = get_columns()
