@@ -471,12 +471,21 @@ def get_customer_list(doctype, txt, searchfield, start, page_len, filters=None):
 
 
 def check_credit_limit(customer, company, ignore_outstanding_sales_order=False, extra_amount=0):
+	# Datahenge: Performance fix.  It's point pointless calculating 'get_customer_outstanding()' if
+	# the customer doesn't have a Credit Limit in the first place.  Do the fast logic first, and the slow
+	# logic only if it's necessary.
+
+	credit_limit = get_credit_limit(customer, company)
+	if credit_limit <= 0:
+		# Customer has no credit limit, so nothing more to calculate/do.
+		return
+
+	# DH Warning: The function below could be resource intensive.
 	customer_outstanding = get_customer_outstanding(customer, company, ignore_outstanding_sales_order)
 	if extra_amount > 0:
 		customer_outstanding += flt(extra_amount)
 
-	credit_limit = get_credit_limit(customer, company)
-	if credit_limit > 0 and flt(customer_outstanding) > credit_limit:
+	if flt(customer_outstanding) > credit_limit:
 		msgprint(_("Credit limit has been crossed for customer {0} ({1}/{2})")
 			.format(customer, customer_outstanding, credit_limit))
 
@@ -519,9 +528,9 @@ def send_emails(args):
 			.format(args.get('customer'), args.get('customer_outstanding'), args.get('credit_limit')))
 	frappe.sendmail(recipients=args.get('credit_controller_users_list'), subject=subject, message=message)
 
-def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=False, cost_center=None):
+def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=True, cost_center=None):
 	# Outstanding based on GL Entries
-
+	# Datahenge: Need to tear this apart, and figure out its Performance Problems....
 	cond = ""
 	if cost_center:
 		lft, rgt = frappe.get_cached_value("Cost Center",
@@ -552,6 +561,9 @@ def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=F
 			and per_billed < 100 and status != 'Closed'""", (customer, company))
 
 		outstanding_based_on_so = flt(outstanding_based_on_so[0][0]) if outstanding_based_on_so else 0
+
+	# Datahenge: Skip all this Unmarked Delivery Note and SI nonsense; it kills performance and it should be CONFIGURABLE.
+	return outstanding_based_on_gle + outstanding_based_on_so
 
 	# Outstanding based on Delivery Note, which are not created against Sales Order
 	outstanding_based_on_dn = 0
