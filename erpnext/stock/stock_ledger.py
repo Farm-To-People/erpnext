@@ -928,28 +928,34 @@ def get_sle_by_voucher_detail_no(voucher_detail_no, excluded_sle=None):
 
 def get_valuation_rate(item_code, warehouse, voucher_type, voucher_no,
 	allow_zero_rate=False, currency=None, company=None, raise_error_if_no_rate=True):
-	# Get valuation rate from last sle for the same item and warehouse
+	"""
+	Datahenge: Another extremely slow/inefficient query, that I had to go write indexes for.
+	"""
+
+	# Get valuation rate from last Stock Ledger Entry: same Item and Warehouse
 	if not company:
 		company = erpnext.get_default_company()
 
-	last_valuation_rate = frappe.db.sql("""select valuation_rate
-		from `tabStock Ledger Entry`
-		where
-			item_code = %s
+	last_valuation_rate = frappe.db.sql("""SELECT valuation_rate
+		FROM `tabStock Ledger Entry`   	FORCE INDEX (ftp_perf_idx_2A)
+		WHERE
+			    item_code = %s
 			AND warehouse = %s
 			AND valuation_rate >= 0
 			AND NOT (voucher_no = %s AND voucher_type = %s)
-		order by posting_date desc, posting_time desc, name desc limit 1""", (item_code, warehouse, voucher_no, voucher_type))
+		ORDER BY
+		posting_date desc, posting_time desc, name desc limit 1""", (item_code, warehouse, voucher_no, voucher_type))
 
 	if not last_valuation_rate:
-		# Get valuation rate from last sle for the item against any warehouse
-		last_valuation_rate = frappe.db.sql("""select valuation_rate
-			from `tabStock Ledger Entry`
-			where
-				item_code = %s
+		# Get valuation rate from last Stock Ledger Entry: same Item but ANY Warehouse
+		last_valuation_rate = frappe.db.sql("""SELECT valuation_rate
+			FROM `tabStock Ledger Entry`	FORCE INDEX (ftp_perf_idx_2B)
+			WHERE
+				    item_code = %s
 				AND valuation_rate > 0
 				AND NOT(voucher_no = %s AND voucher_type = %s)
-			order by posting_date desc, posting_time desc, name desc limit 1""", (item_code, voucher_no, voucher_type))
+			ORDER BY
+			posting_date desc, posting_time desc, name desc limit 1""", (item_code, voucher_no, voucher_type))
 
 	if last_valuation_rate:
 		return flt(last_valuation_rate[0][0])
