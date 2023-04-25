@@ -278,9 +278,9 @@ class Customer(TransactionBase):
 		if self.lead_name:
 			frappe.db.sql("update `tabLead` set status='Interested' where name=%s", self.lead_name)
 
-		self.flags.dh_ignore_linked_doctypes = ('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
+		self.flags.dh_ignore_linked_doctypes = tuple('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
 
-	def after_rename(self, olddn, newdn, merge=False):
+	def after_rename(self, olddn, newdn, merge=False):  # pylint: disable=unused-argument
 		if frappe.defaults.get_global_default('cust_master_name') == 'Customer Name':
 			frappe.db.set(self, "customer_name", newdn)
 
@@ -563,6 +563,7 @@ def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=T
 		outstanding_based_on_so = flt(outstanding_based_on_so[0][0]) if outstanding_based_on_so else 0
 
 	# Datahenge: Skip all this Unmarked Delivery Note and SI nonsense; it kills performance and it should be CONFIGURABLE.
+	# pylint: disable=unreachable
 	return outstanding_based_on_gle + outstanding_based_on_so
 
 	# Outstanding based on Delivery Note, which are not created against Sales Order
