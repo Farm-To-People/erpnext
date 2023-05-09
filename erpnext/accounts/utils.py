@@ -349,7 +349,7 @@ def reconcile_against_document(args):
 	"""
 
 	#TODO : Datahenge : Put a stop to this.
-	# raise frappe.exceptions.ForbiddenError("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
+	# raise frappe.exceptions.Forbidden("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
 
 	for d in args:
 

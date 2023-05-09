@@ -122,7 +122,8 @@ class PricingRule(Document):
 			# reset all values except for the logic field
 			options = (self.meta.get_options(logic_field) or "").split("\n")
 			for f in options:
-				if not f: continue
+				if not f:
+					continue
 
 				scrubbed_f = frappe.scrub(f)
 
@@ -216,17 +217,17 @@ class PricingRule(Document):
 			rows_with_uom = [ row for row in self.items if row.uom ]  # pylint: disable=not-an-iterable
 			if rows_with_uom:
 				print(rows_with_uom)
-				raise Exception("'UOMs are a bad idea right now' - Shelby & Brian")
+				raise ValueError("'UOMs are a bad idea right now' - Shelby & Brian")
 
 		if hasattr(self, "brands") and self.brands:
 			rows_with_uom = [ row for row in self.brands if row.uom ]  # pylint: disable=not-an-iterable
 			if rows_with_uom:
-				raise Exception("UOM is not allowed when Apply On = Brand.")
+				raise ValueError("UOM is not allowed when Apply On = Brand.")
 
 		if hasattr(self, "item_groups") and self.item_groups:
 			rows_with_uom = [ row for row in self.item_groups if row.uom ]  # pylint: disable=not-an-iterable
 			if rows_with_uom:
-				raise Exception("UOM is not allowed when Apply On = Item Group.")
+				raise ValueError("UOM is not allowed when Apply On = Item Group.")
 
 	def on_change(self, verbose=False):
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
@@ -302,7 +303,8 @@ def apply_pricing_rule(args, doc=None):
 	# list of dictionaries
 	out = []
 
-	if args.get("doctype") == "Material Request": return out
+	if args.get("doctype") == "Material Request":
+		return out
 
 	# Extract the "items" child Document into their own variable (e.g. Sales Order Item, Daily Order Item)
 	item_list = args.get("items")
@@ -665,7 +667,8 @@ def remove_pricing_rule_for_item(pricing_rules, item_details, item_code=None):
 	from erpnext.accounts.doctype.pricing_rule.utils import (get_applied_pricing_rules,
 		get_pricing_rule_items)
 	for d in get_applied_pricing_rules(pricing_rules):
-		if not d or not frappe.db.exists("Pricing Rule", d): continue
+		if not d or not frappe.db.exists("Pricing Rule", d):
+			continue
 		pricing_rule = frappe.get_cached_doc('Pricing Rule', d)
 
 		if pricing_rule.price_or_product_discount == 'Price':
@@ -753,7 +756,7 @@ def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list, verbose=Fal
 	"""
 	from temporal import validate_datatype  # Late import from across Python modules.
 
-	validate_datatype('pricing_rule', pricing_rule, dict, mandatory=True)
+	validate_datatype('pricing_rule', pricing_rule, (dict, PricingRule), mandatory=True)
 	validate_datatype('coupon_code_list', coupon_code_list, list, mandatory=False)
 
 	if not bool(pricing_rule.coupon_code_based):

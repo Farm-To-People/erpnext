@@ -153,7 +153,7 @@ class PaymentReconciliation(Document):
 	@frappe.whitelist()
 	def reconcile(self, args):
 
-		raise frappe.exceptions.ForbiddenError("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
+		raise frappe.exceptions.Forbidden("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
 
 		for e in self.get('payments'):
 			e.invoice_type = None
@@ -275,7 +275,7 @@ class PaymentReconciliation(Document):
 
 def reconcile_dr_cr_note(dr_cr_notes, company):
 
-	raise frappe.exceptions.ForbiddenError("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
+	raise frappe.exceptions.Forbidden("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
 	for d in dr_cr_notes:
 		voucher_type = ('Credit Note'
 			if d.voucher_type == 'Sales Invoice' else 'Debit Note')
