@@ -68,7 +68,6 @@ class CouponCode(Document):
 		"""
 		Datahenge: Recalculate the Coupon Code usage.
 		"""
-		pass
 		# TODO: Make it so.
 
 # Yes, 'on_doctype_update' belongs here, outside the Document class.
