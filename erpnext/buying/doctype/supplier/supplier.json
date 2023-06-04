@@ -58,7 +58,8 @@
   "column_break_30",
   "language",
   "is_frozen",
-  "emails_for_purchase_order"
+  "emails_for_purchase_order",
+  "purchase_lead_days"
  ],
  "fields": [
   {
@@ -384,6 +385,12 @@
    "fieldname": "emails_for_purchase_order",
    "fieldtype": "Data",
    "label": "Emails for PO"
+  },
+  {
+   "description": "Relative to the Global Cutoff date.",
+   "fieldname": "purchase_lead_days",
+   "fieldtype": "Int",
+   "label": "PO Lead Days"
   }
  ],
  "icon": "fa fa-user",
@@ -396,7 +403,7 @@
    "link_fieldname": "supplier"
   }
  ],
- "modified": "2022-01-12 13:03:10.679017",
+ "modified": "2023-06-03 19:09:00.398170",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier",
