@@ -805,6 +805,9 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if self.email_id:
 			self.email_id = self.email_id.strip().lower()  # Datahenge: Force emails to lowercase
 
+	def before_save(self):
+		self.clean_pause_records()
+
 	def after_insert(self):
 		"""
 		NOTE: Not sending Welcome Emails, outside of Website Registration via API calls.
@@ -1088,7 +1091,25 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Update the mobile number on all upcoming Daily Orders.
 		"""
-		update_order_phone_numbers(self.name)
+		update_order_phone_numbers(self.name)  # non-Document function defined later in this module.
+
+	def clean_pause_records(self):
+		"""
+		Useful function for cleaning up a Customer's Pause records, prior to saving to SQL.
+		"""
+		from temporal import any_to_date
+
+		for pause_record in self.pauses:
+
+			for other_record in self.pauses:
+				if pause_record.name == other_record.name:
+					continue
+				if any_to_date(pause_record.from_date) >= any_to_date(other_record.from_date) and \
+				   any_to_date(pause_record.to_date) <= any_to_date(other_record.to_date):
+					# print("Removing redundant Customer Pause record.")
+					self.remove(pause_record)
+					break
+
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
