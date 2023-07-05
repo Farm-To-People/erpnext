@@ -184,6 +184,11 @@ class Customer(TransactionBase):
 			lead.save(ignore_permissions=self.flags.get("ignore_permissions") or False)
 
 	def create_lead_address_contact(self):
+
+		# Datahenge: Don't create a Contact; website registration is already handling this.
+		if self.flags.get("dh_do_not_create_contact"):
+			return
+
 		if self.lead_name:
 			# assign lead address to customer (if already not set)
 			address_names = frappe.get_all('Dynamic Link', filters={
