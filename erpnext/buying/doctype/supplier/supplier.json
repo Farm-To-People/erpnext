@@ -387,7 +387,8 @@
    "label": "Emails for PO"
   },
   {
-   "description": "Relative to the Global Cutoff date.",
+   "default": "1",
+   "description": "Number of days to offset Automatic PO Emails, relative to the Global Cutoff date.",
    "fieldname": "purchase_lead_days",
    "fieldtype": "Int",
    "label": "PO Lead Days"
@@ -403,7 +404,7 @@
    "link_fieldname": "supplier"
   }
  ],
- "modified": "2023-06-03 19:09:00.398170",
+ "modified": "2023-07-07 14:08:46.503083",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier",
