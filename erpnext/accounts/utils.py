@@ -117,6 +117,9 @@ def validate_fiscal_year(date, fiscal_year, company, label="Date", doc=None):
 @frappe.whitelist()
 def get_balance_on(account=None, date=None, party_type=None, party=None, company=None,
 	in_account_currency=True, cost_center=None, ignore_account_permission=False):
+
+	# TODO: Datahenge: Seems like this could be problematic ...
+
 	if not account and frappe.form_dict.get("account"):
 		account = frappe.form_dict.get("account")
 	if not date and frappe.form_dict.get("date"):
