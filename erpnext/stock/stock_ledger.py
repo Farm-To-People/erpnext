@@ -900,9 +900,10 @@ def get_stock_ledger_entries(previous_sle, operator=None,
 	if operator in (">", "<=") and previous_sle.get("name"):
 		conditions += " and name!=%(name)s"
 
+	# Datahenge: Adding an Index Hint, in the hope this prevents further MariaDB Locks ...
 	return frappe.db.sql("""
 		select *, timestamp(posting_date, posting_time) as "timestamp"
-		from `tabStock Ledger Entry`
+		from `tabStock Ledger Entry`  USE INDEX(ftp_perf_idx_1A)
 		where item_code = %%(item_code)s
 		and is_cancelled = 0
 		%(conditions)s
