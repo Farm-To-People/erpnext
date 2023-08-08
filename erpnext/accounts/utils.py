@@ -348,7 +348,7 @@ def add_cc(args=None):
 
 def reconcile_against_document(args):
 	"""
-		Cancel JV, Update aginst document, split if required and resubmit jv
+		Cancel JV, Update against document, split if required and resubmit JV
 	"""
 
 	#TODO : Datahenge : Put a stop to this.

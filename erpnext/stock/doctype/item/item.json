@@ -39,6 +39,8 @@
   "sb_misc",
   "segregation",
   "packing_sort_code",
+  "column_break_29",
+  "can_be_favorite",
   "section_break_11",
   "is_item_from_hub",
   "brand",
@@ -1183,6 +1185,17 @@
    "fieldname": "packing_sort_code",
    "fieldtype": "Data",
    "label": "Packing Slip Position"
+  },
+  {
+   "fieldname": "column_break_29",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "When checked, customers can mark this Product as a Favorite on the website.",
+   "fieldname": "can_be_favorite",
+   "fieldtype": "Check",
+   "label": "Can Favorite"
   }
  ],
  "icon": "fa fa-tag",
@@ -1197,7 +1210,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2023-01-15 17:38:26.909383",
+ "modified": "2023-08-08 13:24:06.585992",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
