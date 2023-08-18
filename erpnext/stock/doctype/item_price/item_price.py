@@ -45,6 +45,12 @@ class ItemPrice(Document):
 		self.check_duplicates()  # standard Frappe function.
 		# self.validate_overlapping_prices_ftp()  # commented out July 2022, because it was causing headaches for FTP data entry.
 
+		# FTP - Validate units of measure conversion:
+		from ftp.ftp_invent.redis.api import validate_uom_compatibility  # Late import due to Cross Module dependency.
+		stock_uom = frappe.get_value("Item", self.item_code, "stock_uom")
+		if not validate_uom_compatibility(stock_uom, self.uom, self.item_code):
+			raise ValueError(f"Item is missing a conversion factor from UOM '{self.uom}' to stock UOM '{stock_uom}'.")
+
 	def validate_item(self):
 		if not frappe.db.exists("Item", self.item_code):
 			frappe.throw(_("Item {0} not found.").format(self.item_code))
