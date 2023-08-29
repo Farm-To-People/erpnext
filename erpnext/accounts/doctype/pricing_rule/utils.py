@@ -120,8 +120,8 @@ def get_pricing_rules(args, doc=None):
 				rules.extend(pricing_rule)
 			else:
 				rules.append(pricing_rule)
-	else:
-		# "There Can Only Be One"
+	elif pricing_rules:
+		# If array 'pricing_rules' exists, then "There Can Only Be One"
 		pricing_rule = filter_pricing_rules(args, pricing_rules, doc)
 		if pricing_rule:
 			rules.append(pricing_rule)
