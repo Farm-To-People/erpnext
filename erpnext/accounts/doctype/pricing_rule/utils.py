@@ -41,15 +41,51 @@ def get_pricing_rules(args, doc=None):
 	"""
 	Determine a list of Pricing Rules that "might" apply to these conditions.
 
-	What are 'args'?  An indeterminate Dictionary full of "stuff".  It's awful how inconsistent it is.
-	"""
+	What are 'args'?  An indeterminate Dictionary full of "stuff".  It's criminal how inconsistent and undocumented it is.
 
+	Example:
+		{'name': 'OR-0199443', 
+		 'customer': 'CUST-CONS-00', 
+		 'selling_price_list': 'Standard Selling', 
+		 'doctype': 'Daily Order', 
+		 'coupon_codes': [], 
+		 'document_type': 'Daily Order Item', 
+		 'transaction_date': '2023-08-23', 
+		 'company': 'Farm To People', 
+		 'currency': 'USD', 
+		 'price_list_currency': 'USD', 
+		 'conversion_rate': 1.0, 
+		 'plc_conversion_rate': 1.0, 
+		 'item_code': 'ADD-DAI-0424-12', 
+		 'item_name': 'Pasture Raised Eggs (Dozen)', 
+		 'price_date': '2023-08-20', 
+		 'qty': 3, 
+		 'stock_qty': 3, 
+		 'uom': 'Each', 
+		 'item_group': 'DAIRY - REPORTING', 
+		 'stock_uom': 'Each', 
+		 'conversion_factor': 1.0, 
+		 'child_docname': '45347d6f39', 
+		 'price_list_rate': 3.4, 
+		 'transaction_type': 'selling', 
+		 'price_list': 'Standard Selling', 
+		 'warehouse': 'Main - FTP', 
+		 'update_stock': 0, 
+		 'ignore_pricing_rule': 0, 
+		 'brand': None, 
+		 'customer_group': 'None', 
+		 'territory': 'Manhattan', 
+		 'supplier': None, 
+		 'supplier_group': None}
+
+	"""
+	from erpnext.accounts.doctype.pricing_rule.pricing_rule import pricing_rule_matches_coupon_list # , remove_pricing_rule_for_item
 	pricing_rules = []
 	values =  {}
 
-	# 1. Start adding some potential Pricing Rules to the list 'pricing_rules':
+	# Begin by adding some potential Pricing Rules to the list 'pricing_rules':
 	for apply_on in ['Item Code', 'Item Group', 'Brand']:
-		frappe.dprint(f"* Searching for pricing rules based on {apply_on}", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint(f"  * Searching for pricing rules based on {apply_on}", check_env='FTP_DEBUG_PRICING_RULE')
 		pricing_rules.extend(_get_pricing_rules(apply_on, args, values))
 		if pricing_rules and not apply_multiple_pricing_rules(pricing_rules):
 			frappe.dprint(f"Added {len(pricing_rules)} and will not search for any additional ones.", check_env='FTP_DEBUG_PRICING_RULE')
@@ -57,12 +93,26 @@ def get_pricing_rules(args, doc=None):
 
 	frappe.dprint(f"1. Possible rules include {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
 
+	# Filter out some rules based on conditions.
 	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
 	if not pricing_rules:
 		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 		return []
+	frappe.dprint(f"2. After filter by condition, rules are: {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
+
+	# Next, important to remove Coupon-Based rules immediately, if the Order does not have those Coupons.
+	if doc and doc.doctype == "Daily Order":
+		coupon_codes = [ each.coupon_code for each in doc.coupon_code_set ]
+		for each_rule in copy.deepcopy(pricing_rules):
+			if not pricing_rule_matches_coupon_list(each_rule, coupon_codes):
+				# But what if a rule -already- exists on the Order.  And during this operation, the Coupon is being deleted?
+				# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
+				frappe.dprint(f"x Removing Pricing Rule '{each_rule['name']}' from order, because Coupon Codes {args.coupon_codes} do not enable it.",
+							check_env='FTP_DEBUG_PRICING_RULE')
+				pricing_rules.remove(each_rule)
 
 	rules = []
+	# Do -any- of the applicable Pricing Rules support "apply multiple?"
 	if apply_multiple_pricing_rules(pricing_rules):
 		pricing_rules = sorted_by_priority(pricing_rules, args, doc)
 		for pricing_rule in pricing_rules:
@@ -71,8 +121,7 @@ def get_pricing_rules(args, doc=None):
 			else:
 				rules.append(pricing_rule)
 	else:
-		# No need to apply multiple Pricing Rules.  There can only be One?
-		# TODO: This function below is stripping out rules that should apply to Daily Order Lines.
+		# "There Can Only Be One"
 		pricing_rule = filter_pricing_rules(args, pricing_rules, doc)
 		if pricing_rule:
 			rules.append(pricing_rule)
@@ -80,17 +129,31 @@ def get_pricing_rules(args, doc=None):
 	if not rules:
 		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 	else:
-		frappe.dprint(f"2. Final rules include {[ each['name'] for each in rules] }", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint(f"3. Final rules include {[ each['name'] for each in rules] }", check_env='FTP_DEBUG_PRICING_RULE')
 
 	return rules
 
 def sorted_by_priority(pricing_rules, args, doc=None):
+	"""
+	Datahenge: Strangely, this might be one of the few entrypoints, anywhere in ERPNext, that leads to Min and Max quantity filtering.
+	Therefore, it's not JUST sorting.
+	It's also FILTERING too (or at least it should have, but I had to fix it)
+	"""
+
 	# If more than one pricing rules, then sort by priority
 	pricing_rules_list = []
 	pricing_rule_dict = {}
 
-	for pricing_rule in pricing_rules:
-		pricing_rule = filter_pricing_rules(args, pricing_rule, doc)
+	for pricing_rule in copy.deepcopy(pricing_rules):  # DH: Using deepcopy so I can modify the original list's contents
+
+		# DH: Some wonkiness here, but it gets the job done. Remove the pricing_rule from the original 'pricing_rules' List object.
+		pricing_rule_post_filter = filter_pricing_rules(args, pricing_rule, doc)  # NOTE: This may remove rules from the list.
+		if not pricing_rule_post_filter:
+			pricing_rules.remove(pricing_rule)
+			continue
+
+		# Otherwise, carry on with the prioritization:
+		pricing_rule = pricing_rule_post_filter
 		if pricing_rule:
 			if not pricing_rule.get('priority'):
 				pricing_rule['priority'] = 1
@@ -101,7 +164,7 @@ def sorted_by_priority(pricing_rules, args, doc=None):
 	for key in sorted(pricing_rule_dict):
 		pricing_rules_list.extend(pricing_rule_dict.get(key))
 
-	return pricing_rules_list or pricing_rules
+	return pricing_rules_list or pricing_rules  # DH August 20th 2023 - Now actually doing the Right Thing.
 
 def filter_pricing_rule_based_on_condition(pricing_rules, doc=None):
 	"""
@@ -138,7 +201,7 @@ def _get_pricing_rules(apply_on, args, values):
 	# IMPORTANT: This code is one of the deepest 'origins' of Potential Pricing Rules.  It contains the SQL that fetches the potentials.
 	# Datahenge: Added some validation:
 	if (not apply_on) or apply_on not in ['Brand', 'Detail', 'Item Code', 'Item Group']:
-		raise Exception("Argument 'apply_on' not one of (Brand, Detail, Item Code, Item Group) in function '_get_pricing_rules()'")
+		raise ValueError("Argument 'apply_on' not one of (Brand, Detail, Item Code, Item Group) in function '_get_pricing_rules()'")
 	if not args.transaction_type:
 		raise ValueError("Missing mandatory args key = 'transaction_type'")
 
@@ -274,18 +337,21 @@ def get_other_conditions(conditions, values, args):
 
 	return conditions
 
-def filter_pricing_rules(args, pricing_rules, doc=None):
+def filter_pricing_rules(args, pricing_rules: object, doc=None) -> list:
 	"""
 	Datahenge: Given a List 'pricing_rules', which ones apply under the conditions of args + doc?
-
-	Called -only- by JavaScript (to the best of my knowledge)
 	"""
-
+	# Datahenge: Let's complain if the function is calling without arguments:
+	if not pricing_rules:
+		raise RuntimeError("Why call function filter_pricing_rules() without passing any 'pricing_rules'?")
 	# validate_args_schema_PY1(doc, args)  # need to ensure that arg contains enough information.
 
 	args["for_shopping_cart"] = True  # DH (28 March) For the purpose of price calculations, this argument avoids conflicts due to lack of Priority.
 
-	if not isinstance(pricing_rules, list):
+	if isinstance(pricing_rules, list):
+		dh_original_type = "List"
+	else:
+		dh_original_type = "Other"
 		pricing_rules = [pricing_rules]
 	original_pricing_rule = copy.copy(pricing_rules)
 
@@ -317,7 +383,9 @@ def filter_pricing_rules(args, pricing_rules, doc=None):
 		if pricing_rules[0].apply_rule_on_other and not pricing_rules[0].mixed_conditions and doc:
 			pricing_rules = get_qty_and_rate_for_other_item(doc, pr_doc, pricing_rules) or []
 		else:
+			# NOTE: Very important, this is where Min_Qty, Max_Qty, Min_Amt, and Max_Amt are applied:
 			pricing_rules = filter_pricing_rules_for_qty_amount(stock_qty, amount, pricing_rules, args)
+			# The 'pricing_rules' list could possibly be empty now.
 
 		if not pricing_rules:
 			for d in original_pricing_rule:
@@ -357,9 +425,22 @@ def filter_pricing_rules(args, pricing_rules, doc=None):
 	elif pricing_rules:
 		return pricing_rules[0]
 
+	# Datahenge: Explicit is better than implicit!
+	if dh_original_type == "List":
+		return []
+	return None
+
 def validate_quantity_and_amount_for_suggestion(args, qty, amount, item_code, transaction_type):
+	"""
+	Datahenge: Not sure about this?  Where is this called from, when, why?
+	"""
+
+	# frappe.whatis("Entering function validate_quantity_and_amount_for_suggestion()")
 	fieldname, msg = '', ''
 	type_of_transaction = 'purchase' if transaction_type == 'buying' else 'sale'
+
+	# DH : 1 of only 2 places in ERPNext that worry about Pricing Rule Minimum Quantity
+	# frappe.whatis("1 of only 2 places in ERPNext that worry about Pricing Rule Minimum Quantity")
 
 	for field, value in {'min_qty': qty, 'min_amt': amount}.items():
 		if (args.get(field) and value < args.get(field)
@@ -384,10 +465,20 @@ def validate_quantity_and_amount_for_suggestion(args, qty, amount, item_code, tr
 
 	return msg
 
-def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
+def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None, debug=True):
+	"""
+	Datahenge:
+	NOTE: This is the only function in all of Pricing that pays attention to 'min_qty'
+	"""
+
 	rules = []
 
+	if debug:
+		print(f"\nValidating {len(pricing_rules)} pricing rule for Quantity and Amount.")
+
 	for rule in pricing_rules:
+		if debug:
+			print(f"    Checking rule {rule['name']} ...")
 		status = False
 		conversion_factor = 1
 
@@ -400,8 +491,12 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 		if rule.get("uom"):
 			conversion_factor = get_conversion_factor(rule.item_code, rule.uom).get("conversion_factor", 1)
 
+		# DH : 2 of only 2 places in ERPNext that worry about Pricing Rule Minimum Quantity
 		if (flt(qty) >= (flt(rule.min_qty) * conversion_factor)
 			and (flt(qty)<= (rule.max_qty * conversion_factor) if rule.max_qty else True)):
+
+			if debug:
+				print(f"Rule '{rule['name']}' successfully meets the Min and Max quantity validation")
 			status = True
 
 		# if user has created item price against the transaction UOM
@@ -415,7 +510,12 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 			status = False
 
 		if status:
+			if debug:
+				print(f"Appending rule {rule.get('name')}")
 			rules.append(rule)
+		else:
+			if debug:
+				print(f"    Warning: Rule '{rule['name']}' did NOT meet the Min and Max quantity validation.")
 
 	return rules
 
@@ -534,9 +634,10 @@ def apply_pricing_rule_on_transaction(doc):
 	"""
 	Called By:  erpnext.controllers.accounts_controller.py
 	"""
-	# Datahenge: No longer used by Daily Orders; they have their own code.
-	if doc.doctype == 'Daily Order':
-		raise Exception("Daily Orders should not call standard ERPNext 'apply_pricing_rule_on_transaction'")
+	# Datahenge: No longer used by Daily Orders; they have their own code in ftp/utilities.
+	if doc and doc.doctype == 'Daily Order':
+		raise RuntimeError("Daily Orders should not call standard ERPNext 'apply_pricing_rule_on_transaction'")
+
 	conditions = "apply_on = 'Transaction'"
 
 	values = {}

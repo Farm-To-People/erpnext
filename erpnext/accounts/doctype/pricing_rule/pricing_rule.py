@@ -450,7 +450,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 	})
 
 	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules,
-	#                       then return the price information for all Lines.
+	#                          then return the price information for all Lines.
 	if args.ignore_pricing_rule or not args.item_code:
 		frappe.dprint(f"* Warning: 'ignore_pricing_rule' is set for Order Line {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 		if frappe.db.exists(args.doctype, args.name) and args.get("pricing_rules"):
@@ -474,7 +474,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 													args.get('item_code'))
 		return item_details
 
-	applied_rules = []  # originally named 'rules' in standard code.
+	applied_rules = []  # originally named 'rules' in standard code, which was confusing af.
 
 	for index, pricing_rule in enumerate(pricing_rules):
 
@@ -543,10 +543,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 			continue
 		# ------------------------------------
 
-		item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0)
+		item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0)  # Doesn't make much sense, since 'item_details' is not Pricing Rule specific.
 		item_details.price_or_product_discount = pricing_rule.get("price_or_product_discount")
 
-		applied_rules.append(get_pricing_rule_details(args, pricing_rule))
+		applied_rules.append(get_pricing_rule_details(args, pricing_rule))  # Append a Dictionary to the 'applied_rules' List.  No logic, very simple.
 
 		if pricing_rule.mixed_conditions or pricing_rule.apply_rule_on_other:
 			item_details.update({
@@ -558,7 +558,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 
 		if not pricing_rule.validate_applied_rule:
 			if pricing_rule.price_or_product_discount == "Price":
-				apply_price_discount_rule(pricing_rule, item_details, args)
+				apply_price_discount_rule(pricing_rule, item_details, args)  # Do some stuff????
 			else:
 				get_product_discount_rule(pricing_rule, item_details, args, doc)
 
@@ -571,7 +571,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):  # pylint: di
 		item_details.margin_type = None
 		item_details.margin_rate_or_amount = 0.0
 
-	item_details.has_pricing_rule = 1
+	# item_details.has_pricing_rule = 1  # Datahenge: absolutely pointless variable assignment.
 	item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in applied_rules])
 
 	frappe.dprint(f"\nReturning variable 'item_details' to caller:\n{item_details}", check_env='FTP_DEBUG_PRICING_RULE')
@@ -609,7 +609,10 @@ def update_args_for_pricing_rule(args):
 		args.supplier_group = frappe.get_cached_value("Supplier", args.supplier, "supplier_group")
 		args.customer = args.customer_group = args.territory = None
 
-def get_pricing_rule_details(args, pricing_rule):
+def get_pricing_rule_details(args, pricing_rule) -> frappe._dict:
+	"""
+	Another really poor function name.  It's just creating a dictionary, without "getting" anything new.
+	"""
 	return frappe._dict({
 		'pricing_rule': pricing_rule.name,
 		'rate_or_discount': pricing_rule.rate_or_discount,
@@ -619,9 +622,13 @@ def get_pricing_rule_details(args, pricing_rule):
 	})
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
+	"""
+	DH: Modifies the mutable 'item_details' object in place.
+	"""
 	frappe.dprint("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...", check_env='FTP_DEBUG_PRICING_RULE')
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
+	# Margin logic:
 	if ((pricing_rule.margin_type in ['Amount', 'Percentage'] and pricing_rule.currency == args.currency)
 			or (pricing_rule.margin_type == 'Percentage')):
 		item_details.margin_type = pricing_rule.margin_type
