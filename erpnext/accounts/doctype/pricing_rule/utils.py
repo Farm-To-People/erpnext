@@ -465,7 +465,7 @@ def validate_quantity_and_amount_for_suggestion(args, qty, amount, item_code, tr
 
 	return msg
 
-def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None, debug=True):
+def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None, debug=False):
 	"""
 	Datahenge:
 	NOTE: This is the only function in all of Pricing that pays attention to 'min_qty'
