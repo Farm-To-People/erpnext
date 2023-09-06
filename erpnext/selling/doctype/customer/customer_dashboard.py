@@ -13,7 +13,8 @@ def get_data():
 			'Quotation': 'party_name',
 			'Opportunity': 'party_name',
 			'Bank Account': 'party',
-			'Subscription': 'party'
+			'Subscription': 'party',
+			'Item Favorites': 'customer_key'
 		},
 		'dynamic_links': {
 			'party_name': ['Customer', 'quotation_to']
@@ -25,7 +26,7 @@ def get_data():
 			#},
 			{
 				'label': _('Website'),
-				'items': ['Auth User']
+				'items': ['Auth User', 'Item Favorites']
 			},
 			{
 				'label': _('Orders'),

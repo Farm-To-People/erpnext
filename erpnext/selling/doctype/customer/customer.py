@@ -133,7 +133,7 @@ class Customer(TransactionBase):
 				frappe.bold(self.represents_company)))
 
 	def on_update(self):
-		from ftp.ftp_module.doctype.customer_holds import customer_holds  # Important: Late Import due to Circular Reference
+		from ftp.ftp_module.doctype.customer_holds.customer_holds import CustomerHolds  # Important: Late Import due to Circular Reference
 
 		self.validate_name_with_customer_group()
 		# Datahenge: Disabling these 2 features.  They don't help, but rather, create extraneous, junk data.
@@ -152,7 +152,7 @@ class Customer(TransactionBase):
 		# Farm To People
 		if self.customer_holds_changed():
 			# If any Holds modified, update all related orders
-			customer_holds._update_daily_orders(self.name)  # pylint: disable=protected-access
+			CustomerHolds._update_daily_orders(self.name)  # pylint: disable=protected-access
 
 		self.update_order_shipping_rules()  # if default Shipping Rule modified, update all related Orders.
 
