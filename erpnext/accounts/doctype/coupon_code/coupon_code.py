@@ -70,6 +70,42 @@ class CouponCode(Document):
 		"""
 		# TODO: Make it so.
 
+	def for_nth_order_position(self) -> int:
+		"""
+		Is this coupon code associated with an Nth Order Only pricing rule?
+		"""
+
+		query = """
+			SELECT
+				Coupon.name
+				,PricingRule.name
+				,PricingRule.nth_order_only
+			FROM
+				`tabCoupon Code`		AS Coupon
+				
+			INNER JOIN
+				`tabCoupon Code Pricing Rule`		AS PricingRuleMap
+			ON
+				PricingRuleMap.parenttype = 'Coupon Code'
+			AND PricingRuleMap.parent = Coupon.name
+
+			INNER JOIN
+				`tabPricing Rule`		AS PricingRule
+			ON
+				PricingRule.name = PricingRuleMap.pricing_rule
+			AND PricingRule.selling = 1
+			AND IFNULL(nth_order_only,0) > 0
+
+			WHERE
+				Coupon.coupon_code = %(coupon_code)s
+			LIMIT 1;
+		"""
+
+		results = frappe.db.sql(query, values={ "coupon_code": self.name }, as_dict=True)
+		if not results or not results[0]:
+			return None
+		return int(results[0]["nth_order_only"])
+
 # Yes, 'on_doctype_update' belongs here, outside the Document class.
 def on_doctype_update():
 	"""
