@@ -18,17 +18,6 @@ class ItemPrice(Document):
 		# Farm to People Rule : No Customer-Specific Pricing allowed in Item Price table.
 		# Not creating a separate flag "Deposit"; just use the new "Price Type"
 		self.customer = None
-		if self.item_price_type == 'Selling':
-			self.selling = True
-			self.buying = False
-
-		elif self.item_price_type == 'Buying':
-			self.selling = False
-			self.buying = True
-
-		elif self.item_price_type == 'Deposit':
-			self.selling = False
-			self.buying = False
 
 	def validate(self):
 		# FTP Rules for choosing which Price:
@@ -40,7 +29,13 @@ class ItemPrice(Document):
 		# self.validate_item()
 
 		self.validate_dates()
-		self.update_price_list_details()
+		self.update_price_list_details()  # <---- This can change the Buying and Selling booleans
+
+		if self.selling and self.item_price_type not in ('Selling', 'Deposit'):
+			frappe.throw(_("Mismatch between 'Price List' and 'Price Type'"))
+		elif self.buying and self.item_price_type != 'Buying':
+			frappe.throw(_("Mismatch between 'Price List' and 'Price Type'"))
+
 		self.update_item_details()
 		self.check_duplicates()  # standard Frappe function.
 		# self.validate_overlapping_prices_ftp()  # commented out July 2022, because it was causing headaches for FTP data entry.
