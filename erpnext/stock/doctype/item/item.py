@@ -98,7 +98,7 @@ class Item(WebsiteGenerator):
 
 		# FTP:  Do not allow pipes (|) in the Item Codes.  Pipes are used as key separators in Redis Inventory database.
 		if '|' in self.item_code:
-			raise Exception("The pipe character '|' is forbidden anywhere in the 'item_code' DocField.")
+			raise ValueError("The pipe character '|' is forbidden anywhere in the 'item_code' DocField.")
 
 		if not self.item_name:
 			self.item_name = self.item_code
@@ -152,6 +152,19 @@ class Item(WebsiteGenerator):
 			self.old_website_item_groups = frappe.db.sql_list("""select item_group
 					from `tabWebsite Item Group`
 					where parentfield='website_item_groups' and parenttype='Item' and parent=%s""", self.name)
+
+		self.validate_website_item_groups()
+
+
+	def validate_website_item_groups(self):
+
+		number_of_primary_groups = len([ each for each in self.website_item_groups if each.is_priority ])
+		if number_of_primary_groups > 1:
+			frappe.throw(_("Only 1 Website Item Group can be marked as 'Is Priority'"))
+		# TODO: Enable this later after the feature launches
+		#if number_of_primary_groups == 0:
+		#	raise ValueError("Item does not have a Website Item Group marked with 'Is Priority'.")
+
 
 	def on_update(self):
 		invalidate_cache_for_item(self)
