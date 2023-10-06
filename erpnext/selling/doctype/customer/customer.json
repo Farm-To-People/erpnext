@@ -595,7 +595,8 @@
    "fieldname": "dbp_login_id",
    "fieldtype": "Data",
    "label": "DBP Login",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "description": "If set, this overrides the default Global and Customer Group rule.",
@@ -647,7 +648,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2023-05-09 18:00:21.579193",
+ "modified": "2023-10-05 17:03:51.486986",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
