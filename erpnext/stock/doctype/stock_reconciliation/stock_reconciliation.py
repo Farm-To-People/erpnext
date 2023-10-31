@@ -2,18 +2,25 @@
 # License: GNU General Public License v3. See license.txt
 
 from __future__ import unicode_literals
-import frappe, erpnext
+
+import frappe
 import frappe.defaults
 from frappe import msgprint, _
 from frappe.utils import cstr, flt, cint
+
+import erpnext
 from erpnext.controllers.stock_controller import StockController
 from erpnext.accounts.utils import get_company_default
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
-from erpnext.stock.utils import get_stock_balance, get_incoming_rate, get_available_serial_nos
+from erpnext.stock.utils import get_stock_balance #, get_incoming_rate, get_available_serial_nos
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 
-class OpeningEntryAccountError(frappe.ValidationError): pass
-class EmptyStockReconciliationItemsError(frappe.ValidationError): pass
+# pylint: disable=protected-access
+
+class OpeningEntryAccountError(frappe.ValidationError):
+	pass
+class EmptyStockReconciliationItemsError(frappe.ValidationError):
+	pass
 
 class StockReconciliation(StockController):
 	def __init__(self, *args, **kwargs):
@@ -37,6 +44,10 @@ class StockReconciliation(StockController):
 		if self._action=="submit":
 			self.make_batches('warehouse')
 
+	def before_submit(self):
+		pass
+		# TODO Would be great to lock some Tables if this is an Inventory Close
+
 	def on_submit(self):
 		self.update_stock_ledger()
 		self.make_gl_entries()
@@ -51,8 +62,62 @@ class StockReconciliation(StockController):
 		self.make_gl_entries_on_cancel()
 		self.repost_future_sle_and_gle()
 
+	@frappe.whitelist()
+	def add_additional_items(self, quantity: int):
+
+		if not isinstance(quantity, int):
+			raise TypeError("Expected an integer.")
+
+		frappe.msgprint("Querying for Items with most Stock Ledger activity ...")
+		query = f"""
+			SELECT item_code, warehouse, count(*) FROM
+			`tabStock Ledger Entry`
+			GROUP BY item_code, warehouse
+			ORDER BY count(*) DESC
+			LIMIT {quantity}
+		"""
+
+		results = frappe.db.sql(query, as_dict=True, debug=True)
+
+		for each in results:
+			print(f"Querying stock balance for Item {each.item_code} ...")
+			data = get_stock_balance_for(each.item_code,
+			                             each.warehouse,
+										 self.posting_date,
+										 self.posting_time)
+
+			if data["qty"] < 0:
+				data["qty"] = 0
+
+			self.append("items", {
+				"item_code": each["item_code"],
+				"warehouse": each["warehouse"],
+				"qty": data["qty"],
+				"valuation_rate": data["rate"]
+			})
+		self.save()
+		frappe.msgprint("Finished!")
+
+
+	@frappe.whitelist()
+	def archive_stock_ledger_entry(self):
+		"""
+		Callable via button on Stock Ledger Entry web page.
+		"""
+
+		frappe.enqueue("erpnext.stock.doctype.stock_reconciliation.stock_reconciliation._archive_stock_ledger_entry",
+		               queue="long",
+		               doc_stock_recon=self,
+					   timeout=36000)
+
 	def remove_items_with_no_change(self):
-		"""Remove items if qty or rate is not changed"""
+		"""
+		Remove items if qty or rate is not changed.
+		"""
+
+		if self.purpose == "Inventory Closing":  # DH - It's normal for an Inventory Closing to not change Quantity and Value.
+			return
+
 		self.difference_amount = 0.0
 		def _changed(item):
 			item_dict = get_stock_balance_for(item.item_code, item.warehouse,
@@ -90,8 +155,8 @@ class StockReconciliation(StockController):
 
 		elif len(items) != len(self.items):
 			self.items = items
-			for i, item in enumerate(self.items):
-				item.idx = i + 1
+			for index, item in enumerate(self.items):
+				item.idx = index + 1
 			frappe.msgprint(_("Removed items with no change in quantity or value."))
 
 	def validate_data(self):
@@ -118,8 +183,12 @@ class StockReconciliation(StockController):
 			self.validate_item(row.item_code, row)
 
 			# validate warehouse
-			if not frappe.db.get_value("Warehouse", row.warehouse):
+			# DH - Adding some additional Warehouse validation.
+			warehouse_key, is_group = frappe.db.get_value("Warehouse", row.warehouse, fieldname=["name", "is_group"])
+			if not warehouse_key:
 				self.validation_messages.append(_get_msg(row_num, _("Warehouse not found in the system")))
+			if is_group:
+				self.validation_messages.append(_get_msg(row_num, _("Warehouse should not be a Group.")))
 
 			# if both not specified
 			if row.qty in ["", None] and row.valuation_rate in ["", None]:
@@ -181,8 +250,8 @@ class StockReconciliation(StockController):
 			# docstatus should be < 2
 			validate_cancelled_item(item_code, item.docstatus)
 
-		except Exception as e:
-			self.validation_messages.append(_("Row #") + " " + ("%d: " % (row.idx)) + cstr(e))
+		except Exception as ex:
+			self.validation_messages.append(_("Row #") + " " + ("%d: " % (row.idx)) + cstr(ex))
 
 	def update_stock_ledger(self):
 		"""	find difference between current and expected entries
@@ -225,7 +294,7 @@ class StockReconciliation(StockController):
 				if ((previous_sle and row.qty == previous_sle.get("qty_after_transaction")
 					and (row.valuation_rate == previous_sle.get("valuation_rate") or row.qty == 0))
 					or (not previous_sle and not row.qty)):
-						continue
+					continue
 
 				sl_entries.append(self.get_sle_for_items(row))
 
@@ -314,7 +383,8 @@ class StockReconciliation(StockController):
 
 	def update_valuation_rate_for_serial_no(self):
 		for d in self.items:
-			if not d.serial_no: continue
+			if not d.serial_no:
+				continue
 
 			serial_nos = get_serial_nos(d.serial_no)
 			self.update_valuation_rate_for_serial_nos(d, serial_nos)
@@ -324,8 +394,8 @@ class StockReconciliation(StockController):
 		if valuation_rate is None:
 			return
 
-		for d in serial_nos:
-			frappe.db.set_value("Serial No", d, 'purchase_rate', valuation_rate)
+		for each in serial_nos:
+			frappe.db.set_value("Serial No", each, 'purchase_rate', valuation_rate)
 
 	def get_sle_for_items(self, row, serial_nos=None):
 		"""Insert Stock Ledger Entries"""
@@ -333,7 +403,7 @@ class StockReconciliation(StockController):
 		if not serial_nos and row.serial_no:
 			serial_nos = get_serial_nos(row.serial_no)
 
-		data = frappe._dict({
+		data = frappe._dict({  # pylint: disable=protected-access
 			"doctype": "Stock Ledger Entry",
 			"item_code": row.item_code,
 			"warehouse": row.warehouse,
@@ -405,7 +475,7 @@ class StockReconciliation(StockController):
 
 			key = (d.item_code, d.warehouse)
 			if key not in merge_similar_entries:
-				d.total_amount = (d.actual_qty * d.valuation_rate)
+				d.total_amount = d.actual_qty * d.valuation_rate
 				merge_similar_entries[key] = d
 			elif d.serial_no:
 				data = merge_similar_entries[key]
@@ -423,7 +493,7 @@ class StockReconciliation(StockController):
 
 		return new_sl_entries
 
-	def get_gl_entries(self, warehouse_account=None):
+	def get_gl_entries(self, warehouse_account=None, default_expense_account=None, default_cost_center=None):
 		if not self.cost_center:
 			msgprint(_("Please enter Cost Center"), raise_exception=1)
 
@@ -455,13 +525,13 @@ class StockReconciliation(StockController):
 
 
 	def set_total_qty_and_amount(self):
-		for d in self.get("items"):
-			d.amount = flt(d.qty, d.precision("qty")) * flt(d.valuation_rate, d.precision("valuation_rate"))
-			d.current_amount = (flt(d.current_qty,
-				d.precision("current_qty")) * flt(d.current_valuation_rate, d.precision("current_valuation_rate")))
+		for row in self.get("items"):
+			row.amount = flt(row.qty, row.precision("qty")) * flt(row.valuation_rate, row.precision("valuation_rate"))
+			row.current_amount = (flt(row.current_qty,
+				row.precision("current_qty")) * flt(row.current_valuation_rate, row.precision("current_valuation_rate")))
 
-			d.quantity_difference = flt(d.qty) - flt(d.current_qty)
-			d.amount_difference = flt(d.amount) - flt(d.current_amount)
+			row.quantity_difference = flt(row.qty) - flt(row.current_qty)
+			row.amount_difference = flt(row.amount) - flt(row.current_amount)
 
 	def get_items_for(self, warehouse):
 		self.items = []
@@ -564,7 +634,7 @@ def get_itemwise_batch(warehouse, posting_date, company, item_code=None):
 	if item_code:
 		filters.item_code = item_code
 
-	columns, data = execute(filters)
+	unused_columns, data = execute(filters)  # pylint: disable=unused-variable
 
 	for row in data:
 		itemwise_batch_data.setdefault(row[0], []).append(frappe._dict({
@@ -613,3 +683,70 @@ def get_difference_account(purpose, company):
 			'company': company, 'account_type': 'Temporary'}, 'name')
 
 	return account
+
+
+def _archive_stock_ledger_entry(doc_stock_recon):
+	"""
+	Try to archive some rows in Stock Ledger Entry.
+	"""
+
+	source_database_name = frappe.db.db_name
+
+	archive_statement = f"""
+
+		INSERT INTO archive.`tabStock Ledger Entry`
+
+		(name, creation, modified, modified_by, owner, docstatus, parent, parentfield, parenttype, idx, item_code, 
+		 warehouse, posting_date, posting_time, voucher_type, voucher_no, voucher_detail_no, dependant_sle_voucher_detail_no, 
+		 recalculate_rate, actual_qty, qty_after_transaction, incoming_rate, outgoing_rate, valuation_rate, stock_value, 
+		 stock_value_difference, stock_queue, company, stock_uom, project, batch_no, fiscal_year, serial_no, is_cancelled, 
+		 to_rename, `_user_tags`, `_comments`, `_assign`, `_liked_by`)
+
+		SELECT
+			StockLedgerEntry.*
+		FROM {source_database_name}.`tabStock Ledger Entry`		AS StockLedgerEntry
+
+		LEFT JOIN 
+			archive.`tabStock Ledger Entry`	AS Archive
+		ON
+			Archive.name = StockLedgerEntry.name
+
+		WHERE
+			StockLedgerEntry.item_code = %(item_code)s
+		AND StockLedgerEntry.warehouse = %(warehouse)s			
+		AND StockLedgerEntry.voucher_no != %(voucher_number)s
+		AND Archive.name IS NULL
+	"""
+
+	# Deletes any Stock Ledger Entry that exists in the archive.
+	delete_statement = f"""
+		DELETE StockLedgerEntry
+		FROM {source_database_name}.`tabStock Ledger Entry` 			AS StockLedgerEntry
+		INNER JOIN archive.`tabStock Ledger Entry` 		AS Archive
+		ON Archive.name = StockLedgerEntry.name
+	"""
+
+	voucher_number = doc_stock_recon.name
+
+	for each_row in doc_stock_recon.items:
+
+		try:
+			values = {
+				"item_code": each_row.item_code,
+				"warehouse": each_row.warehouse,
+				"voucher_number": voucher_number,
+			}
+
+			# Archive
+			frappe.db.sql(archive_statement, values=values, debug=True)
+			print(f"Finished archiving item {each_row.item_code}, warehouse {each_row.warehouse}")
+
+			# Delete
+			frappe.db.sql(delete_statement, values=values)
+			print(f"Finished deleting item {each_row.item_code}, warehouse {each_row.warehouse}")
+
+			frappe.db.commit()
+
+		except Exception as ex:
+			frappe.db.rollback()
+			raise ex

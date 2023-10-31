@@ -50,6 +50,21 @@ frappe.ui.form.on("Stock Reconciliation", {
 			});
 		}
 
+		// New button to Archive the stock ledger entry rows.
+		if(frm.doc.docstatus == 1 && frm.doc.purpose == "Inventory Closing") {
+
+			frm.add_custom_button(__("Archive Stock Ledger"), function() {
+				frm.events.archive_stock_ledger(frm);
+			});
+		}
+
+		// New button to Add more item rows.
+		if(frm.doc.docstatus == 0 && frm.doc.purpose == "Inventory Closing") {
+			frm.add_custom_button(__("Add More Items"), function() {			
+				frm.events.add_more_items(frm);
+			});
+		}
+
 		if(frm.doc.company) {
 			frm.trigger("toggle_display_account_head");
 		}
@@ -87,7 +102,9 @@ frappe.ui.form.on("Stock Reconciliation", {
 					item_code: data.item_code
 				},
 				callback: function(r) {
-					frm.clear_table("items");
+					if (frm.doc.purpose != "Inventory Closing") {
+						frm.clear_table("items");  // DH - Learned about a new method
+					}
 					for (var i=0; i<r.message.length; i++) {
 						var d = frm.add_child("items");
 						$.extend(d, r.message[i]);
@@ -104,6 +121,49 @@ frappe.ui.form.on("Stock Reconciliation", {
 				}
 			});
 		}, __("Get Items"), __("Update"));
+	},
+
+	add_more_items: function(frm) {
+	
+		let fields = [{
+			label: "Quantity", 
+			fieldname: "quantity",
+			fieldtype: "Int",
+		}];	
+
+		frappe.prompt(fields, function(data) {
+			frappe.call({
+				doc: frm.doc,
+				args: {
+					quantity: data.quantity,
+				},
+				method: "add_additional_items",
+				callback: function(r) {
+					frm.reload_doc();
+				}
+			})
+		}, __("Add More Items"), __("Add"));
+	},
+
+	archive_stock_ledger: function(frm) {
+		let fields = [{
+			label: "Warning", 
+			fieldname: "warning_field",
+			fieldtype: "Text",
+			default_value: "Foo",
+			options: "Foo",
+			read_only: 1
+		}];
+
+		frappe.prompt(fields, function(data) {
+			frappe.call({
+				doc: frm.doc,
+				method: "archive_stock_ledger_entry",
+				callback: function(r) {
+					frappe.msgprint("Archive task is enqueued.")
+				}
+			});
+		}, __("Choose Item"), __("Archive"));
 	},
 
 	posting_date: function(frm) {

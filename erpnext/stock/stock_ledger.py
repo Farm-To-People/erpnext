@@ -802,6 +802,8 @@ def get_previous_sle_of_current_voucher(args, exclude_current_voucher=False):
 	if not args_clone.get("posting_time"):
 		args_clone["posting_time"] = "00:00:00"
 	elif isinstance(args_clone['posting_time'], str):
+		if '.' not in args_clone['posting_time']:
+			args_clone['posting_time'] += '.000'
 		posting_time = datetime.datetime.strptime(args_clone["posting_time"], python_time_format)
 		args_clone["posting_time"] = datetime.timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
 
