@@ -254,8 +254,10 @@ class StockReconciliation(StockController):
 			self.validation_messages.append(_("Row #") + " " + ("%d: " % (row.idx)) + cstr(ex))
 
 	def update_stock_ledger(self):
-		"""	find difference between current and expected entries
-			and create stock ledger entries based on the difference"""
+		"""
+		Find difference between current and expected entries;
+		Create stock ledger entries based on the difference
+		"""
 		from erpnext.stock.stock_ledger import get_previous_sle
 
 		sl_entries = []
@@ -289,12 +291,16 @@ class StockReconciliation(StockController):
 						row.valuation_rate = previous_sle.get("valuation_rate", 0)
 
 				if row.qty and not row.valuation_rate and not row.allow_zero_valuation_rate:
-					frappe.throw(_("Valuation Rate required for Item {0} at row {1}").format(row.item_code, row.idx))
+					if self.purpose != "Inventory Closing":
+						frappe.throw(_("Valuation Rate required for Item {0} at row {1}").format(row.item_code, row.idx))
 
 				if ((previous_sle and row.qty == previous_sle.get("qty_after_transaction")
 					and (row.valuation_rate == previous_sle.get("valuation_rate") or row.qty == 0))
 					or (not previous_sle and not row.qty)):
-					continue
+
+					# DH - Even if the Quantity and Value are *identical*, importan an SLE is created for Inventory Closing.
+					if self.purpose != "Inventory Closing":
+						continue
 
 				sl_entries.append(self.get_sle_for_items(row))
 
