@@ -728,7 +728,7 @@ def _archive_stock_ledger_entry(doc_stock_recon):
 	delete_statement = f"""
 		DELETE StockLedgerEntry
 		FROM {source_database_name}.`tabStock Ledger Entry` 			AS StockLedgerEntry
-		INNER JOIN archive.`tabStock Ledger Entry` 		AS Archive
+		INNER JOIN archive.`tabStock Ledger Entry` 		AS Archive		USE INDEX (PRIMARY)
 		ON Archive.name = StockLedgerEntry.name
 	"""
 
