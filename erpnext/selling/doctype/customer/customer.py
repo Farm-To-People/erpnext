@@ -750,6 +750,34 @@ class Customer(Customer):  # pylint: disable=function-redefined
 	# However, it's a rather nice technique for extend the standard Customer Class without
 	# intermingles the code above, which does make Git Diff more difficult to reconcile.
 
+	@staticmethod
+	def get_key_by_email_address(email_address: str) -> str:
+		"""
+		Returns either a Customer 'name', or None.
+		"""
+		if not email_address:
+			raise ValueError("Function argument 'email_address' is mandatory.")
+		email_address = email_address.strip().lower()  # Datahenge: Enforce lowercase email addresses.
+		customer_keys = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
+		if (not customer_keys) or (not customer_keys[0]):
+			return None
+		return customer_keys[0]
+
+	@staticmethod
+	def get_customer_by_emailid(email_address, err_on_missing=False):
+		"""
+		Find a Customer based on email address.
+		"""
+		if email_address:
+			email_address = email_address.strip().lower()  # Datahenge: Enforce lowercase email addresses.
+		customer_key = Customer.get_key_by_email_address(email_address)
+		if not customer_key:
+			if err_on_missing:
+				frappe.throw(_(f"No customer found with email address = '{email_address}'"))
+			return None
+
+		return frappe.get_doc("Customer", customer_key)
+
 	def on_change(self):
 
 		# FTP: If customer's name changed, then update Web Subscription names
@@ -822,39 +850,12 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		if (not self.is_anon()) and (not self.get_referral_code()):
 			self.reset_referral_code()
 
-
 	def on_update(self):
 		# Note: Parent's update may (or may not) have involved some CRUD on Child Tables.
 		super().on_update()
 		self.on_update_children(child_docfield_name='pauses')
 
-	@staticmethod
-	def get_key_by_email_address(email_address: str) -> str:
-		"""
-		Returns either a Customer 'name', or None.
-		"""
-		if not email_address:
-			raise ValueError("Function argument 'email_address' is mandatory.")
-		email_address = email_address.strip().lower()  # Datahenge: Enforce lowercase email addresses.
-		customer_keys = frappe.db.get_all("Customer", filters=[ {"email_id": email_address} ], pluck='name', update=False)
-		if (not customer_keys) or (not customer_keys[0]):
-			return None
-		return customer_keys[0]
-
-	@staticmethod
-	def get_customer_by_emailid(email_address, err_on_missing=False):
-		"""
-		Find a Customer based on email address.
-		"""
-		if email_address:
-			email_address = email_address.strip().lower()  # Datahenge: Enforce lowercase email addresses.
-		customer_key = Customer.get_key_by_email_address(email_address)
-		if not customer_key:
-			if err_on_missing:
-				frappe.throw(_(f"No customer found with email address = '{email_address}'"))
-			return None
-
-		return frappe.get_doc("Customer", customer_key)
+	# End of Standard Controller Methods
 
 	def is_anon(self):
 		"""
@@ -900,19 +901,6 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			row['amount'] = value_to_currency(row['amount'])
 		return query_result
 
-	@frappe.whitelist()
-	def show_accounts_receivable_summary(self):
-		"""
-		Return a lightly formatted message, showing a Customer's AR Balance.
-		This message does --not-- include a breakdown about Credit Allocations to Daily Orders.
-		"""
-		balance_per_gl = self.get_ar_balance_per_gl()
-		message = "<b>Accounts Receivable</b>"
-		message += f"\n{self.customer_name}&nbsp;({self.name})\n"
-		message += ar_summary_to_html(self.calc_ar_summary_by_type(), balance_per_gl)
-		message = message.replace("\n","<br>")
-		return message
-
 	def customer_holds_changed(self):
 		"""
 		Try to determine if the Customer Holds child table was modified.
@@ -941,6 +929,19 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			if any_to_date(row.to_date) != any_to_date(holds_orig[idx].to_date):
 				return True
 		return False
+
+	@frappe.whitelist()
+	def show_accounts_receivable_summary(self):
+		"""
+		Return a lightly formatted message, showing a Customer's AR Balance.
+		This message does --not-- include a breakdown about Credit Allocations to Daily Orders.
+		"""
+		balance_per_gl = self.get_ar_balance_per_gl()
+		message = "<b>Accounts Receivable</b>"
+		message += f"\n{self.customer_name}&nbsp;({self.name})\n"
+		message += ar_summary_to_html(self.calc_ar_summary_by_type(), balance_per_gl)
+		message = message.replace("\n","<br>")
+		return message
 
 	@frappe.whitelist()
 	def collect_daily_order_payments(self):
@@ -1115,6 +1116,49 @@ class Customer(Customer):  # pylint: disable=function-redefined
 					self.remove(pause_record)
 					break
 
+	def can_pause(self, pause_from_date, pause_to_date) -> bool:
+		"""
+		Can this customer pause all their open Orders?
+		"""
+		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
+
+		sql_query = """
+			SELECT
+				Header.customer
+				,Header.name
+				,Header.delivery_date
+				,Line.item_code
+			FROM
+				`tabDaily Order`	AS Header		USE INDEX (is_past_cutoff)
+			INNER JOIN
+				`tabDaily Order Item` AS Line		USE INDEX (parent_item_code_IDX)
+			ON
+				Line.parent = Header.name
+			INNER JOIN
+				`tabItem Sales Controls` 	AS ISC	USE INDEX (item_code)
+			ON
+				ISC.item_code = Line.item_code
+
+			WHERE
+				Header.is_past_cutoff = 0
+			AND Header.customer = %(customer_key)s
+			AND Header.delivery_date BETWEEN %(pause_from_date)s AND %(pause_to_date)s
+			AND ISC.disable_item_removal = 1	
+		"""
+
+		filters = {
+			"customer_key": self.name,
+			"pause_from_date": pause_from_date,
+			"pause_to_date": pause_to_date
+		}
+		results = frappe.db.sql(sql_query, values=filters)
+		if results and results[0]:
+			return Result(False, "Orders exist with non-removable items.")
+		return Result(True, "")
+
+
+	def can_unpause(self):
+		pass
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
