@@ -1156,9 +1156,45 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			return Result(False, "Orders exist with non-removable items.")
 		return Result(True, "")
 
+	def can_unpause(self, pause_from_date, pause_to_date) -> bool:
 
-	def can_unpause(self):
-		pass
+		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
+		from ftp.ftp_module.doctype.daily_order.skip_pause import can_unskip
+
+		sql_query = """
+			SELECT
+				Header.name		AS daily_order_key
+			FROM
+				`tabDaily Order`	AS Header		USE INDEX (is_past_cutoff)
+			INNER JOIN
+				`tabDaily Order Item` AS Line		USE INDEX (parent_item_code_IDX)
+			ON
+				Line.parent = Header.name
+			WHERE
+				Header.is_past_cutoff = 0
+			AND Header.customer = %(customer_key)s
+			AND Header.delivery_date BETWEEN %(pause_from_date)s AND %(pause_to_date)s
+		"""
+
+		filters = {
+			"customer_key": self.name,
+			"pause_from_date": pause_from_date,
+			"pause_to_date": pause_to_date
+		}
+		sql_results = frappe.db.sql(sql_query, values=filters, as_dict=True)
+
+		total_result = Result(True, "")
+		for each_order in sql_results:
+			daily_order_key = each_order["daily_order_key"]
+			doc_daily_order = frappe.get_doc("Daily Order", daily_order_key)
+			result = can_unskip(doc_daily_order)
+			if not result:
+				total_result.okay = False
+				for each_message in result.message:
+					total_result.append_message(each_message)
+
+		return total_result
+
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
