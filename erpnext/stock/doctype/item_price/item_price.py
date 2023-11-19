@@ -28,7 +28,7 @@ class ItemPrice(Document):
 		# Datahenge: Not sure why self.validate_item() is necessary, when we have built-in Link Validation.
 		# self.validate_item()
 
-		from ftp.ftp_invent import validate_uom_compatibility  # Late import due to Cross Module dependency.
+		from ftp.ftp_invent.redis.api import validate_uom_compatibility  # Late import due to Cross Module dependency.
 
 		self.validate_dates()
 		self.update_price_list_details()  # <---- This can change the Buying and Selling booleans
