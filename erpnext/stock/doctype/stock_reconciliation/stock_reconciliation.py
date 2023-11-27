@@ -691,7 +691,7 @@ def get_difference_account(purpose, company):
 	return account
 
 
-def _archive_stock_ledger_entry(doc_stock_recon):
+def _archive_stock_ledger_entry(doc_stock_recon, perform_deletion=False):
 	"""
 	Try to archive some rows in Stock Ledger Entry.
 	"""
@@ -748,8 +748,9 @@ def _archive_stock_ledger_entry(doc_stock_recon):
 			print(f"Finished archiving item {each_row.item_code}, warehouse {each_row.warehouse}")
 
 			# Delete
-			frappe.db.sql(delete_statement, values=values)
-			print(f"Finished deleting item {each_row.item_code}, warehouse {each_row.warehouse}")
+			if perform_deletion:
+				frappe.db.sql(delete_statement, values=values)
+				print(f"Finished deleting item {each_row.item_code}, warehouse {each_row.warehouse}")
 
 			frappe.db.commit()
 
