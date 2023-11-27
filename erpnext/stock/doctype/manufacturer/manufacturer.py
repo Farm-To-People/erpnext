@@ -11,3 +11,17 @@ class Manufacturer(Document):
 	def onload(self):
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
+
+
+	def on_update(self):
+		from ftp.ftp_sanity.manufacturer import update_producer
+		update_producer(self.name, self.full_name, self.location)
+		frappe.msgprint("Sanity updated successfully.")
+
+	@frappe.whitelist()
+	def get_sanity_record(self):
+		"""
+		Ask Sanity for data about this Manufacturer.
+		"""
+		from ftp.ftp_sanity.manufacturer import get_producer_by_key
+		return get_producer_by_key(self.name)

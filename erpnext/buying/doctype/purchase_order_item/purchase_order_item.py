@@ -7,7 +7,8 @@ import frappe
 from frappe.model.document import Document
 
 # FTP
-from ftp.ftp_invent.redis.api import try_update_redis_inventory, validate_uom_compatibility
+from ftp.ftp_invent import validate_uom_compatibility
+from ftp.ftp_invent.redis.api import try_update_redis_inventory
 
 class PurchaseOrderItem(Document):
 
