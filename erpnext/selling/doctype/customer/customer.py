@@ -1166,10 +1166,6 @@ class Customer(Customer):  # pylint: disable=function-redefined
 				Header.name		AS daily_order_key
 			FROM
 				`tabDaily Order`	AS Header		USE INDEX (is_past_cutoff)
-			INNER JOIN
-				`tabDaily Order Item` AS Line		USE INDEX (parent_item_code_IDX)
-			ON
-				Line.parent = Header.name
 			WHERE
 				Header.is_past_cutoff = 0
 			AND Header.customer = %(customer_key)s
