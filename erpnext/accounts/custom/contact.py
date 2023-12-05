@@ -17,7 +17,7 @@ class ERPNextContact(ContactType):
 			frappe.db.set_value("Customer", customer_key, 'mobile_no', self.mobile_no)
 
 		# Also cascade into Daily Orders:
-		self.update_daily_orders(verbose=True)
+		self.update_daily_orders(verbose=False)
 
 	def update_daily_orders(self, verbose=False):
 		# NOTE: This works nicely inside the ERPNext module, because we don't need to import FTP objects.
