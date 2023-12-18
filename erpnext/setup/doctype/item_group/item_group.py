@@ -44,6 +44,14 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 		self.validate_one_root()
 		self.delete_child_item_groups_key()
 
+	def on_change(self):
+		"""
+		Update Sanity whenever an Item Group is modified.
+		"""
+		from ftp.ftp_sanity.product_category import update_sanity_product_category
+		update_sanity_product_category(self)
+		frappe.msgprint("Sanity Category updated.")
+
 	def make_route(self):
 		'''Make website route'''
 		if not self.route:

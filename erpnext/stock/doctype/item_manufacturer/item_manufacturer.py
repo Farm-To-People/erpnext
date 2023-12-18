@@ -17,12 +17,12 @@ class ItemManufacturer(Document):
 		self.manage_default_item_manufacturer(delete=True)
 
 	def after_delete(self):
-		from ftp.sanity import update_sanity_by_item_code
-		update_sanity_by_item_code(self.item_code)
+		from ftp.ftp_sanity.manufacturer import update_sanity_producer  # Late import due to cross-module dependency
+		update_sanity_producer(self.item_code)
 
 	def on_change(self):
-		from ftp.sanity import update_sanity_by_item_code
-		update_sanity_by_item_code(self.item_code)
+		from ftp.ftp_sanity.manufacturer import update_sanity_producer  # Late import due to cross-module dependency
+		update_sanity_producer(self.item_code)
 
 	def validate_duplicate_entry(self):
 		if self.is_new():
