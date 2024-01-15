@@ -87,10 +87,7 @@
   "pauses",
   "ftp_custom_controls_section",
   "disable_order_minimum_emails",
-  "first_order_email_sent",
-  "column_break_78",
-  "sb_item_preferences",
-  "preferences"
+  "first_order_email_sent"
  ],
  "fields": [
   {
@@ -536,17 +533,6 @@
    "options": "Customer Holds"
   },
   {
-   "collapsible": 1,
-   "fieldname": "sb_item_preferences",
-   "fieldtype": "Section Break",
-   "label": "Item Preferences"
-  },
-  {
-   "fieldname": "preferences",
-   "fieldtype": "Table",
-   "options": "Customer Item Prefs"
-  },
-  {
    "description": "Instructions for driver to deliver products.",
    "fieldname": "delivery_instructions",
    "fieldtype": "Small Text",
@@ -621,10 +607,6 @@
    "label": "Disable Order Minimum Emails"
   },
   {
-   "fieldname": "column_break_78",
-   "fieldtype": "Column Break"
-  },
-  {
    "default": "0",
    "fieldname": "first_order_email_sent",
    "fieldtype": "Check",
@@ -648,7 +630,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2023-10-05 17:03:51.486986",
+ "modified": "2024-01-15 12:07:28.054592",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
