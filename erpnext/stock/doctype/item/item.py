@@ -179,11 +179,14 @@ class Item(WebsiteGenerator):
 		"""
 		# Late imports due to cross-module dependency:
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
+		from ftp.sanity import update_sanity_by_item_code  # LEGACY Sanity
 		from ftp.ftp_sanity.product import update_sanity_product
 
 		# Farm To People: Update redis after Item Price touched.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
-		update_sanity_product(self)
+
+		update_sanity_by_item_code(self.item_code)  # LEGACY
+		update_sanity_product(self) # New in January 2024
 
 	def validate_description(self):
 		'''Clean HTML description if set'''
