@@ -225,7 +225,7 @@ class DeliveryNote(SellingController):
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 		for each in self.items:
-			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Order has been cancelled.
+			try_update_redis_inventory(each.item_code, queue_name='short')  # update Redis after Purchase Order has been cancelled.
 
 	def on_cancel(self):
 		super(DeliveryNote, self).on_cancel()
@@ -247,7 +247,7 @@ class DeliveryNote(SellingController):
 		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry', 'Repost Item Valuation')
 
 		for each in self.items:
-			try_update_redis_inventory(each.item_code)  # update Redis after Purchase Order has been cancelled.
+			try_update_redis_inventory(each.item_code, queue_name='short')  # update Redis after Purchase Order has been cancelled.
 
 
 	def check_credit_limit(self):

@@ -18,11 +18,19 @@ class ItemManufacturer(Document):
 
 	def after_delete(self):
 		from ftp.ftp_sanity.manufacturer import update_sanity_producer  # Late import due to cross-module dependency
-		update_sanity_producer(self.item_code)
+		try:
+			update_sanity_producer(self.item_code)
+		except Exception as ex:
+			print(ex)
+			frappe.msgprint("Warning: Failed to update Producer in Sanity.")
 
 	def on_change(self):
 		from ftp.ftp_sanity.manufacturer import update_sanity_producer  # Late import due to cross-module dependency
-		update_sanity_producer(self.item_code)
+		try:
+			update_sanity_producer(self.item_code)
+		except Exception as ex:
+			print(ex)
+			frappe.msgprint("Warning: Failed to update Producer in Sanity.")
 
 	def validate_duplicate_entry(self):
 		if self.is_new():
