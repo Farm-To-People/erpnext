@@ -175,18 +175,19 @@ class Item(WebsiteGenerator):
 
 	def on_change(self):
 		"""
-		Should be happening after SQL transaction commit.
+		SQL may or may NOT be committed yet.
 		"""
 		# Late imports due to cross-module dependency:
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
+		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item
 		from ftp.sanity import update_sanity_by_item_code  # LEGACY Sanity
 		from ftp.ftp_sanity.product import update_sanity_product
 
 		# Farm To People: Update redis after Item is modified.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
-
 		update_sanity_by_item_code(self.item_code)  # LEGACY
-		update_sanity_product(self) # New in January 2024
+		update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
+		rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
 
 	def validate_description(self):
 		'''Clean HTML description if set'''
