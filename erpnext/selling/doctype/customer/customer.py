@@ -1122,12 +1122,12 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		from ftp.ftp_module.doctype.daily_order.skip_pause import can_pause as _can_pause
 		return _can_pause(self.name, pause_from_date, pause_to_date)
 
-	def can_unpause(self, pause_from_date, pause_to_date) -> bool:
+	def can_unpause(self, pause_from_date, pause_to_date) -> bool:  # pylint: disable=unused-argument
 		"""
-		Can this customer remove an existing Pause on their account?
+		Can an existing Pause/Hold be removed from a Customer's account?
 		"""
-		from ftp.ftp_module.doctype.daily_order.skip_pause import can_unpause as _can_unpause
-		return _can_unpause(self.name, pause_from_date, pause_to_date)
+		# February 15th 2024 - The answer is always True/Yes.  The caveat is if an entire Order has unavailable quantity, it will become Skipped.
+		return True
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
