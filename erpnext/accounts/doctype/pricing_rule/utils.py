@@ -435,12 +435,11 @@ def validate_quantity_and_amount_for_suggestion(args, qty, amount, item_code, tr
 	Datahenge: Not sure about this?  Where is this called from, when, why?
 	"""
 
-	# frappe.whatis("Entering function validate_quantity_and_amount_for_suggestion()")
 	fieldname, msg = '', ''
 	type_of_transaction = 'purchase' if transaction_type == 'buying' else 'sale'
 
 	# DH : 1 of only 2 places in ERPNext that worry about Pricing Rule Minimum Quantity
-	# frappe.whatis("1 of only 2 places in ERPNext that worry about Pricing Rule Minimum Quantity")
+	# print("1 of only 2 places in ERPNext that worry about Pricing Rule Minimum Quantity")
 
 	for field, value in {'min_qty': qty, 'min_amt': amount}.items():
 		if (args.get(field) and value < args.get(field)
