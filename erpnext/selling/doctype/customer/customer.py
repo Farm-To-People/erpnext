@@ -18,7 +18,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils.user import get_users_with_role
 from erpnext.utilities.transaction_base import TransactionBase
 from erpnext import get_default_company
-from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data # keep this
+from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data  # keep this pylint: disable=unused-import
 
 # pylint: disable=consider-using-f-string
 
@@ -1119,7 +1119,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 		"""
 		Can this customer apply a range of pause dates?
 		"""
-		from ftp.ftp_module.doctype.daily_order.skip_pause import can_pause as _can_pause
+		from ftp.ftp_module.doctype.daily_order.pause_skip.pause import can_pause as _can_pause
 		return _can_pause(self.name, pause_from_date, pause_to_date)
 
 	def can_unpause(self, pause_from_date, pause_to_date) -> bool:  # pylint: disable=unused-argument
