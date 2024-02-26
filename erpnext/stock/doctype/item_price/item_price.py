@@ -201,6 +201,6 @@ class ItemPrice(Document):
 		Validates the -entire- Item Code, not just this single record.
 		Caller: ERP UI button at the top of an Item Price.
 		"""
-		from ftp.utilities.pricing import ItemPriceValidation
+		from ftp.utilities.pricing_validation import ItemPriceValidation
 		# self.validate_overlapping_prices_ftp()
 		ItemPriceValidation(self.item_code).validate_item_prices()
