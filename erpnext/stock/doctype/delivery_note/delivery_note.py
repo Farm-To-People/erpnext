@@ -353,6 +353,7 @@ def on_doctype_update():
 	Yes, 'on_doctype_update' belongs here, outside the Document class.
 	"""
 	frappe.db.add_index("Delivery Note", ["daily_order", "name"], index_name="daily_order_idx")
+	frappe.db.add_index("Delivery Note Item", ["item_group", "modified"], index_name="item_group_modified_idx")
 
 def update_billed_amount_based_on_so(so_detail, update_modified=True):
 	# Billed against Sales Order directly

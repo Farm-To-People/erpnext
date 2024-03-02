@@ -12,6 +12,15 @@ class CustomerGroup(NestedSet):
 	def validate(self):
 		if not self.parent_customer_group:
 			self.parent_customer_group = get_root_of("Customer Group")
+		# FTP Custom Code
+		if self.onfleet_merchant:
+			from ftp.ftp_fleet.onfleet_api.organization_merchant import build_merchant_name_id_map  # Late import due to custom App dependency
+			merchant_map = build_merchant_name_id_map()
+			if not merchant_map.get(self.onfleet_merchant):
+				message = f"Onfleet API cannot find Merchant named = '{self.onfleet_merchant}'"
+				available_options = '<br>'.join(merchant_map.keys())
+				message += f"<br><br>Available options are:<br>{available_options}"
+				raise ValueError(message)
 
 	def on_update(self):
 		self.validate_name_with_customer()

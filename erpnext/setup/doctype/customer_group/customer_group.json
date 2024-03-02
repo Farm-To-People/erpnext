@@ -152,6 +152,7 @@
    "label": "Disable Order Minimum Emails"
   },
   {
+   "description": "Merchant value is validated with Onfleet API upon save.",
    "fieldname": "onfleet_merchant",
    "fieldtype": "Data",
    "label": "Onfleet Merchant"
@@ -161,7 +162,7 @@
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2023-01-19 12:15:43.225961",
+ "modified": "2024-03-01 16:31:27.444648",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",

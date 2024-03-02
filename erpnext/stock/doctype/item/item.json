@@ -153,9 +153,6 @@
   "hub_warehouse",
   "synced_with_hub",
   "sb_ftp",
-  "ingredients_ftp",
-  "legacy_image_url_ftp",
-  "nutrition_facts_ftp",
   "dbp_product_id"
  ],
  "fields": [
@@ -1104,23 +1101,6 @@
    "search_index": 1
   },
   {
-   "fieldname": "ingredients_ftp",
-   "fieldtype": "Long Text",
-   "label": "Ingredients"
-  },
-  {
-   "fieldname": "legacy_image_url_ftp",
-   "fieldtype": "Data",
-   "label": "Legacy Image URL",
-   "length": 255,
-   "read_only": 1
-  },
-  {
-   "fieldname": "nutrition_facts_ftp",
-   "fieldtype": "HTML Editor",
-   "label": "Nutrition Facts"
-  },
-  {
    "description": "This descriptive tag appears on the shopping website.",
    "fieldname": "sales_uom_website",
    "fieldtype": "Data",
@@ -1219,7 +1199,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2023-11-03 12:06:01.529978",
+ "modified": "2024-02-28 17:55:00.061182",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

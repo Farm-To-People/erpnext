@@ -155,7 +155,6 @@ class Item(WebsiteGenerator):
 
 		self.validate_website_item_groups()
 
-
 	def validate_website_item_groups(self):
 
 		number_of_primary_groups = len([ each for each in self.website_item_groups if each.is_priority ])
@@ -164,7 +163,6 @@ class Item(WebsiteGenerator):
 		# TODO: Enable this later after the feature launches
 		#if number_of_primary_groups == 0:
 		#	raise ValueError("Item does not have a Website Item Group marked with 'Is Priority'.")
-
 
 	def on_update(self):
 		invalidate_cache_for_item(self)
