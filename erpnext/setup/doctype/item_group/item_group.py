@@ -49,8 +49,9 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 		Update Sanity whenever an Item Group is modified.
 		"""
 		from ftp.ftp_sanity.product_category import update_sanity_product_category
-		update_sanity_product_category(self)
-		frappe.msgprint("Sanity Category updated.")
+		result = update_sanity_product_category(self)
+		if (not result):
+			frappe.msgprint(result.as_msgprint())
 
 	def make_route(self):
 		'''Make website route'''
@@ -139,6 +140,14 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 	def delete_child_item_groups_key(self):
 		frappe.cache().hdel("child_item_groups", self.name)
 
+	def is_ftp_website_category(self) -> bool:
+		"""
+		Returns a boolen True if Item Group is also an FTP website category.
+		"""
+		from ftp.ftp_invent import get_parent_item_group_names
+		return 'Frontend' in get_parent_item_group_names(self.name)
+
+
 @frappe.whitelist(allow_guest=True)
 def get_product_list_for_group(product_group=None, start=0, limit=10, search=None):
 	if product_group:
@@ -180,6 +189,7 @@ def get_product_list_for_group(product_group=None, start=0, limit=10, search=Non
 			set_product_info_for_website(item)
 
 	return data
+
 
 def get_child_groups_for_list_in_html(item_group, start, limit, search):
 	search_filters = None

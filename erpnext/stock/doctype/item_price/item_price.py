@@ -168,14 +168,14 @@ class ItemPrice(Document):
 		"""
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.sanity import update_sanity_by_item_code  # Legacy
-		from ftp.ftp_sanity.product import update_sanity_product
+		from ftp.ftp_sanity.product import js_update_sanity_product
 		if self.selling:
 			try:
 				try_update_redis_inventory(item_code=self.item_code)
 			except Exception as ex:
 				print(ex)
 				frappe.msgprint("Unable to update Redis.<br>To resolve, continue editing Item Prices.  There should be an active Selling Price for the next 28 days.")
-		update_sanity_product(self.item_code)
+		js_update_sanity_product(self.item_code)
 		update_sanity_by_item_code(self.item_code)  # Legacy
 
 	def after_delete(self):
@@ -184,7 +184,7 @@ class ItemPrice(Document):
 		"""
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.sanity import update_sanity_by_item_code  # Legacy
-		from ftp.ftp_sanity.product import update_sanity_product
+		from ftp.ftp_sanity.product import js_update_sanity_product
 
 		if self.selling:
 			try:
@@ -192,7 +192,7 @@ class ItemPrice(Document):
 			except Exception as ex:
 				print(ex)
 				frappe.msgprint("Unable to update Redis.<br>To resolve, continue editing Item Prices.  There should be an active Selling Price for the next 28 days.")
-		update_sanity_product(self.item_code)
+		js_update_sanity_product(self.item_code)
 		update_sanity_by_item_code(self.item_code)   # Legacy
 
 	@frappe.whitelist()

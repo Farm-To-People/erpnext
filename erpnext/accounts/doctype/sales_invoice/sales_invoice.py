@@ -1847,6 +1847,7 @@ def on_doctype_update():
 	# FTP: Add an additional index for performance of Orders Not Invoiced report.
 	frappe.db.add_index("Sales Invoice", ["daily_order", "docstatus", "is_return"])
 	frappe.db.add_index("Sales Invoice", ["amended_from", "modified_by"], index_name="amended_from_idx")
+	frappe.db.add_index("Sales Invoice Item", ["item_group", "modified"], index_name="item_group_modified_idx")
 
 
 @frappe.whitelist()

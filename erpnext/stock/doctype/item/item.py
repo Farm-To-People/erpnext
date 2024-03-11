@@ -171,6 +171,14 @@ class Item(WebsiteGenerator):
 		self.update_item_price()
 		self.update_template_item()
 
+	def _website_item_groups_altered(self) -> set:
+		"""
+		Returns a list of Website Item Groups that were added --or-- removed during the save()
+		"""
+		orig_item_group_keys = { each.item_group for each in self.get_doc_before_save().website_item_groups }
+		new_item_group_keys = { each.item_group for each in self.website_item_groups }
+		return orig_item_group_keys.symmetric_difference(new_item_group_keys)
+
 	def on_change(self):
 		"""
 		SQL may or may NOT be committed yet.
@@ -179,13 +187,20 @@ class Item(WebsiteGenerator):
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item
 		from ftp.sanity import update_sanity_by_item_code  # LEGACY Sanity
-		from ftp.ftp_sanity.product import update_sanity_product
+		from ftp.ftp_sanity.product import js_update_sanity_product
+		from ftp.ftp_sanity.product_category import update_sanity_product_category
 
 		# Farm To People: Update redis after Item is modified.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
-		update_sanity_by_item_code(self.item_code)  # LEGACY
-		update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
 		rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
+
+		# Sanity Updates
+		update_sanity_by_item_code(self.item_code)  # LEGACY
+		js_update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
+
+		# If necessary, also update the Sanity Categories
+		for item_group_key in self._website_item_groups_altered():
+			update_sanity_product_category(item_group=item_group_key, update_parent_group=False)
 
 	def validate_description(self):
 		'''Clean HTML description if set'''
