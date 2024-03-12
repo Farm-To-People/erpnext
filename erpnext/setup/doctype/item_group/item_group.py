@@ -140,6 +140,23 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 	def delete_child_item_groups_key(self):
 		frappe.cache().hdel("child_item_groups", self.name)
 
+	def after_rename(self, olddn, newdn, merge=False):  # pylint: disable=unused-argument
+		"""
+		Rename from string 'olddn' to string 'newdn'
+		"""
+		# After a rename, update the data in Sanity CMS
+		from ftp.ftp_sanity.product_category import ItemGroupGlue  # Late import due to cross-module dependency
+		ItemGroupGlue.rename_primary_key(olddn, newdn)
+
+	def after_delete(self):
+		"""
+		After deleting the ERP Item Group, try to delete the Sanity Category.
+		"""
+		from ftp.ftp_sanity.product_category import ItemGroupGlue  # Late import due to cross-module dependency
+		result = ItemGroupGlue.delete_sanity_category(self.name)
+		if not result:
+			raise ValueError(f"Was unable to delete the corresponding Category from Sanity: {result.message}")
+
 	def is_ftp_website_category(self) -> bool:
 		"""
 		Returns a boolen True if Item Group is also an FTP website category.
