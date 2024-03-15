@@ -175,8 +175,18 @@ class Item(WebsiteGenerator):
 		"""
 		Returns a list of Website Item Groups that were added --or-- removed during the save()
 		"""
-		orig_item_group_keys = { each.item_group for each in self.get_doc_before_save().website_item_groups }
-		new_item_group_keys = { each.item_group for each in self.website_item_groups }
+		# Hotfix: Items may or may not have Categories
+		doc_orig = self.get_doc_before_save()
+		if hasattr(doc_orig, "website_item_groups"):
+			orig_item_group_keys = { each.item_group for each in doc_orig.website_item_groups }
+		else:
+			orig_item_group_keys = set()
+
+		if hasattr(self, "website_item_groups"):
+			new_item_group_keys = { each.item_group for each in self.website_item_groups }
+		else:
+			new_item_group_keys = set()
+
 		return orig_item_group_keys.symmetric_difference(new_item_group_keys)
 
 	def on_change(self):
