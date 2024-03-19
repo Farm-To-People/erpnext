@@ -25,7 +25,9 @@
   "stock_use_days_offset",
   "use_header_required_by",
   "column_break_19",
-  "default_target_warehouse"
+  "default_target_warehouse",
+  "default_supplier_email_template",
+  "default_po_print_format"
  ],
  "fields": [
   {
@@ -150,6 +152,18 @@
   {
    "fieldname": "column_break_19",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_supplier_email_template",
+   "fieldtype": "Link",
+   "label": "Default Supplier Email Template",
+   "options": "Email Template"
+  },
+  {
+   "fieldname": "default_po_print_format",
+   "fieldtype": "Link",
+   "label": "Default PO Print Format",
+   "options": "Print Format"
   }
  ],
  "icon": "fa fa-cog",
@@ -157,7 +171,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-09-22 22:02:23.265611",
+ "modified": "2024-03-19 13:49:13.392668",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Buying Settings",

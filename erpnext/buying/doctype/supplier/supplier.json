@@ -59,7 +59,9 @@
   "language",
   "is_frozen",
   "emails_for_purchase_order",
-  "purchase_lead_days"
+  "purchase_lead_days",
+  "default_print_format",
+  "po_email_template"
  ],
  "fields": [
   {
@@ -392,6 +394,18 @@
    "fieldname": "purchase_lead_days",
    "fieldtype": "Int",
    "label": "PO Lead Days"
+  },
+  {
+   "fieldname": "default_print_format",
+   "fieldtype": "Link",
+   "label": "Default Print Format",
+   "options": "Print Format"
+  },
+  {
+   "fieldname": "po_email_template",
+   "fieldtype": "Link",
+   "label": "PO Email Template",
+   "options": "Email Template"
   }
  ],
  "icon": "fa fa-user",
@@ -404,7 +418,7 @@
    "link_fieldname": "supplier"
   }
  ],
- "modified": "2023-07-07 14:08:46.503083",
+ "modified": "2024-03-18 14:28:35.990791",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier",
