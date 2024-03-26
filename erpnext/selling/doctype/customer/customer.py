@@ -1155,10 +1155,13 @@ class Customer(Customer):  # pylint: disable=function-redefined
 			return Result(False, "Orders exist with non-removable items.")
 		return Result(True, "")
 
-	def can_unpause(self, pause_from_date, pause_to_date) -> bool:
+	def DEL_can_unpause(self, pause_from_date, pause_to_date) -> bool:
 
+		return True
+
+		'''
 		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
-		from ftp.ftp_module.doctype.daily_order.skip_pause import can_unskip
+		from ftp.ftp_module.doctype.daily_order.pause_skip import can_unskip
 
 		sql_query = """
 			SELECT
@@ -1189,7 +1192,7 @@ class Customer(Customer):  # pylint: disable=function-redefined
 					total_result.append_message(each_message)
 
 		return total_result
-
+	'''
 
 # Accounts Receivable Summary Query
 def read_ar_summary_query():
