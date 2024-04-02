@@ -6,6 +6,7 @@
 import itertools
 import json
 import copy
+import re
 
 import frappe
 import erpnext
@@ -13,6 +14,7 @@ import erpnext
 from erpnext.controllers.item_variant import (ItemVariantExistsError,
 		copy_attributes_to_variant, get_variant, make_variant_item_code, validate_item_variant_attributes)
 from erpnext.setup.doctype.item_group.item_group import (get_parent_item_groups, invalidate_cache_for)
+
 from frappe import _, msgprint
 from frappe.utils import (cint, cstr, flt, formatdate, getdate,
 		now_datetime, random_string, strip, get_link_to_form, nowtime)
@@ -93,6 +95,11 @@ class Item(WebsiteGenerator):
 
 		self.create_item_sales_controls()  # FTP
 
+	def before_validate(self):
+		# If necessary, add leading zeros to the Packing Sort Code.
+		if self.packing_sort_code and len(self.packing_sort_code) < 5:
+			self.packing_sort_code = self.packing_sort_code.rjust(5, "0")
+
 	def validate(self):
 		super(Item, self).validate()
 
@@ -147,6 +154,8 @@ class Item(WebsiteGenerator):
 			if self.item_type != 'Farm Box':
 				raise ValueError(f"Item {self.name} cannot have 'farmbox_can_customize' set to True, when Item Type is not 'Farm Box'")
 
+		Item.ftp_validate_packing_slip_position(self.packing_sort_code)  # April 2nd 2024
+
 		if not self.is_new():
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
 			self.old_website_item_groups = frappe.db.sql_list("""select item_group
@@ -154,6 +163,19 @@ class Item(WebsiteGenerator):
 					where parentfield='website_item_groups' and parenttype='Item' and parent=%s""", self.name)
 
 		self.validate_website_item_groups()
+
+	@staticmethod
+	def ftp_validate_packing_slip_position(value: str):
+		"""
+		The 'Packing Slip' Position' must be a zero-padded string, only numerals, exactly 5 characters.
+		"""
+		if not value:
+			return
+		if len(value) != 5:
+			raise ValueError("Packing Slip Position must be exactly 5 numbers.")
+		if not re.match("^\\d+$", value):
+			raise ValueError("Data filed 'Packing Slip Position' can only contain numbers.")
+
 
 	def validate_website_item_groups(self):
 
@@ -196,7 +218,6 @@ class Item(WebsiteGenerator):
 		# Late imports due to cross-module dependency:
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item
-		# from ftp.ftp_module.doctype.item_filter_map import update_filters_in_redis
 
 		from ftp.sanity import update_sanity_by_item_code  # LEGACY Sanity
 		from ftp.ftp_sanity.product import js_update_sanity_product
@@ -205,7 +226,6 @@ class Item(WebsiteGenerator):
 		# Farm To People: Update redis after Item is modified.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
 		rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
-		# update_filters_in_redis(self)
 
 		# Sanity Updates
 		update_sanity_by_item_code(self.item_code)  # LEGACY
