@@ -17,20 +17,16 @@ class ItemManufacturer(Document):
 		self.manage_default_item_manufacturer(delete=True)
 
 	def after_delete(self):
-		from ftp.sanity import update_sanity_by_item_code  # Legacy
 		from ftp.ftp_sanity.product import js_update_sanity_product  # Late import due to cross-module dependency
 		try:
-			update_sanity_by_item_code(self.item_code)  # Legacy
 			js_update_sanity_product(self.item_code)
 		except Exception as ex:
 			print(ex)
 			frappe.msgprint("Warning: Failed to update Producer in Sanity.")
 
 	def on_change(self):
-		from ftp.sanity import update_sanity_by_item_code  # Legacy
 		from ftp.ftp_sanity.product import js_update_sanity_product  # Late import due to cross-module dependency
 		try:
-			update_sanity_by_item_code(self.item_code)  # Legacy
 			js_update_sanity_product(self.item_code)
 		except Exception as ex:
 			print(ex)

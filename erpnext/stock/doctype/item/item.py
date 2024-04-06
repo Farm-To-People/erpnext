@@ -219,7 +219,6 @@ class Item(WebsiteGenerator):
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
 		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item
 
-		from ftp.sanity import update_sanity_by_item_code  # LEGACY Sanity
 		from ftp.ftp_sanity.product import js_update_sanity_product
 		from ftp.ftp_sanity.product_category import update_sanity_product_category
 
@@ -228,7 +227,6 @@ class Item(WebsiteGenerator):
 		rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
 
 		# Sanity Updates
-		update_sanity_by_item_code(self.item_code)  # LEGACY
 		js_update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
 
 		# If necessary, also update the Sanity Categories
