@@ -37,6 +37,8 @@
   "over_delivery_receipt_allowance",
   "over_billing_allowance",
   "image",
+  "sb_web_filters",
+  "web_filters",
   "sb_misc",
   "segregation",
   "packing_sort_code",
@@ -1185,6 +1187,16 @@
    "fieldname": "calc_stock_from_subproducts",
    "fieldtype": "Check",
    "label": "Calculate Stock from Subproducts"
+  },
+  {
+   "fieldname": "web_filters",
+   "fieldtype": "Table MultiSelect",
+   "options": "Item Filter Map"
+  },
+  {
+   "fieldname": "sb_web_filters",
+   "fieldtype": "Section Break",
+   "label": "Web Filters"
   }
  ],
  "icon": "fa fa-tag",
@@ -1199,7 +1211,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-02-28 17:55:00.061182",
+ "modified": "2024-03-05 14:13:56.292825",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
