@@ -16,6 +16,7 @@
   "route",
   "image",
   "column_break_5",
+  "sanity_sort_code",
   "defaults",
   "item_group_defaults",
   "sec_break_taxes",
@@ -42,7 +43,6 @@
   {
    "fieldname": "item_group_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Item Group Name",
    "oldfieldname": "item_group_name",
    "oldfieldtype": "Data",
@@ -114,7 +114,6 @@
    "fieldname": "show_in_website",
    "fieldtype": "Check",
    "hidden": 1,
-   "in_list_view": 1,
    "label": "Show in Website",
    "read_only": 1
   },
@@ -210,6 +209,15 @@
    "fieldname": "website_title",
    "fieldtype": "Data",
    "label": "Title"
+  },
+  {
+   "description": "Position of this Item Group (Category) in relation to <i>sibling</i> Item Groups.",
+   "fieldname": "sanity_sort_code",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Sanity Sort Code",
+   "non_negative": 1,
+   "read_only": 1
   }
  ],
  "icon": "fa fa-sitemap",
@@ -218,7 +226,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2024-03-14 14:28:21.218764",
+ "modified": "2024-04-09 15:30:48.641955",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",
