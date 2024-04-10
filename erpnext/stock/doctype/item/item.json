@@ -44,6 +44,7 @@
   "packing_sort_code",
   "column_break_29",
   "can_be_favorite",
+  "include_in_popular_searches",
   "section_break_11",
   "is_item_from_hub",
   "brand",
@@ -921,7 +922,8 @@
    "fieldname": "slideshow",
    "fieldtype": "Link",
    "label": "Slideshow",
-   "options": "Website Slideshow"
+   "options": "Website Slideshow",
+   "read_only": 1
   },
   {
    "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
@@ -947,7 +949,8 @@
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
    "label": "Website Warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "read_only": 1
   },
   {
    "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
@@ -1197,6 +1200,13 @@
    "fieldname": "sb_web_filters",
    "fieldtype": "Section Break",
    "label": "Web Filters"
+  },
+  {
+   "default": "0",
+   "description": "When marked, product will appear in the \"Popular\" section of searches on farmtopeople.com",
+   "fieldname": "include_in_popular_searches",
+   "fieldtype": "Check",
+   "label": "Include in Popular Searches"
   }
  ],
  "icon": "fa fa-tag",
@@ -1211,7 +1221,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-03-05 14:13:56.292825",
+ "modified": "2024-04-09 18:15:22.317633",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
