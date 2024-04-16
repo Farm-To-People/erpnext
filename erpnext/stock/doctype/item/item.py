@@ -223,6 +223,13 @@ class Item(WebsiteGenerator):
 		from ftp.ftp_sanity.product import js_update_sanity_product
 		from ftp.ftp_sanity.product_category import update_sanity_product_category
 
+		skip_integrations = False
+		if hasattr(self.flags, "ftp_skip_integrations") and self.flags.ftp_skip_integrations:
+			skip_integrations = True
+
+		if skip_integrations:  # This is used when importing Item Filters from a CSV file.
+			return
+
 		# Farm To People: Update redis after Item is modified.
 		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
 		rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
