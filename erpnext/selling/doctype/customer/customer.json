@@ -599,6 +599,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "collapsible": 1,
    "fieldname": "ftp_custom_controls_section",
    "fieldtype": "Section Break",
    "label": "FTP Custom Controls"
@@ -644,7 +645,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-05-09 18:52:59.221080",
+ "modified": "2024-05-09 19:47:58.436613",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
