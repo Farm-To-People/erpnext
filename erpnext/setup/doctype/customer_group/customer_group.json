@@ -11,15 +11,16 @@
   "customer_group_name",
   "parent_customer_group",
   "is_group",
-  "disable_order_minimum_emails",
+  "onfleet_merchant",
   "cb0",
   "default_price_list",
   "payment_terms",
   "default_shipping_rule",
-  "onfleet_merchant",
   "lft",
   "rgt",
   "old_parent",
+  "email_overrides_section",
+  "override",
   "default_receivable_account",
   "accounts",
   "credit_limit_section",
@@ -145,24 +146,27 @@
    "options": "Shipping Rule"
   },
   {
-   "default": "0",
-   "description": "When marked, customers in this Group will not receive any Order Minimum warning emails.",
-   "fieldname": "disable_order_minimum_emails",
-   "fieldtype": "Check",
-   "label": "Disable Order Minimum Emails"
-  },
-  {
    "description": "Merchant value is validated with Onfleet API upon save.",
    "fieldname": "onfleet_merchant",
    "fieldtype": "Data",
    "label": "Onfleet Merchant"
+  },
+  {
+   "fieldname": "email_overrides_section",
+   "fieldtype": "Section Break",
+   "label": "Email Overrides"
+  },
+  {
+   "fieldname": "override",
+   "fieldtype": "Table",
+   "options": "Transactional Email Override"
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2024-03-01 16:31:27.444648",
+ "modified": "2024-05-09 12:23:27.152081",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",

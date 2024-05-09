@@ -12,8 +12,8 @@ class CustomerGroup(NestedSet):
 	def validate(self):
 		if not self.parent_customer_group:
 			self.parent_customer_group = get_root_of("Customer Group")
-		# FTP Custom Code
-		if self.onfleet_merchant:
+		# FTP Custom Code - Ensure that Onfleet Merchants actually exis
+		if self.onfleet_merchant and bool(frappe.db.get_single_value("Onfleet Configuration", "enable_onfleet_integration")):
 			from ftp.ftp_fleet.onfleet_api.organization_merchant import build_merchant_name_id_map  # Late import due to custom App dependency
 			merchant_map = build_merchant_name_id_map()
 			if not merchant_map.get(self.onfleet_merchant):

@@ -86,8 +86,10 @@
   "sb_pauses",
   "pauses",
   "ftp_custom_controls_section",
-  "disable_order_minimum_emails",
-  "first_order_email_sent"
+  "ftp_options",
+  "email_overrides_section",
+  "first_order_email_sent",
+  "override"
  ],
  "fields": [
   {
@@ -603,16 +605,27 @@
   },
   {
    "default": "0",
-   "fieldname": "disable_order_minimum_emails",
-   "fieldtype": "Check",
-   "label": "Disable Order Minimum Emails"
-  },
-  {
-   "default": "0",
    "fieldname": "first_order_email_sent",
    "fieldtype": "Check",
    "label": "First Order email was Sent",
    "read_only": 1
+  },
+  {
+   "fieldname": "ftp_options",
+   "fieldtype": "Table",
+   "label": "FTP Options",
+   "options": "Customer Options"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "email_overrides_section",
+   "fieldtype": "Section Break",
+   "label": "Email Overrides"
+  },
+  {
+   "fieldname": "override",
+   "fieldtype": "Table",
+   "options": "Transactional Email Override"
   }
  ],
  "icon": "fa fa-user",
@@ -631,7 +644,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-02-12 19:09:41.605216",
+ "modified": "2024-05-09 18:52:59.221080",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
