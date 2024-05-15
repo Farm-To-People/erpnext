@@ -51,6 +51,12 @@ class StockEntry(StockController):
 			apply_putaway_rule(self.doctype, self.get("items"), self.company,
 				purpose=self.purpose)
 
+		# Farm To People : Disable mandatory UOM in JavaScript, and fill-in defaults here
+		for each_row in self.get("items"):
+			if not each_row.uom:
+				each_row.uom = frappe.get_value("Item", each_row.item_code, "stock_uom")
+
+
 	def validate(self):
 		self.pro_doc = frappe._dict()
 		if self.work_order:

@@ -76,6 +76,7 @@
   {
    "fieldname": "barcode",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Barcode"
   },
   {
@@ -167,6 +168,7 @@
   },
   {
    "bold": 1,
+   "default": "1",
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -229,7 +231,7 @@
    "oldfieldname": "uom",
    "oldfieldtype": "Link",
    "options": "UOM",
-   "reqd": 1
+   "reqd_in_database": 1
   },
   {
    "fieldname": "conversion_factor",
@@ -549,7 +551,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-06-21 16:03:18.834880",
+ "modified": "2024-05-15 15:59:19.558533",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry Detail",
