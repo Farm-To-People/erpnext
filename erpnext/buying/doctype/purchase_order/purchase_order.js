@@ -834,7 +834,7 @@ function set_schedule_date(frm) {
 
 function set_target_warehouse(frm) {
 	// Farm To People: Set the target Warehouse.
-	console.log("set_target_warehouse");
+	// console.log("set_target_warehouse");
 	if(! frm.doc.set_warehouse){
 		frappe.db.get_single_value("Buying Settings", "default_target_warehouse").then(val => {
 			frm.doc.set_warehouse = val;

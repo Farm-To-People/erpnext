@@ -1177,6 +1177,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_in_quick_entry": 1,
    "default": "0",
    "description": "When checked, customers can mark this Product as a Favorite on the website.",
    "fieldname": "can_be_favorite",
@@ -1221,7 +1222,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-04-09 18:15:22.317633",
+ "modified": "2024-05-20 15:04:15.901463",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
