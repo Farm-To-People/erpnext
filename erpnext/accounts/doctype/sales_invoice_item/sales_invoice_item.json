@@ -99,7 +99,8 @@
   "dimension_col_break",
   "project",
   "section_break_54",
-  "page_break"
+  "page_break",
+  "daily_order_item_key"
  ],
  "fields": [
   {
@@ -822,12 +823,20 @@
    "no_copy": 1,
    "options": "currency",
    "read_only": 1
+  },
+  {
+   "fieldname": "daily_order_item_key",
+   "fieldtype": "Link",
+   "label": "Daily Orderline Key",
+   "length": 20,
+   "options": "Daily Order Item",
+   "search_index": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-09-14 17:37:28.644919",
+ "modified": "2024-06-09 13:08:01.179445",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

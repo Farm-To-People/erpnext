@@ -187,11 +187,21 @@ class Item(WebsiteGenerator):
 		#	raise ValueError("Item does not have a Website Item Group marked with 'Is Priority'.")
 
 	def on_update(self):
+		from ftp.utilities.doc_extensions import update_order_item_names
+		from ftp.ftp_invent.redis.item_attributes import update_popular_searches
+
 		invalidate_cache_for_item(self)
 		self.validate_name_with_item_group()
 		self.update_variants()
 		self.update_item_price()
 		self.update_template_item()
+
+		doc_orig = self.get_doc_before_save()
+		if doc_orig and doc_orig.include_in_popular_searches != self.include_in_popular_searches:
+			# Update the "Popular Searches" key in Middleware Redis
+			update_popular_searches(self.name, "add" if self.include_in_popular_searches else "remove")
+		if doc_orig and doc_orig.item_name != self.item_name:
+			update_order_item_names(self.item_code, self.item_name)
 
 	def _website_item_groups_altered(self) -> set:
 		"""
@@ -217,9 +227,8 @@ class Item(WebsiteGenerator):
 		"""
 		# Late imports due to cross-module dependency:
 		from ftp.ftp_invent.redis.api import try_update_redis_inventory
-		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item, update_popular_searches
+		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item
 		from ftp.ftp_module.doctype.item_filter_map import update_filters_in_redis
-		from ftp.utilities.doc_extensions import update_order_item_names
 		from ftp.ftp_sanity.product import js_update_sanity_product
 		from ftp.ftp_sanity.product_category import update_sanity_product_category
 
@@ -242,15 +251,6 @@ class Item(WebsiteGenerator):
 		for item_group_key in self._website_item_groups_altered():
 			update_sanity_product_category(item_group=item_group_key, update_parent_group=False)
 
-		try:
-			doc_orig = self.get_doc_before_save()
-			if doc_orig and doc_orig.include_in_popular_searches != self.include_in_popular_searches:
-				# Update the "Popular Searches" key in Middleware Redis
-				update_popular_searches(self.name, "add" if self.include_in_popular_searches else "remove")
-			if doc_orig and doc_orig.item_name != self.item_name:
-				update_order_item_names(self.item_code, self.item_name)
-		except Exception as ex:
-			raise ex
 
 	def validate_description(self):
 		'''Clean HTML description if set'''
@@ -767,6 +767,8 @@ class Item(WebsiteGenerator):
 			self.set_last_purchase_rate(new_name)
 			self.recalculate_bin_qty(new_name)
 
+		# Datahenge: If there are Too Many updates here, ERP will fail
+		# frappe.exceptions.ValidationError: Too many writes in one request. Please send smaller requests
 		for dt in ("Sales Taxes and Charges", "Purchase Taxes and Charges"):
 			for d in frappe.db.sql("""select name, item_wise_tax_detail from `tab{0}`
 					where ifnull(item_wise_tax_detail, '') != ''""".format(dt), as_dict=1):
