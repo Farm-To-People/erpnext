@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_import": 1,
+ "allow_rename": 1,
  "autoname": "field:item_group_name",
  "creation": "2013-03-28 10:35:29",
  "description": "Item Classification",
@@ -226,7 +227,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2024-04-09 15:30:48.641955",
+ "modified": "2024-06-13 16:56:22.893213",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",

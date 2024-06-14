@@ -140,6 +140,10 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 	def delete_child_item_groups_key(self):
 		frappe.cache().hdel("child_item_groups", self.name)
 
+	def before_rename(self,  olddn, newdn, merge=False, group_fname="is_group"):
+		if self.parent_item_group == 'Frontend':
+			raise ValueError("You cannot rename the top-level Item Groups beneath 'Frontend'.")
+
 	def after_rename(self, olddn, newdn, merge=False):  # pylint: disable=unused-argument
 		"""
 		Rename from string 'olddn' to string 'newdn'
