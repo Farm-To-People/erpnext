@@ -45,6 +45,7 @@
   "column_break_29",
   "can_be_favorite",
   "include_in_popular_searches",
+  "dbp_product_id",
   "section_break_11",
   "is_item_from_hub",
   "brand",
@@ -100,10 +101,10 @@
   "sales_details",
   "sales_uom",
   "is_sales_item",
+  "website_uom_option",
   "sales_uom_website",
   "column_break3",
   "max_discount",
-  "badge_on_sale",
   "badge_promotional",
   "deferred_revenue",
   "deferred_revenue_account",
@@ -154,9 +155,7 @@
   "publish_in_hub",
   "hub_category_to_publish",
   "hub_warehouse",
-  "synced_with_hub",
-  "sb_ftp",
-  "dbp_product_id"
+  "synced_with_hub"
  ],
  "fields": [
   {
@@ -322,6 +321,7 @@
    "collapsible": 1,
    "fieldname": "section_break_11",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Description"
   },
   {
@@ -428,6 +428,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "reorder_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Auto re-order",
    "options": "fa fa-rss"
   },
@@ -533,6 +534,7 @@
    "collapsible_depends_on": "attributes",
    "fieldname": "variants_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Variants"
   },
   {
@@ -561,6 +563,7 @@
    "options": "Item Variant Attribute"
   },
   {
+   "collapsible": 1,
    "fieldname": "defaults",
    "fieldtype": "Section Break",
    "label": "Sales, Purchase, Accounting Defaults"
@@ -645,7 +648,7 @@
    "collapsible": 1,
    "fieldname": "supplier_details",
    "fieldtype": "Section Break",
-   "label": "Supplier Details"
+   "label": "Supplier Items"
   },
   {
    "default": "0",
@@ -664,6 +667,7 @@
    "collapsible": 1,
    "fieldname": "foreign_trade_details",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Foreign Trade Details"
   },
   {
@@ -721,6 +725,7 @@
    "collapsible": 1,
    "fieldname": "deferred_revenue",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Deferred Revenue"
   },
   {
@@ -751,6 +756,7 @@
    "collapsible": 1,
    "fieldname": "deferred_expense_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Deferred Expense"
   },
   {
@@ -781,6 +787,7 @@
    "collapsible": 1,
    "fieldname": "customer_details",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Customer Details"
   },
   {
@@ -811,6 +818,7 @@
    "collapsible": 1,
    "fieldname": "inspection_criteria",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Inspection Criteria",
    "oldfieldtype": "Section Break",
    "options": "fa fa-search"
@@ -972,6 +980,7 @@
    "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
    "fieldname": "sb72",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Website Specifications"
   },
   {
@@ -1013,6 +1022,7 @@
    "depends_on": "eval:(!doc.is_item_from_hub)",
    "fieldname": "hub_publishing_sb",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Hub Publishing Details"
   },
   {
@@ -1110,14 +1120,9 @@
    "fieldname": "sales_uom_website",
    "fieldtype": "Data",
    "label": "Sales UOM on Website",
-   "length": 60
-  },
-  {
-   "description": "Badge priority #2",
-   "fieldname": "badge_on_sale",
-   "fieldtype": "Data",
-   "label": "On Sale Badge",
-   "length": 25
+   "length": 60,
+   "mandatory_depends_on": "eval:doc.website_uom_option == 'Custom'",
+   "read_only_depends_on": "eval:doc.website_uom_option != 'Custom'"
   },
   {
    "description": "Badge priority #3",
@@ -1125,11 +1130,6 @@
    "fieldtype": "Data",
    "label": "Promotional Badge",
    "length": 25
-  },
-  {
-   "fieldname": "sb_ftp",
-   "fieldtype": "Section Break",
-   "label": "Farm To People"
   },
   {
    "fieldname": "dbp_product_id",
@@ -1157,7 +1157,7 @@
    "collapsible": 1,
    "fieldname": "sb_misc",
    "fieldtype": "Section Break",
-   "label": "Misc"
+   "label": "Misc FTP"
   },
   {
    "default": "0",
@@ -1198,9 +1198,10 @@
    "options": "Item Filter Map"
   },
   {
+   "collapsible": 1,
    "fieldname": "sb_web_filters",
    "fieldtype": "Section Break",
-   "label": "Web Filters"
+   "label": "Website Filters"
   },
   {
    "default": "0",
@@ -1208,6 +1209,15 @@
    "fieldname": "include_in_popular_searches",
    "fieldtype": "Check",
    "label": "Include in Popular Searches"
+  },
+  {
+   "default": "None",
+   "fieldname": "website_uom_option",
+   "fieldtype": "Select",
+   "label": "Website UOM Option",
+   "options": "None\nSales UOM\nWeight\nSales UOM + Weight\nCustom",
+   "reqd": 1,
+   "reqd_in_database": 1
   }
  ],
  "icon": "fa fa-tag",
@@ -1222,7 +1232,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-05-20 15:04:15.901463",
+ "modified": "2024-06-17 14:09:41.289676",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

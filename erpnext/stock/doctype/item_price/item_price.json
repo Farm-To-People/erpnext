@@ -12,7 +12,6 @@
   "packing_unit",
   "column_break_17",
   "item_name",
-  "brand",
   "item_description",
   "item_details",
   "price_list_rate",
@@ -37,7 +36,8 @@
   "valid_to_price_date",
   "section_break_28",
   "note",
-  "reference"
+  "reference",
+  "brand"
  ],
  "fields": [
   {
@@ -67,6 +67,7 @@
    "description": "Quantity  that must be bought or sold per UOM",
    "fieldname": "packing_unit",
    "fieldtype": "Int",
+   "hidden": 1,
    "label": "Packing Unit"
   },
   {
@@ -86,8 +87,11 @@
    "fetch_from": "item_code.brand",
    "fieldname": "brand",
    "fieldtype": "Read Only",
+   "hidden": 1,
    "label": "Brand",
-   "read_only": 1
+   "print_hide": 1,
+   "read_only": 1,
+   "report_hide": 1
   },
   {
    "fieldname": "item_description",
@@ -102,6 +106,7 @@
    "options": "fa fa-tags"
   },
   {
+   "default": "Standard Selling",
    "fieldname": "price_list",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -190,7 +195,9 @@
    "default": "0",
    "fieldname": "lead_time_days",
    "fieldtype": "Int",
-   "label": "Lead Time in days"
+   "hidden": 1,
+   "label": "Lead Time in days",
+   "read_only": 1
   },
   {
    "columns": 1,
@@ -213,6 +220,7 @@
   {
    "fieldname": "batch_no",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Batch No",
    "options": "Batch"
   },
@@ -258,7 +266,7 @@
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-10-12 14:15:13.251846",
+ "modified": "2024-06-14 14:10:04.486106",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
@@ -292,7 +300,6 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "ASC",
  "title_field": "item_code",

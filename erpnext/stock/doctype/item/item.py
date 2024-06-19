@@ -100,6 +100,9 @@ class Item(WebsiteGenerator):
 		if self.packing_sort_code and len(self.packing_sort_code) < 5:
 			self.packing_sort_code = self.packing_sort_code.rjust(5, "0")
 
+		#if self.website_uom_option != 'Custom':
+		#	self.sales_uom_website = ''
+
 	def validate(self):
 		super(Item, self).validate()
 
@@ -112,6 +115,15 @@ class Item(WebsiteGenerator):
 
 		if not self.description:
 			self.description = self.item_name
+
+		if (self.website_uom_option == 'Custom') and not self.sales_uom_website:
+			raise ValueError("Website UOM Option is 'Custom', but no custom information was provided.")
+
+		if 'piece' in self.sales_uom_website:
+			raise ValueError("Sales UOM Website cannot be used for Pieces: use a real Sales UOM instead.")
+
+		if 'pcs' in self.sales_uom_website:
+			raise ValueError("Sales UOM Website cannot be used for Pieces: use a real Sales UOM instead.")
 
 		self.validate_uom()
 		self.validate_description()

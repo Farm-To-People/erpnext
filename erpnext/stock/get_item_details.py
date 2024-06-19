@@ -1005,7 +1005,7 @@ def get_conversion_factor(item_code, uom):
   	# Datahenge: Defaulting to 1.0 is a terrible practice, and could lead to a LOT of data integrity issues!
 	# return {"conversion_factor": conversion_factor or 1.0}
 	if not conversion_factor:
-		raise Exception(f"Cannot find a conversion factor for Item '{item_code}', from uom '{uom}' to stocking UOM '{stock_uom}'.")
+		raise ValueError(f"Cannot find a conversion factor for Item '{item_code}', from uom '{uom}' to stocking UOM '{stock_uom}'.")
 	return {"conversion_factor": conversion_factor}
 
 @frappe.whitelist()

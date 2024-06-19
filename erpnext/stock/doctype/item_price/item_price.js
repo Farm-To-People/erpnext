@@ -11,7 +11,17 @@ frappe.ui.form.on("Item Price", {
 		// Fetch item details
 		frm.add_fetch("item_code", "item_name", "item_name");
 		frm.add_fetch("item_code", "description", "item_description");
-		frm.add_fetch("item_code", "stock_uom", "uom");
+  
+		// FTP - The default UOM varies depending on Buying, Selling, or Purchase.
+		if (! frm.doc.uom) {
+			if (frm.doc.item_price_type == 'Selling') {
+				frm.add_fetch("item_code", "sales_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+			} else if (frm.doc.item_price_type == 'Buying') {
+				frm.add_fetch("item_code", "purchase_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+			} else {
+				frm.add_fetch("item_code", "uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+			}
+		}
 
 		frm.set_df_property("bulk_import_help", "options",
 			'<a href="/app/data-import-tool/Item Price">' + __("Import in Bulk") + '</a>');
@@ -23,6 +33,19 @@ frappe.ui.form.on("Item Price", {
 				}
 			};
 		});
+	}
+
+	,item_price_type: function(frm) {
+		if (frm.doc.item_price_type == 'Selling') {
+			// frm.add_fetch("item_code", "sales_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+			frm.set_value("uom", 'Hello');
+		} else if (frm.doc.item_price_type == 'Buying') {
+			frm.add_fetch("item_code", "purchase_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+			frm.set_value("uom", 'Hello');
+		} else {
+			frm.add_fetch("item_code", "uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+			frm.set_value("uom", 'Hello');
+		}
 	}
 
 	,after_save: function(frm) {
