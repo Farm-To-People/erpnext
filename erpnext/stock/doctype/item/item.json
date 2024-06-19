@@ -99,8 +99,8 @@
   "column_break_59",
   "customs_tariff_number",
   "sales_details",
-  "sales_uom",
   "is_sales_item",
+  "sales_uom",
   "website_uom_option",
   "sales_uom_website",
   "column_break3",
@@ -1116,6 +1116,7 @@
    "search_index": 1
   },
   {
+   "depends_on": "eval:doc.website_uom_option == 'Custom'",
    "description": "This descriptive tag appears on the shopping website.",
    "fieldname": "sales_uom_website",
    "fieldtype": "Data",
@@ -1232,7 +1233,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-06-17 14:09:41.289676",
+ "modified": "2024-06-19 12:05:53.388666",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
