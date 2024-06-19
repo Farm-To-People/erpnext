@@ -119,12 +119,6 @@ class Item(WebsiteGenerator):
 		if (self.website_uom_option == 'Custom') and not self.sales_uom_website:
 			raise ValueError("Website UOM Option is 'Custom', but no custom information was provided.")
 
-		if 'piece' in self.sales_uom_website:
-			raise ValueError("Sales UOM Website cannot be used for Pieces: use a real Sales UOM instead.")
-
-		if 'pcs' in self.sales_uom_website:
-			raise ValueError("Sales UOM Website cannot be used for Pieces: use a real Sales UOM instead.")
-
 		self.validate_uom()
 		self.validate_description()
 		self.add_default_uom_in_conversion_factor_table()
