@@ -824,54 +824,54 @@ def get_purchase_lines_based_on_sales(supplier_id, delivery_date_from, delivery_
 
 	price_list_name = frappe.db.get_single_value("Buying Settings", "buying_price_list")
 
-	query = """ SELECT
-		 OrderLine.item_code					AS item_code
-		,tabItem.item_name
-		,OrderLine.uom_sales					AS uom
-		,IFNULL(ItemPrice.price_list_rate,0)	AS price_list_rate		
-		,SUM(OrderLine.qty_sales_unit)	AS quantity
+	query = """
+		SELECT
+			 OrderLine.item_code					AS item_code
+			,tabItem.item_name
+			,tabItem.stock_uom						AS uom
+			,IFNULL(ItemPrice.price_list_rate,0)	AS price_list_rate		
+			,SUM(OrderLine.qty_stock_unit)			AS quantity
 
-	FROM 	
-		`tabDaily Order Item`	AS OrderLine
+		FROM 	
+			`tabDaily Order Item`	AS OrderLine
 
-	INNER JOIN
-		tabItem
-	ON
-		tabItem.name = OrderLine.item_code
-	AND tabItem.item_type not in ('Farm Box')
-	AND tabItem.is_purchase_item = 1
+		INNER JOIN
+			tabItem
+		ON
+			tabItem.name = OrderLine.item_code
+		AND tabItem.is_purchase_item = 1
 
-	INNER JOIN
-		`tabDaily Order`	AS OrderHeader
-	ON
-		OrderHeader.name = OrderLine.parent
-	AND OrderHeader.status_delivery not in ('Cancelled', 'Anonymous', 'Paused', 'Skipped')
+		INNER JOIN
+			`tabDaily Order`	AS OrderHeader
+		ON
+			OrderHeader.name = OrderLine.parent
+		AND OrderHeader.status_delivery not in ('Cancelled', 'Anonymous', 'Paused', 'Skipped')
 
-	INNER JOIN
-		`tabItem Default`	AS ItemDefaults
-	ON
-		ItemDefaults.parent = tabItem.item_code
-	AND ItemDefaults.default_supplier = %(default_supplier_id)s
-	AND ItemDefaults.company = 'Farm To People'
+		INNER JOIN
+			`tabItem Default`	AS ItemDefaults
+		ON
+			ItemDefaults.parent = tabItem.item_code
+		AND ItemDefaults.default_supplier = %(default_supplier_id)s
+		AND ItemDefaults.company = 'Farm To People'
 
-	LEFT JOIN
-		`tabItem Price`	AS ItemPrice
-	ON
-		ItemPrice.buying = 1
-	AND ItemPrice.item_code = tabItem.item_code 
-	AND ItemPrice.uom  = OrderLine.uom_sales
- 	AND (ItemPrice.valid_from is NULL	OR ItemPrice.valid_from <=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
-	AND (ItemPrice.valid_upto is NULL	or ItemPrice.valid_upto >=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
-	AND ItemPrice.price_list = %(price_list_name)s
+		LEFT JOIN
+			`tabItem Price`	AS ItemPrice
+		ON
+			ItemPrice.buying = 1
+		AND ItemPrice.item_code = tabItem.item_code 
+		AND ItemPrice.uom  = tabItem.stock_uom
+		AND (ItemPrice.valid_from is NULL	OR ItemPrice.valid_from <=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
+		AND (ItemPrice.valid_upto is NULL	or ItemPrice.valid_upto >=  DATE(CONVERT_TZ( UTC_TIMESTAMP(), 'UTC', 'EST')) )
+		AND ItemPrice.price_list = %(price_list_name)s
 
-	WHERE
-		OrderLine.delivery_date >= %(date_from)s
-	AND OrderLine.delivery_date <= %(date_to)s
+		WHERE
+			OrderLine.delivery_date >= %(date_from)s
+		AND OrderLine.delivery_date <= %(date_to)s
 
-	GROUP BY
-		 OrderLine.item_code
-		,tabItem.item_name
-		,OrderLine.uom_sales
+		GROUP BY
+			 OrderLine.item_code
+			,tabItem.item_name
+			,tabItem.stock_uom	
 	"""
 
 	result = frappe.db.sql(query, values={"default_supplier_id": supplier_id,
