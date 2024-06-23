@@ -209,6 +209,8 @@ class Item(WebsiteGenerator):
 		if doc_orig and doc_orig.item_name != self.item_name:
 			update_order_item_names(self.item_code, self.item_name)
 
+		self.cascade_uom_into_prices()  # June 23rd 2024
+
 	def _website_item_groups_altered(self) -> set:
 		"""
 		Returns a list of Website Item Groups that were added --or-- removed during the save()
@@ -256,6 +258,30 @@ class Item(WebsiteGenerator):
 		# If necessary, also update the Sanity Categories
 		for item_group_key in self._website_item_groups_altered():
 			update_sanity_product_category(item_group=item_group_key, update_parent_group=False)
+
+
+	def cascade_uom_into_prices(self):
+		"""
+		After any update to the Item, make sure the Item Price is using the exact same UOM.
+		"""
+
+		sql_statement = """
+			UPDATE
+				`tabItem Price`		AS ItemPrice
+
+			INNER JOIN
+				tabItem
+			ON
+				tabItem.item_code = ItemPrice.item_code
+
+			SET ItemPrice.uom = tabItem.sales_uom
+
+			WHERE
+				ItemPrice.selling = 1
+			AND ItemPrice.uom <> tabItem.sales_uom
+			AND ItemPrice.item_code = %(item_code)s
+		"""
+		frappe.db.sql(sql_statement, values={'item_code': self.item_code})
 
 
 	def validate_description(self):
