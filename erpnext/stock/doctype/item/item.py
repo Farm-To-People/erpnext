@@ -195,6 +195,7 @@ class Item(WebsiteGenerator):
 	def on_update(self):
 		from ftp.utilities.doc_extensions import update_order_item_names
 		from ftp.ftp_invent.redis.item_attributes import update_popular_searches
+		from ftp.ftp_warehouse.lightspeed import create_update_product
 
 		invalidate_cache_for_item(self)
 		self.validate_name_with_item_group()
@@ -210,6 +211,7 @@ class Item(WebsiteGenerator):
 			update_order_item_names(self.item_code, self.item_name)
 
 		self.cascade_uom_into_prices()  # June 23rd 2024
+		create_update_product(self.item_code)  # Sync with Pick To Light using background queue
 
 	def _website_item_groups_altered(self) -> set:
 		"""
