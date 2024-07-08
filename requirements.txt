@@ -5,6 +5,7 @@ pycountry~=20.7.3
 PyGithub~=1.54.1
 python-stdnum~=1.16
 python-youtube~=0.8.0
+schema~=0.7.4
 taxjar~=1.9.2
 tweepy~=3.10.0
 Unidecode~=1.2.0
