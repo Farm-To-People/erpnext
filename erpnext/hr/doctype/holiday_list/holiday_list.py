@@ -70,7 +70,11 @@ def on_doctype_update():
 	""" Create additional indexes and constraints. """
 	# Yes, this code belongs here, outside of the Document class.  :/
 	# Holiday child document.
-	frappe.db.add_index("Holiday", ["parent", "holiday_date"], index_name='holiday_date_idx')
+
+	try:
+		frappe.db.add_index("Holiday", ["parent", "holiday_date"], index_name='holiday_date_idx')
+	except Exception as ex:
+		print(ex)
 
 
 @frappe.whitelist()
