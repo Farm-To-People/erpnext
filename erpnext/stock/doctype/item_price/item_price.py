@@ -200,3 +200,9 @@ class ItemPrice(Document):
 		from ftp.utilities.pricing_validation import ItemPriceValidation
 		# self.validate_overlapping_prices_ftp()
 		ItemPriceValidation(self.item_code).validate_item_prices()
+
+	@frappe.whitelist()
+	def py_get_item_uoms(self):
+		doc_item = frappe.get_doc("Item", self.item_code)
+		# I want to return the Buying, the Stock, and the Selling
+		return [ doc_item.purchase_uom, doc_item.stock_uom, doc_item.sales_uom ]  # I am returning a List

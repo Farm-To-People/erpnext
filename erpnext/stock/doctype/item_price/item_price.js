@@ -35,16 +35,16 @@ frappe.ui.form.on("Item Price", {
 		});
 	}
 
-	,item_price_type: function(frm) {
+	,item_price_type: async function(frm) {
+
+		// Note to future selves:  The 'async' keyword is VERY important.
+		let uom_array = await js_get_item_uoms(frm);
 		if (frm.doc.item_price_type == 'Selling') {
-			// frm.add_fetch("item_code", "sales_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
-			frm.set_value("uom", 'Hello');
+			frm.set_value("uom", uom_array[2]);
 		} else if (frm.doc.item_price_type == 'Buying') {
-			frm.add_fetch("item_code", "purchase_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
-			frm.set_value("uom", 'Hello');
+			frm.set_value("uom", uom_array[0]);
 		} else {
-			frm.add_fetch("item_code", "uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
-			frm.set_value("uom", 'Hello');
+			frm.set_value("uom", uom_array[1]);
 		}
 	}
 
@@ -121,3 +121,16 @@ frappe.ui.form.on("Item Price", {
 		}, __("")).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});
 	}
 });
+
+
+
+async function js_get_item_uoms(frm) {
+	//
+	// Purpose is to find all the UOM values for a specific Item.
+	//
+	const result = await frappe.call({
+		doc: frm.doc,
+		method: 'py_get_item_uoms',
+	});
+	return result.message
+}
