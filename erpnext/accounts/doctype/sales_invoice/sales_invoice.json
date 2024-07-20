@@ -11,6 +11,7 @@
   "naming_series",
   "customer",
   "customer_name",
+  "invoice_origin",
   "tax_id",
   "pos_profile",
   "is_pos",
@@ -1975,6 +1976,16 @@
    "in_standard_filter": 1,
    "label": "Daily Order",
    "options": "Daily Order"
+  },
+  {
+   "default": "Direct Edit",
+   "fieldname": "invoice_origin",
+   "fieldtype": "Select",
+   "label": "Origin",
+   "length": 30,
+   "options": "Direct Edit\nDaily Order Edit\nShorts and Credits\nBTU",
+   "reqd": 1,
+   "reqd_in_database": 1
   }
  ],
  "icon": "fa fa-file-text",
@@ -1987,7 +1998,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-03-07 20:00:00.123456",
+ "modified": "2024-07-20 13:58:23.006080",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
