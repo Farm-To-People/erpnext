@@ -133,7 +133,7 @@ class PaymentEntry(AccountsController):
 
 			payment_intent_id =  pinstripe_payment.create_from_payment_entry(self.name, order_number=self.get_daily_order_key(), description=description)
 			if not payment_intent_id:
-				raise Exception(_("Unsuccessful attempt at creating payment via Stripe API (no payment intent returned)"))
+				raise IOError("Unsuccessful attempt to create payment via Stripe API (no payment intent returned)")
 			self.db_set('reference_no', payment_intent_id, update_modified = True, commit=True)  # commit SQL immediately
 			self._log_stripe_on_success(payment_intent_id)
 			return payment_intent_id
@@ -144,7 +144,7 @@ class PaymentEntry(AccountsController):
 			              short_message=ex, ref_doctype='Daily Order' if self.get_daily_order_key() else 'Payment Entry',
 						  ref_docname = self.get_daily_order_key() if self.get_daily_order_key() else self.name,
 						  auto_commit=True)
-			raise LoggedError from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
+			raise LoggedError(ex) from ex # VERY important to re-raise, so that Submit fails.  But no need to write a 2nd Log.
 
 	def _log_stripe_on_success(self, payment_intent_id, activity_type='Stripe Payment'):
 		"""
@@ -166,7 +166,13 @@ class PaymentEntry(AccountsController):
 		As part of Payment Entry cancellation, refund the Payment Intent in Stripe.
 		"""
 		from pinstripe.pinstripe.doctype.pinstripe_payment import pinstripe_payment  # late import due to cross-App dependency.
-		pinstripe_payment.refund_from_payment_entry(self)
+		try:
+			pinstripe_payment.generate_refund_from_payment_entry(self)
+		except Exception as ex:
+			print(f"generate_refund_from_payment_entry {str(ex)}")
+			if 'has already been refunded' not in str(ex):
+				# Any errors besides the above should be throw again
+				raise ex
 
 	def can_cancel(self):
 		from ftp.ftp_module.generics import Result  # late import due to cross-App dependency.
@@ -196,7 +202,7 @@ class PaymentEntry(AccountsController):
 		# Farm To People:
 		# --------
 
-		# self.create_stripe_refund()
+		self.create_stripe_refund()
 		CustomerAccountSettlement.delete_cancelled_payment_entry(self)
 		if self.party and self.party_type in ("Customer"):
 			reapply_customer_credits(customer_key=self.party)  # FTP : Recalculate customer's account balance.

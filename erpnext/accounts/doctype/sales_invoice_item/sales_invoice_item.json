@@ -90,6 +90,7 @@
   "sales_order",
   "so_detail",
   "sales_invoice_item",
+  "daily_order_item_key",
   "column_break_74",
   "delivery_note",
   "dn_detail",
@@ -99,8 +100,7 @@
   "dimension_col_break",
   "project",
   "section_break_54",
-  "page_break",
-  "daily_order_item_key"
+  "page_break"
  ],
  "fields": [
   {
@@ -836,7 +836,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-06-09 13:08:01.179445",
+ "modified": "2024-07-20 15:51:31.264543",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

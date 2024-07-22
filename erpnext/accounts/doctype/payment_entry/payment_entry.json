@@ -153,6 +153,7 @@
    "options": "Cost Center"
   },
   {
+   "columns": 1,
    "fieldname": "mode_of_payment",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -179,6 +180,7 @@
   },
   {
    "bold": 1,
+   "columns": 1,
    "depends_on": "eval:in_list([\"Receive\", \"Pay\"], doc.payment_type) && doc.party_type",
    "fieldname": "party",
    "fieldtype": "Dynamic Link",
@@ -750,7 +752,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-10-24 17:26:33.754073",
+ "modified": "2024-07-21 21:07:52.507126",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
@@ -792,6 +794,6 @@
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "title_field": "title",
+ "title_field": "party",
  "track_changes": 1
 }
