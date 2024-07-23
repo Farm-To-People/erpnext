@@ -828,7 +828,7 @@
    "fieldname": "daily_order_item_key",
    "fieldtype": "Link",
    "label": "Daily Orderline Key",
-   "length": 20,
+   "length": 50,
    "options": "Daily Order Item",
    "search_index": 1
   }
@@ -836,7 +836,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-20 15:51:31.264543",
+ "modified": "2024-07-22 20:46:33.679061",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

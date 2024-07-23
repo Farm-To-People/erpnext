@@ -1984,6 +1984,7 @@
    "label": "Origin",
    "length": 30,
    "options": "Direct Edit\nDaily Order Edit\nShorts and Credits\nBTU",
+   "read_only": 1,
    "reqd": 1,
    "reqd_in_database": 1
   }
@@ -1998,7 +1999,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-07-20 13:58:23.006080",
+ "modified": "2024-07-22 15:47:27.370012",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
