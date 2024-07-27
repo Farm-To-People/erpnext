@@ -274,6 +274,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_in_quick_entry": 1,
    "fieldname": "language",
    "fieldtype": "Link",
    "label": "Print Language",
@@ -645,7 +646,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-05-09 19:47:58.436613",
+ "modified": "2024-07-23 22:47:19.643546",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
