@@ -250,16 +250,19 @@ class Item(WebsiteGenerator):
 			return
 
 		# Farm To People: Update redis after Item is modified.
-		try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
-		rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
-		update_filters_in_redis(self)
+		try:
+			try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
+			rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
+			update_filters_in_redis(self)
 
-		# Sanity Updates
-		js_update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
+			# Sanity Updates
+			js_update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
 
-		# If necessary, also update the Sanity Categories
-		for item_group_key in self._website_item_groups_altered():
-			update_sanity_product_category(item_group=item_group_key, update_parent_group=False)
+			# If necessary, also update the Sanity Categories
+			for item_group_key in self._website_item_groups_altered():
+				update_sanity_product_category(item_group=item_group_key, update_parent_group=False)
+		except Exception as e:
+			frappe.msgprint(f"{e}", to_console=True)
 
 
 	def cascade_uom_into_prices(self):
