@@ -134,6 +134,7 @@ class Customer(TransactionBase):
 
 	def on_update(self):
 		from ftp.ftp_module.doctype.customer_holds.customer_holds import CustomerHolds  # Important: Late Import due to Circular Reference
+		from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder  
 
 		self.validate_name_with_customer_group()
 		# Datahenge: Disabling these 2 features.  They don't help, but rather, create extraneous, junk data.
@@ -150,6 +151,11 @@ class Customer(TransactionBase):
 		self.update_customer_groups()
 
 		# Farm To People
+		doc_orig = self.get_doc_before_save()
+		if doc_orig and doc_orig.reusable_packaging_opt_in != self.reusable_packaging_opt_in:
+			DailyOrder.update_changed_daily_orders(self.name, self.reusable_packaging_opt_in) 
+
+
 		if self.customer_holds_changed():
 			# If any Holds modified, update all related orders
 			CustomerHolds._update_daily_orders(self.name)  # pylint: disable=protected-access
@@ -1232,3 +1238,4 @@ def update_order_phone_numbers(customer_key: str, mobile_number: str=None):
 	except Exception as ex:
 		print(f"Error in update_order_phone_numbers(): {ex}")
 		raise ex
+

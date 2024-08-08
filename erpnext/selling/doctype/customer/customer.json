@@ -87,6 +87,7 @@
   "pauses",
   "ftp_custom_controls_section",
   "ftp_options",
+  "reusable_packaging_opt_in",
   "email_overrides_section",
   "first_order_email_sent",
   "override"
@@ -628,6 +629,13 @@
    "fieldname": "override",
    "fieldtype": "Table",
    "options": "Transactional Email Override"
+  },
+  {
+   "default": "Unknown",
+   "fieldname": "reusable_packaging_opt_in",
+   "fieldtype": "Select",
+   "label": "Reusable Packaging Opt In",
+   "options": "Unknown\nYes\nNo"
   }
  ],
  "icon": "fa fa-user",
@@ -646,7 +654,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-07-23 22:47:19.643546",
+ "modified": "2024-07-31 12:50:46.165191",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
