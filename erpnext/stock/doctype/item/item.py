@@ -627,12 +627,17 @@ class Item(WebsiteGenerator):
 			ch.uom = self.stock_uom
 			ch.conversion_factor = 1
 
+		# Brian - This Frappe standard code is wrong and dangerous.  We should *absolutely* be able to create a 1:1 Conversion Factor between
+		#         different UOMs.  I'm commenting it out.
+		# pylint: disable=pointless-string-statement
+		'''
 		to_remove = []
 		for d in self.get("uoms"):
 			if d.conversion_factor == 1 and d.uom != self.stock_uom:
 				to_remove.append(d)
 
 		[self.remove(d) for d in to_remove]
+		'''
 
 	def update_show_in_website(self):
 		if self.disabled:
@@ -660,6 +665,8 @@ class Item(WebsiteGenerator):
 				self.append("reorder_levels", n)
 
 	def validate_conversion_factor(self):
+		from erpnext.stock.get_item_details import get_conversion_factor
+
 		check_list = []
 		for d in self.get('uoms'):
 			if cstr(d.uom) in check_list:
@@ -671,6 +678,17 @@ class Item(WebsiteGenerator):
 			if d.uom and cstr(d.uom) == cstr(self.stock_uom) and flt(d.conversion_factor) != 1:
 				frappe.throw(
 					_("Conversion factor for default Unit of Measure must be 1 in row {0}").format(d.idx))
+
+		# Datahenge : Not done yet!  How about validating the Default Sales UOM and Default Purchase UOM?
+		if self.sales_uom != self.stock_uom:
+			factor = get_conversion_factor(self.item_code, self.sales_uom)
+			if not factor:
+				raise ValueError(f"Unable to find a UOM Conversion from {self.sales_uom} to {self.stock_uom}")
+		if self.purchase_uom != self.stock_uom:
+			factor = get_conversion_factor(self.item_code, self.purchase_uom)
+			if not factor:
+				raise ValueError(f"Unable to find a UOM Conversion from {self.purchase_uom} to {self.stock_uom}")
+		# DH - End
 
 	def validate_item_type(self):
 		if self.has_serial_no == 1 and self.is_stock_item == 0 and not self.is_fixed_asset:
