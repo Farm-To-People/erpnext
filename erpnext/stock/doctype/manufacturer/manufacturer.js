@@ -14,6 +14,31 @@ frappe.ui.form.on('Manufacturer', {
 		};
 
 		frm.events.add_button_show_sanity_record(frm);
+
+		// Middleware Button Group - Begin
+		frm.add_custom_button(__("Show Keys"), function() {
+			frappe.call({
+				doc: frm.doc,
+				method: "button_show_middleware_redis",
+				callback: function(r) {
+					frappe.msgprint(r);
+				}
+			});
+		},('Middleware'));
+
+		frm.add_custom_button(__("Update"), function() {
+			frappe.call({
+				method: "ftp.ftp_invent.redis.manufacturer_attributes.rewrite_attributes_by_manufacturer",
+				args: {
+					"manufacturer_key": frm.doc.name
+				},
+				callback: function(r) {
+					frappe.msgprint("Redis keys updated.");
+				}
+			});
+		},('Middleware'));
+
+		// Middleware Button Group - End
 	},
 
 	// This function adds a button "Show Sanity Data"
