@@ -22,6 +22,8 @@
   "address_html",
   "column_break_8",
   "contact_html",
+  "website_filters_section",
+  "manufacturer_web_filters",
   "section_break_10",
   "notes"
  ],
@@ -115,11 +117,22 @@
    "options": "MF-.",
    "reqd": 1,
    "set_only_once": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "website_filters_section",
+   "fieldtype": "Section Break",
+   "label": "Website Filters"
+  },
+  {
+   "fieldname": "manufacturer_web_filters",
+   "fieldtype": "Table MultiSelect",
+   "options": "Manufacturer Filter Map"
   }
  ],
  "icon": "fa fa-certificate",
  "links": [],
- "modified": "2024-04-07 15:19:12.421207",
+ "modified": "2024-08-12 18:30:52.027396",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Manufacturer",
