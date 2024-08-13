@@ -19,6 +19,16 @@ class Manufacturer(Document):
 		from ftp.ftp_sanity.manufacturer import update_sanity_producer
 		update_sanity_producer(self)
 
+	def on_change(self):
+		# Late imports due to cross-module dependency:
+
+		from ftp.ftp_module.doctype.manufacturer_filter_map import update_filters_in_redis
+
+		try:
+			update_filters_in_redis(self)
+		except Exception as e:
+			frappe.msgprint(f"{e}", to_console=True)
+
 	@frappe.whitelist()
 	def get_sanity_record(self):
 		"""
