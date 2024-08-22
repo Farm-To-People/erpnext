@@ -46,6 +46,8 @@
   "can_be_favorite",
   "include_in_popular_searches",
   "dbp_product_id",
+  "exclude_from_shipping_rule_subtotal",
+  "exclude_from_subtotal_discounts",
   "section_break_11",
   "is_item_from_hub",
   "brand",
@@ -1219,6 +1221,20 @@
    "options": "None\nSales UOM\nWeight\nSales UOM + Weight\nCustom",
    "reqd": 1,
    "reqd_in_database": 1
+  },
+  {
+   "default": "0",
+   "description": "When checked, this Item's line amount will be ignored when calculating Delivery Fee thresholds (Shipping Rule)",
+   "fieldname": "exclude_from_shipping_rule_subtotal",
+   "fieldtype": "Check",
+   "label": "Exclude from Shipping Rule Subtotal"
+  },
+  {
+   "default": "0",
+   "description": "When checked, this Item's line amount does not participate in Discounts Against Subtotal.",
+   "fieldname": "exclude_from_subtotal_discounts",
+   "fieldtype": "Check",
+   "label": "Exclude from Subtotal Discounts"
   }
  ],
  "icon": "fa fa-tag",
@@ -1233,7 +1249,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-06-19 12:05:53.388666",
+ "modified": "2024-08-21 18:26:51.910659",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
