@@ -8,7 +8,8 @@
   "supplier",
   "supplier_part_no",
   "qty_minimum",
-  "qty_multiples"
+  "qty_multiples",
+  "no_automatic_po"
  ],
  "fields": [
   {
@@ -44,12 +45,19 @@
    "in_list_view": 1,
    "label": "Multiples Of",
    "non_negative": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "no_automatic_po",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "No Automatic PO"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-07-10 14:15:54.421184",
+ "modified": "2024-08-24 15:52:07.542994",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Supplier",

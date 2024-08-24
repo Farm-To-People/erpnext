@@ -100,9 +100,6 @@ class Item(WebsiteGenerator):
 		if self.packing_sort_code and len(self.packing_sort_code) < 5:
 			self.packing_sort_code = self.packing_sort_code.rjust(5, "0")
 
-		#if self.website_uom_option != 'Custom':
-		#	self.sales_uom_website = ''
-
 	def validate(self):
 		super(Item, self).validate()
 
