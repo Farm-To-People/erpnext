@@ -42,12 +42,13 @@
   "sb_misc",
   "segregation",
   "packing_sort_code",
+  "dbp_product_id",
   "column_break_29",
   "can_be_favorite",
   "include_in_popular_searches",
-  "dbp_product_id",
   "exclude_from_shipping_rule_subtotal",
   "exclude_from_subtotal_discounts",
+  "exclude_from_weekly_sales_controls",
   "section_break_11",
   "is_item_from_hub",
   "brand",
@@ -1235,6 +1236,13 @@
    "fieldname": "exclude_from_subtotal_discounts",
    "fieldtype": "Check",
    "label": "Exclude from Subtotal Discounts"
+  },
+  {
+   "default": "0",
+   "description": "When checked, prevents this Item from automatically appearing on Weekly Sales Controls (e.g.  certain kinds of 'Bundles')",
+   "fieldname": "exclude_from_weekly_sales_controls",
+   "fieldtype": "Check",
+   "label": "Exclude from Weekly Sales Controls"
   }
  ],
  "icon": "fa fa-tag",
@@ -1249,7 +1257,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-08-21 18:26:51.910659",
+ "modified": "2024-08-30 11:23:51.354972",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
