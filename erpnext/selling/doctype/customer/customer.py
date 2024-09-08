@@ -153,7 +153,7 @@ class Customer(TransactionBase):
 		# Farm To People
 		doc_orig = self.get_doc_before_save()
 		if doc_orig and doc_orig.reusable_packaging_opt_in != self.reusable_packaging_opt_in:
-			DailyOrder.update_changed_daily_orders(self.name, self.reusable_packaging_opt_in) 
+			DailyOrder.update_changed_daily_orders(self.name)
 
 
 		if self.customer_holds_changed():
