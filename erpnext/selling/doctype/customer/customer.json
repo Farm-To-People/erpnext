@@ -66,8 +66,6 @@
   "payment_terms",
   "credit_limits",
   "more_info",
-  "dbp_order_quantity",
-  "dbp_login_id",
   "customer_details",
   "column_break_45",
   "market_segment",
@@ -88,6 +86,10 @@
   "ftp_custom_controls_section",
   "ftp_options",
   "reusable_packaging_opt_in",
+  "dbp_order_quantity",
+  "dbp_login_id",
+  "customer_acquisition_channel",
+  "registration_date",
   "email_overrides_section",
   "first_order_email_sent",
   "override"
@@ -636,6 +638,19 @@
    "fieldtype": "Select",
    "label": "Reusable Packaging Opt In",
    "options": "Unknown\nYes\nNo"
+  },
+  {
+   "fieldname": "customer_acquisition_channel",
+   "fieldtype": "Link",
+   "label": "Acquisition Channel",
+   "options": "Acquisition Channel",
+   "search_index": 1
+  },
+  {
+   "fieldname": "registration_date",
+   "fieldtype": "Date",
+   "label": "Registration Date",
+   "search_index": 1
   }
  ],
  "icon": "fa fa-user",
@@ -654,7 +669,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-07-31 12:50:46.165191",
+ "modified": "2024-09-09 13:17:23.848265",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

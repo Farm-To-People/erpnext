@@ -12,6 +12,7 @@
   "coupon_code",
   "coupon_type",
   "coupon_code_group",
+  "assign_to_acquisition_channel",
   "customer",
   "column_break_4",
   "description",
@@ -213,10 +214,16 @@
   {
    "fieldname": "column_break_24",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "assign_to_acquisition_channel",
+   "fieldtype": "Link",
+   "label": "Acquisition Channel",
+   "options": "Acquisition Channel"
   }
  ],
  "links": [],
- "modified": "2024-07-21 23:06:25.230079",
+ "modified": "2024-09-05 12:01:24.649694",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",
