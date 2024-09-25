@@ -414,10 +414,10 @@ def book_deferred_income_or_expense(doc, deferred_process, posting_date=None):
 			)
 
 	via_journal_entry = cint(
-		frappe.db.get_singles_value("Accounts Settings", "book_deferred_entries_via_journal_entry")
+		frappe.db.get_single_value("Accounts Settings", "book_deferred_entries_via_journal_entry")  # DH : Let's stop using 'get_singles_value'
 	)
-	submit_journal_entry = cint(frappe.db.get_singles_value("Accounts Settings", "submit_journal_entries"))
-	book_deferred_entries_based_on = frappe.db.get_singles_value(
+	submit_journal_entry = cint(frappe.db.get_single_value("Accounts Settings", "submit_journal_entries"))  # DH : Let's stop using 'get_singles_value'
+	book_deferred_entries_based_on = frappe.db.get_single_value(
 		"Accounts Settings", "book_deferred_entries_based_on"
 	)
 
@@ -436,7 +436,7 @@ def process_deferred_accounting(posting_date=None):
 		posting_date = today()
 
 	if not cint(
-		frappe.db.get_singles_value("Accounts Settings", "automatically_process_deferred_accounting_entry")
+		frappe.db.get_single_value("Accounts Settings", "automatically_process_deferred_accounting_entry")
 	):
 		return
 

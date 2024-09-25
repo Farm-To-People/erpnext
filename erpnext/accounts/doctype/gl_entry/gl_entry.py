@@ -435,6 +435,9 @@ def on_doctype_update():
 
 
 def rename_gle_sle_docs():
+	"""
+	Datahenge: The purpose of these functions is to replace the hash 'name' values (e.g. 3f3c34ab) with permanent names.
+	"""
 	for doctype in ["GL Entry", "Stock Ledger Entry"]:
 		rename_temporarily_named_docs(doctype)
 
@@ -442,12 +445,21 @@ def rename_gle_sle_docs():
 def rename_temporarily_named_docs(doctype):
 	"""Rename temporarily named docs using autoname options"""
 	docs_to_rename = frappe.get_all(doctype, {"to_rename": "1"}, order_by="creation", limit=50000)
+	if not docs_to_rename:
+		return
+	print(f"Number of {doctype} to rename = {len(docs_to_rename)}")  # DH: Summarize what is about to happen.
+
 	for doc in docs_to_rename:
-		oldname = doc.name
-		set_name_from_naming_options(frappe.get_meta(doctype).autoname, doc)
-		newname = doc.name
-		frappe.db.sql(
-			f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0 where name = %s",
-			(newname, oldname),
-			auto_commit=True,
-		)
+		try:
+			oldname = doc.name
+			set_name_from_naming_options(frappe.get_meta(doctype).autoname, doc)
+			newname = doc.name
+			frappe.db.sql(
+				f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0 where name = %s",
+				(newname, oldname),
+				auto_commit=True,
+			)
+		except Exception as ex:
+			print(f"Error 'rename_temporarily_named_docs()': {ex}")
+
+	print("Finished renaming temporarily named documents.")

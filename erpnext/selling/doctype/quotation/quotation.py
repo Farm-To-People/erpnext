@@ -333,7 +333,7 @@ def get_list_context(context=None):
 
 @frappe.whitelist()
 def make_sales_order(source_name: str, target_doc=None):
-	if not frappe.db.get_singles_value(
+	if not frappe.db.get_single_value(
 		"Selling Settings", "allow_sales_order_creation_for_expired_quotation"
 	):
 		quotation = frappe.db.get_value(

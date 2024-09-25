@@ -2051,7 +2051,7 @@ class AccountsController(TransactionBase):
 		party_gle_currency = get_party_gle_currency(party_type, party, self.company)
 		party_account = self.get("debit_to") if self.doctype == "Sales Invoice" else self.get("credit_to")
 		party_account_currency = get_account_currency(party_account)
-		allow_multi_currency_invoices_against_single_party_account = frappe.db.get_singles_value(
+		allow_multi_currency_invoices_against_single_party_account = frappe.db.get_single_value(
 			"Accounts Settings", "allow_multi_currency_invoices_against_single_party_account"
 		)
 
