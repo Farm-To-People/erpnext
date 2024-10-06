@@ -346,7 +346,7 @@ def filter_pricing_rules(args, pricing_rules: object, doc=None) -> list:
 		raise RuntimeError("Why call function filter_pricing_rules() without passing any 'pricing_rules'?")
 	# validate_args_schema_PY1(doc, args)  # need to ensure that arg contains enough information.
 
-	args["for_shopping_cart"] = True  # DH (28 March) For the purpose of price calculations, this argument avoids conflicts due to lack of Priority.
+	args["for_shopping_cart"] = True  # Datahenge: For the purpose of price calculations, this argument avoids conflicts due to lack of Priority.
 
 	if isinstance(pricing_rules, list):
 		dh_original_type = "List"
