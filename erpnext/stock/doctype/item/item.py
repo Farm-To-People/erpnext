@@ -179,7 +179,6 @@ class Item(WebsiteGenerator):
 		if not re.match("^\\d+$", value):
 			raise ValueError("Data filed 'Packing Slip Position' can only contain numbers.")
 
-
 	def validate_website_item_groups(self):
 
 		number_of_primary_groups = len([ each for each in self.website_item_groups if each.is_priority ])
@@ -190,9 +189,6 @@ class Item(WebsiteGenerator):
 		#	raise ValueError("Item does not have a Website Item Group marked with 'Is Priority'.")
 
 	def on_update(self):
-		from ftp.utilities.doc_extensions import update_order_item_names
-		from ftp.ftp_invent.redis.item_attributes import update_popular_searches
-		from ftp.ftp_warehouse.lightspeed import create_update_product
 
 		invalidate_cache_for_item(self)
 		self.validate_name_with_item_group()
@@ -200,15 +196,9 @@ class Item(WebsiteGenerator):
 		self.update_item_price()
 		self.update_template_item()
 
-		doc_orig = self.get_doc_before_save()
-		if doc_orig and doc_orig.include_in_popular_searches != self.include_in_popular_searches:
-			# Update the "Popular Searches" key in Middleware Redis
-			update_popular_searches(self.name, "add" if self.include_in_popular_searches else "remove")
-		if doc_orig and doc_orig.item_name != self.item_name:
-			update_order_item_names(self.item_code, self.item_name)
-
-		self.cascade_uom_into_prices()  # June 23rd 2024
-		create_update_product(self.item_code)  # Sync with Pick To Light using background queue
+	def on_change(self):
+		from ftp.ftp_website.api import item_data_changed  # late import due to cross-module dependency
+		item_data_changed(self)
 
 	def _website_item_groups_altered(self) -> set:
 		"""
@@ -227,40 +217,6 @@ class Item(WebsiteGenerator):
 			new_item_group_keys = set()
 
 		return orig_item_group_keys.symmetric_difference(new_item_group_keys)
-
-	def on_change(self):
-		"""
-		SQL may or may NOT be committed yet.
-		"""
-		# Late imports due to cross-module dependency:
-		from ftp.ftp_invent.redis.api import try_update_redis_inventory
-		from ftp.ftp_invent.redis.item_attributes import rewrite_attributes_by_item
-		from ftp.ftp_module.doctype.item_filter_map import update_filters_in_redis
-		from ftp.ftp_sanity.product import js_update_sanity_product           
-		from ftp.ftp_sanity.product_category import update_sanity_product_category
-
-		skip_integrations = False
-		if hasattr(self.flags, "ftp_skip_integrations") and self.flags.ftp_skip_integrations:
-			skip_integrations = True
-
-		if skip_integrations:  # This is used when importing Item Filters from a CSV file.
-			return
-
-		# Farm To People: Update redis after Item is modified.
-		try:
-			try_update_redis_inventory(self.item_code)  # update Redis after Item is modified.
-			rewrite_attributes_by_item(self.item_code)  # Update the semi-static Redis data
-			update_filters_in_redis(self)
-
-			# Sanity Updates
-			js_update_sanity_product(self) # New Sanity 2.0 sync released in January 2024
-
-			# If necessary, also update the Sanity Categories
-			for item_group_key in self._website_item_groups_altered():
-				update_sanity_product_category(item_group=item_group_key, update_parent_group=False)
-		except Exception as e:
-			frappe.msgprint(f"{e}", to_console=True)
-
 
 	def cascade_uom_into_prices(self):
 		"""
@@ -284,7 +240,6 @@ class Item(WebsiteGenerator):
 			AND ItemPrice.item_code = %(item_code)s
 		"""
 		frappe.db.sql(sql_statement, values={'item_code': self.item_code})
-
 
 	def validate_description(self):
 		'''Clean HTML description if set'''

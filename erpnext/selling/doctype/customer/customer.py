@@ -134,7 +134,8 @@ class Customer(TransactionBase):
 
 	def on_update(self):
 		from ftp.ftp_module.doctype.customer_holds.customer_holds import CustomerHolds  # Important: Late Import due to Circular Reference
-		from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder  
+		from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder
+		from ftp.ftp_module.doctype.reusable_packaging.reusable_packaging import handle_customer_opt_in_changed
 
 		self.validate_name_with_customer_group()
 		# Datahenge: Disabling these 2 features.  They don't help, but rather, create extraneous, junk data.
@@ -153,6 +154,9 @@ class Customer(TransactionBase):
 		# Farm To People
 		doc_orig = self.get_doc_before_save()
 		if doc_orig and doc_orig.reusable_packaging_opt_in != self.reusable_packaging_opt_in:
+			handle_customer_opt_in_changed(customer_key=self.name,
+			                               opt_in_original=doc_orig.reusable_packaging_opt_in,
+										   opt_in_now=self.reusable_packaging_opt_in)
 			DailyOrder.update_changed_daily_orders(self.name)
 
 
