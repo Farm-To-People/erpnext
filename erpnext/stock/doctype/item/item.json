@@ -158,7 +158,8 @@
   "publish_in_hub",
   "hub_category_to_publish",
   "hub_warehouse",
-  "synced_with_hub"
+  "synced_with_hub",
+  "volume_rating"
  ],
  "fields": [
   {
@@ -1243,6 +1244,13 @@
    "fieldname": "exclude_from_weekly_sales_controls",
    "fieldtype": "Check",
    "label": "Exclude from Weekly Sales Controls"
+  },
+  {
+   "default": "1",
+   "description": "Used for predicting box sizes.",
+   "fieldname": "volume_rating",
+   "fieldtype": "Float",
+   "label": "Volume Rating"
   }
  ],
  "icon": "fa fa-tag",
@@ -1257,7 +1265,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-08-30 11:23:51.354972",
+ "modified": "2024-11-03 13:16:11.044435",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

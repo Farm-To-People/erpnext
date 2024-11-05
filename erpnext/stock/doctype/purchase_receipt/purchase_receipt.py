@@ -140,6 +140,8 @@ class PurchaseReceipt(BuyingController):
 				break
 
 	def validate_with_previous_doc(self):
+
+		# TODO: FTP : We should be allowed to change UOMs
 		super(PurchaseReceipt, self).validate_with_previous_doc({
 			"Purchase Order": {
 				"ref_dn_field": "purchase_order",
