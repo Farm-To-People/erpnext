@@ -64,6 +64,7 @@
   "warranty_period",
   "weight_per_unit",
   "weight_uom",
+  "volume_rating",
   "reorder_section",
   "reorder_levels",
   "unit_of_measure_conversion",
@@ -158,8 +159,7 @@
   "publish_in_hub",
   "hub_category_to_publish",
   "hub_warehouse",
-  "synced_with_hub",
-  "volume_rating"
+  "synced_with_hub"
  ],
  "fields": [
   {
@@ -1265,7 +1265,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-11-03 13:16:11.044435",
+ "modified": "2024-11-08 18:48:53.724719",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
