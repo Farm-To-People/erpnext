@@ -16,6 +16,7 @@
   "default_price_list",
   "payment_terms",
   "default_shipping_rule",
+  "cannot_subscribe_to_totes",
   "lft",
   "rgt",
   "old_parent",
@@ -160,13 +161,20 @@
    "fieldname": "override",
    "fieldtype": "Table",
    "options": "Transactional Email Override"
+  },
+  {
+   "default": "0",
+   "description": "When marked, customers in this Group cannot subscribe to Reusable Packaging.",
+   "fieldname": "cannot_subscribe_to_totes",
+   "fieldtype": "Check",
+   "label": "No Reusable Totes"
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2024-05-09 12:23:27.152081",
+ "modified": "2024-10-24 11:17:37.241412",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",

@@ -71,6 +71,7 @@
   "market_segment",
   "industry",
   "language",
+  "customer_retention_segment",
   "is_frozen",
   "column_break_38",
   "loyalty_program",
@@ -651,6 +652,12 @@
    "fieldtype": "Date",
    "label": "Registration Date",
    "search_index": 1
+  },
+  {
+   "fieldname": "customer_retention_segment",
+   "fieldtype": "Link",
+   "label": "Customer Retention Segment",
+   "options": "Customer Retention Segment"
   }
  ],
  "icon": "fa fa-user",
@@ -669,7 +676,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-09-09 13:17:23.848265",
+ "modified": "2024-10-29 12:09:08.960701",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
