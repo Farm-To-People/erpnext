@@ -1440,3 +1440,4 @@ def update_variants(variants, template, publish_progress=True):
 def on_doctype_update():
 	# since route is a Text column, it needs a length for indexing
 	frappe.db.add_index("Item", ["route(500)"])
+	frappe.db.add_index("Item", ["item_type", "item_code"], index_name="item_type_code_IDX")
