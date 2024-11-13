@@ -11,6 +11,7 @@
   "naming_series",
   "customer",
   "customer_name",
+  "invoice_origin",
   "tax_id",
   "company",
   "company_tax_id",
@@ -21,6 +22,7 @@
   "due_date",
   "column_break_14",
   "is_pos",
+  "daily_order",
   "pos_profile",
   "is_consolidated",
   "is_return",
@@ -344,7 +346,7 @@
    "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
-   "in_standard_filter": 1,
+   "in_standard_filter": 0,
    "label": "Company",
    "oldfieldname": "company",
    "oldfieldtype": "Link",
@@ -2166,7 +2168,27 @@
    "label": "Update Outstanding for Self",
    "no_copy": 1,
    "print_hide": 1
-  }
+  },
+  {
+    "bold": 1,
+    "fieldname": "daily_order",
+    "fieldtype": "Link",
+    "in_list_view": 1,
+    "in_standard_filter": 1,
+    "label": "Daily Order",
+    "options": "Daily Order"
+  },
+  {
+    "default": "Direct Edit",
+    "fieldname": "invoice_origin",
+    "fieldtype": "Select",
+    "label": "Origin",
+    "length": 30,
+    "options": "Direct Edit\nDaily Order Edit\nShorts and Credits\nBTU",
+    "read_only": 1,
+    "reqd": 1,
+    "reqd_in_database": 1
+ }
  ],
  "icon": "fa fa-file-text",
  "idx": 181,
@@ -2178,7 +2200,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-07-18 15:30:39.428519",
+ "modified": "2024-09-18 15:30:39.428519",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

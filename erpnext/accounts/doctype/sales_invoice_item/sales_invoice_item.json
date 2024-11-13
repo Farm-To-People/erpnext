@@ -98,6 +98,7 @@
   "sales_order",
   "so_detail",
   "sales_invoice_item",
+  "daily_order_item_key",
   "column_break_74",
   "delivery_note",
   "dn_detail",
@@ -155,6 +156,7 @@
    "read_only": 1
   },
   {
+   "default": "item.item_code",
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "label": "Description",
@@ -922,12 +924,20 @@
   {
    "fieldname": "column_break_ytgd",
    "fieldtype": "Column Break"
-  }
+  },
+  {
+    "fieldname": "daily_order_item_key",
+    "fieldtype": "Link",
+    "label": "Daily Orderline Key",
+    "length": 50,
+    "options": "Daily Order Item",
+    "search_index": 1
+  }  
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-05-23 16:36:18.970862",
+ "modified": "2024-09-23 16:36:18.970862",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

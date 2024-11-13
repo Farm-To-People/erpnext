@@ -11,6 +11,9 @@ import frappe
 from frappe import _, throw
 from frappe.model.document import Document
 from frappe.utils import cint, flt
+from frappe.utils import getdate  # Datahenge
+from temporal import validate_datatype  # Datahenge
+
 
 apply_on_dict = {"Item Code": "items", "Item Group": "item_groups", "Brand": "brands"}
 
@@ -143,6 +146,13 @@ class PricingRule(Document):
 
 		if not self.margin_type:
 			self.margin_rate_or_amount = 0.0
+
+		# Datahenge begin
+		self.validate_nth()
+		self.validate_child_foo()
+		self.dh_validate_when_transaction()
+		# Datahenge end
+
 
 	def validate_duplicate_apply_on(self):
 		if self.apply_on != "Transaction":
@@ -285,7 +295,7 @@ class PricingRule(Document):
 
 	def validate_max_discount(self):
 		if self.rate_or_discount == "Discount Percentage" and self.get("items"):
-			for d in self.items:
+			for d in self.items:  # pylint: disable=not-an-iterable
 				max_discount = frappe.get_cached_value("Item", d.item_code, "max_discount")
 				if max_discount and flt(self.discount_percentage) > flt(max_discount):
 					throw(_("Max discount allowed for item: {0} is {1}%").format(d.item_code, max_discount))
@@ -302,6 +312,10 @@ class PricingRule(Document):
 
 		self.validate_from_to_dates("valid_from", "valid_upto")
 
+		# Datahenge
+		if self.valid_from_price_date and self.valid_to_price_date and getdate(self.valid_from_price_date) > getdate(self.valid_to_price_date):
+			frappe.throw(_("'Valid From Price Date' must be less than 'Valid To Price Date'"))
+
 	def validate_condition(self):
 		if (
 			self.condition
@@ -314,6 +328,83 @@ class PricingRule(Document):
 		if self.mixed_conditions and self.is_recursive:
 			frappe.throw(_("Recursive Discounts with Mixed condition is not supported by the system"))
 
+	def dh_validate_when_transaction(self):
+		if self.apply_on == 'Transaction':
+			if self.price_or_product_discount != "Price":
+				frappe.throw("Transaction discounts are only compatible with Price Discounts, not Product.")
+			if self.is_cumulative:
+				frappe.throw("Transaction discounts are not compatible with 'Is Cumulative'")
+			if self.applicable_for and self.applicable_for not in ['Customer', 'Customer Group', 'Territory']:
+				frappe.throw(f"Transaction discounts are not compatible with Applicable For = '{self.applicable_for}'")
+			if self.rate_or_discount == 'Rate':
+				frappe.throw(f"Transaction discounts are not compatible with 'Rate or Discount' = '{self.rate_or_discount}'")
+
+	def before_save(self):
+		# Datahenge: None of these make sense for Transaction Level discounts.
+		if self.apply_on == 'Transaction':
+			self.apply_discount_on_rate = False
+			self.valid_from_price_date = None
+			self.valid_to_price_date = None
+			self.margin_type = None
+
+	def validate_nth(self):
+		"""
+		Datahenge: Validate the Nth Order.
+		"""
+		if (self.nth_order_only) and (self.first_n_orders):
+			frappe.throw(_("Can only choose one of 'Apply to N-th Order Only' 'First N Orders'"))
+
+		if (self.nth_order_only) and (self.first_n_orders) and (self.nth_order_only > self.first_n_orders):
+			frappe.throw(_("Value of Nth Order Only cannot exceed value of First N Orders."))
+
+	def validate_child_foo(self):
+		"""
+		There are potentially 1 of 3 child tables:
+			* items ( Pricing Rule Item Code )
+			* item_groups ( Pricing Rule Item Group )
+			* brands ( Pricing Rule Item Brand )
+		"""
+
+		# Clear out invalid Child Table data.
+		if self.apply_on == 'Item Code':
+			self.item_groups = None
+			self.brands = None
+		if self.apply_on == 'Item Group':
+			self.items = None
+			self.brands = None
+		if self.apply_on == 'Brand':
+			self.items = None
+			self.item_groups = None
+
+		if hasattr(self, "items") and self.items:
+			rows_with_uom = [ row for row in self.items if row.uom ]  # pylint: disable=not-an-iterable
+			if rows_with_uom:
+				print(rows_with_uom)
+				raise ValueError("'UOMs are a bad idea right now' - Shelby & Brian")
+
+		if hasattr(self, "brands") and self.brands:
+			rows_with_uom = [ row for row in self.brands if row.uom ]  # pylint: disable=not-an-iterable
+			if rows_with_uom:
+				raise ValueError("UOM is not allowed when Apply On = Brand.")
+
+		if hasattr(self, "item_groups") and self.item_groups:
+			rows_with_uom = [ row for row in self.item_groups if row.uom ]  # pylint: disable=not-an-iterable
+			if rows_with_uom:
+				raise ValueError("UOM is not allowed when Apply On = Item Group.")
+
+	def on_change(self, verbose=False):
+		from ftp.ftp_invent.redis.api import try_update_redis_inventory
+		if self.apply_on == 'Item Code' and self.items:
+			message = ""
+			for row in self.items:  # pylint: disable=not-an-iterable
+				try_update_redis_inventory(item_code=row.item_code)
+				if verbose:
+					message += f"Website inventory updated for Item '{row.item_code}'. (Redis)\n"
+			if verbose:
+				frappe.msgprint(message)
+
+		self.on_update_children(child_docfield_name='items')
+
 
 # --------------------------------------------------------------------------------
 
@@ -321,6 +412,17 @@ class PricingRule(Document):
 @frappe.whitelist()
 def apply_pricing_rule(args, doc=None):
 	"""
+	PURPOSE: Given arguments and a Document, return some pricing-related data.
+	MISNOMER: The function's name implies something is "applied".  Not true.  It just returns a dictionary.
+
+	ARGUMENTS:
+		args:	String.  Can be transformed into JSON, then a Python Dictionary.
+		doc:	String.  Can be transformed into JSON, then a Dictionary.
+
+	The "items" portion of args determines how many results you get back.  Regardless of the number of actual "items' in the Document.
+
+	Example of 'args':
+
 	args = {
 	        "items": [{"doctype": "", "name": "", "item_code": "", "brand": "", "item_group": ""}, ...],
 	        "customer": "something",
@@ -340,6 +442,21 @@ def apply_pricing_rule(args, doc=None):
 	}
 	"""
 
+	# ---------------
+	# Datahenge:	This function is called directly by JS code on the ERPNext website.
+	#
+	# There are 2 callers that matter the most to me:
+	#
+	#	1. erpnext/public/js/controllers/transaction.js  (via changing fields like Company or Qty)
+	#	2. daily_order.js
+	#
+	#	When used by Daily and Sales Orders, 'args' must contain 1 additional element: 'coupon_codes'
+	#	To accomplish this, I should modify the JS code, and add Coupon Code Set to it's payload.
+	# ---------------
+
+	validate_datatype('args', args, (dict, str), mandatory=True)
+	validate_datatype('doc', doc, Document, mandatory=False)
+
 	if isinstance(args, str):
 		args = json.loads(args)
 
@@ -355,7 +472,7 @@ def apply_pricing_rule(args, doc=None):
 		return out
 
 	item_list = args.get("items")
-	args.pop("items")
+	args.pop("items")  # DH: Frappe could have just done this on line above
 
 	item_code_list = tuple(item.get("item_code") for item in item_list)
 	query_items = frappe.get_all(
@@ -370,7 +487,7 @@ def apply_pricing_rule(args, doc=None):
 
 	for item in item_list:
 		args_copy = copy.deepcopy(args)
-		args_copy.update(item)
+		args_copy.update(item)  # merge the Order Line dictionary (item) into the 'args' dictionary.
 		data = get_pricing_rule_for_item(args_copy, doc=doc)
 		out.append(data)
 
@@ -389,7 +506,50 @@ def update_pricing_rule_uom(pricing_rule, args):
 			pricing_rule.uom = row.uom
 
 
-def get_pricing_rule_for_item(args, doc=None, for_validate=False):
+def get_pricing_rule_for_item(args, doc=None, for_validate=False) -> dict:
+	#
+	# Datahenge:	A more-accurate function name would be 'get_pricing_rules_for_order_lines()'
+	#  				This function is EXTREMELY IMPORTANT.
+	#
+	"""
+	Arguments:
+		args: A Python Dictionary.
+		doc:  The datatype of this argument varies.
+		      Might be a Python Dictionary, representing a -parent- Document (e.g. Sales Order, Daily Order, Purchase Order)
+			  Might be an actual Document class.
+
+	Returns:
+		New dictionary 'item_details'
+	"""
+
+	# pylint: disable=pointless-string-statement
+	"""
+	Datahenge Notes:
+
+	Argument 'args' (a dictionary) should have a key 'coupon_codes', which is a List of Strings.
+
+	There are two(2) different process flows, and ways of arriving here:
+
+	1. JAVASCRIPT PATH
+		* 'apply_pricing_rule'
+		* erpnext/accounts/doctype/pricing_rule/pricing_rule.py, Line: 213
+		* Same Module as this comment; just scroll up a bit.
+		* Argument 'doc' is a JSON string.
+
+	2. PYTHON SERVERSIDE PATH:
+    	* 'get_item_details'
+    	* erpnext/erpnext/stock/get_item_details.py, Line: 121
+		* Argument 'doc' is a Frappe Class.
+		* Quite a lot of 'get_item_details' is building the 'args', prior to arriving here.
+
+	A huge challenge/problem with this function is Inconsistent Argument Types.  What are the contents of 'args'?
+
+	When called from a Sales Order:
+	  * 'args' is a Dictionary of Sales Order, Sales Order Item, Coupon Codes, Price Lists.
+	  * 'doc' is the SalesOrder document.
+
+	"""
+
 	from erpnext.accounts.doctype.pricing_rule.utils import (
 		get_applied_pricing_rules,
 		get_pricing_rule_items,
@@ -397,11 +557,51 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 		get_product_discount_rule,
 	)
 
+	validate_datatype('args', args, dict, mandatory=True)  # Datahenge: Make sure arguments are passed and are a Dictionary.
+	args = frappe._dict(args)
+
 	if isinstance(doc, str):
 		doc = json.loads(doc)
 
 	if doc:
 		doc = frappe.get_doc(doc)
+		if doc.doctype in ['Daily Order', 'Sales Order'] and 'coupon_codes' not in args.keys():  # Datahenge: Make sure 'coupon_codes' exists when applicable
+			frappe.throw("Argument 'args' is missing an expected key: 'coupon_codes'")
+
+	# DH: The metadata key 'istable' is one of the more-ridiculous naming conventions in Frappe Framework.
+	#     Because -every- Document is a table.  What they actually meant was 'is_child_table'
+	#    :eyeroll:
+	if doc and bool(frappe.get_doc('DocType', doc.doctype).istable):
+		frappe.throw("Invalid call to 'get_pricing_rule_for_item()'.  Cannot pass a Child Document.")
+
+
+	# ----------------
+	# 2. Debugging output
+	# ----------------
+
+	frappe.dprint("\n***************** get_pricing_rule_for_item() *************************", check_env='FTP_DEBUG_PRICING_RULE')
+	if args.get('item_code'):
+		frappe.dprint(f"Item Code: {args.get('item_code')}", check_env='FTP_DEBUG_PRICING_RULE')
+
+	# frappe.print_caller()
+	# dprint("1. Function Arguments")
+	# dprint(f"\targs : a Dictionary with {len(args.keys())} keys.")
+	# dprint(f"\tdoc : a Document of type {type(doc)}")
+
+	# ----------------
+	# 3. Datahenge: Try to extract the Coupon Codes, and write to 'args' as a List of String.
+	# ----------------
+	if doc and doc.doctype in ['Sales Order', 'Daily Order'] and \
+		(('coupon_codes' not in args) or (not args['coupon_codes'])):
+
+		if hasattr(doc, 'coupon_code_set'):
+			args['coupon_codes'] = []
+			for coupon_code_doc in doc.coupon_code_set:
+				args.coupon_codes.append(coupon_code_doc.coupon_code)
+
+	# ----------------
+	# standard code
+	# ----------------
 
 	if args.get("is_free_item") or args.get("parenttype") == "Material Request":
 		return {}
@@ -418,7 +618,10 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 		}
 	)
 
+	# 4. Early exit condition: If 'ignore_pricing_rule', disable all Pricing Rules,
+	#                          then return the price information for all Lines.
 	if args.ignore_pricing_rule or not args.item_code:
+		frappe.dprint(f"* Warning: 'ignore_pricing_rule' is set for Order Line {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 		if frappe.db.exists(args.doctype, args.name) and args.get("pricing_rules"):
 			item_details = remove_pricing_rule_for_item(
 				args.get("pricing_rules"),
@@ -430,6 +633,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 
 	update_args_for_pricing_rule(args)
 
+	# DH: Confusing way of writing this, but leaving it alone for now:
 	pricing_rules = (
 		get_applied_pricing_rules(args.get("pricing_rules"))
 		if for_validate and args.get("pricing_rules")
@@ -443,18 +647,66 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 			if not pricing_rule:
 				continue
 
+			# For each --potential-- Pricing Rule, determine if it's actually applicable or not.
 			if isinstance(pricing_rule, str):
 				pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
 				update_pricing_rule_uom(pricing_rule, args)
 				pricing_rule.apply_rule_on_other_items = get_pricing_rule_items(pricing_rule) or []
 
+			# Datahenge: Can we now *assume* Pricing Rule is a Document?  A dictionary?
+
 			if pricing_rule.get("suggestion"):
 				continue
 
-			item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0)
+			# ------------------------------------
+			# Farm To People: Nth Order
+			# ------------------------------------
+			if doc and doc.doctype == 'Daily Order' and bool(pricing_rule.nth_order_only):
+				frappe.dprint(f"* Pricing Rule {pricing_rule['name']} requires an Nth order condition.", check_env='FTP_DEBUG_PRICING_RULE')
+				try:
+					# Create a list of all non-cancelled Daily Orders
+					nth_order_list = create_nth_order_list(customer_id=doc.customer,
+														daily_order=doc)
+					this_order_position = next(iter([ order for order in nth_order_list if order['name'] == doc.name ]))
+					this_order_position = this_order_position['nth_order_index']
+				except StopIteration:
+					this_order_position = 1
+
+				if this_order_position !=  pricing_rule.nth_order_only:
+					frappe.dprint(f"* Skipping Pricing rule {pricing_rule['name']} because Order {doc.name} is not the {pricing_rule.nth_order_only}th order.",
+								check_env='FTP_DEBUG_PRICING_RULE')
+					continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
+
+				frappe.dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
+
+				# ------------------------------------
+				# Farm To People: Pricing Rule based on Order Line's Origin Code.
+				# ------------------------------------
+				if (pricing_rule.limit_to_origin != "All") and (doc.doctype == 'Daily Order Item'):
+					if pricing_rule.limit_to_origin == 'ALC' and doc.origin_code != 'A la carte':
+						continue
+					if pricing_rule.limit_to_origin == 'Subscription' and doc.origin_code != 'Subscription':
+						continue
+
+				# ------------------------------------
+				# Farm To People: Pricing Rule based on Coupon Codes.
+				# ------------------------------------
+				# NOTE: Standard code never accomplished this.
+				# Coupon Codes (if they actually worked at all), only worked with ERPNext shopping carts.
+
+				if not pricing_rule_matches_coupon_list(pricing_rule, args.coupon_codes):
+					# But what if a rule already exists on the Order.  And now then Coupon is deleted?
+					# Well, then delete the Rule.  Otherwise, INFINITE LOOP (yes...seriously)
+					frappe.dprint(f"x Removing Pricing Rule '{pricing_rule['name']}' from order, because Coupon Codes {args.coupon_codes} do not enable it.",
+								check_env='FTP_DEBUG_PRICING_RULE')
+					item_details = remove_pricing_rule_for_item(args.get("pricing_rules"), item_details, args.get('item_code'))
+					continue
+				# ------------------------------------
+
+			item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0  )# Doesn't make much sense, since 'item_details' is not Pricing Rule specific.
 			item_details.price_or_product_discount = pricing_rule.get("price_or_product_discount")
 
-			rules.append(get_pricing_rule_details(args, pricing_rule))
+			rules.append(get_pricing_rule_details(args, pricing_rule))  # Append a Dictionary to the applied rules (rules) List.  No logic, very simple.
 
 			if pricing_rule.mixed_conditions or pricing_rule.apply_rule_on_other:
 				item_details.update(
@@ -478,22 +730,31 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 
 			if not pricing_rule.validate_applied_rule:
 				if pricing_rule.price_or_product_discount == "Price":
-					apply_price_discount_rule(pricing_rule, item_details, args)
+					apply_price_discount_rule(pricing_rule, item_details, args) # Do some stuff????
 				else:
 					get_product_discount_rule(pricing_rule, item_details, args, doc)
+
+		# -----> end of really large For Loop!
+		applied_rule_names = ",".join([ each.pricing_rule for each in rules])
+		frappe.dprint(f"Price Loops completed.  Rules applied = {applied_rule_names}", check_env='FTP_DEBUG_PRICING_RULE')
 
 		if not item_details.get("has_margin"):
 			item_details.margin_type = None
 			item_details.margin_rate_or_amount = 0.0
 
-		item_details.has_pricing_rule = 1
+		item_details.has_pricing_rule = 1 # Datahenge: absolutely pointless variable assignment.
 
 		item_details.pricing_rules = frappe.as_json([d.pricing_rule for d in rules])
 
+		frappe.dprint(f"\nReturning variable 'item_details' to caller:\n{item_details}", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint("\n**************** END PRICING************************\n", check_env='FTP_DEBUG_PRICING_RULE')
+
 		if not doc:
 			return item_details
+		# So if there's a 'doc' we return absolutely nothing???
 
 	elif args.get("pricing_rules"):
+		frappe.dprint("Arguments contain 'pricing_rules' that must be removed from the Order.", check_env='FTP_DEBUG_PRICING_RULE')
 		item_details = remove_pricing_rule_for_item(
 			args.get("pricing_rules"),
 			item_details,
@@ -505,6 +766,9 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 
 
 def update_args_for_pricing_rule(args):
+	"""
+	Offical Upstream Function: But I'm unsure the point of it.
+	"""
 	if not (args.item_group and args.brand):
 		item = frappe.get_cached_value("Item", args.item_code, ("item_group", "brand"))
 		if not item:
@@ -533,6 +797,9 @@ def update_args_for_pricing_rule(args):
 
 
 def get_pricing_rule_details(args, pricing_rule):
+	"""
+	Another really poor function name.  It's just creating a dictionary, without "getting" anything new.
+	"""	
 	return frappe._dict(
 		{
 			"pricing_rule": pricing_rule.name,
@@ -545,14 +812,21 @@ def get_pricing_rule_details(args, pricing_rule):
 
 
 def apply_price_discount_rule(pricing_rule, item_details, args):
+	"""
+	DH: Modifies the mutable 'item_details' object in place.
+	"""
+	frappe.dprint("DH: Entering function 'pricing_rule.apply_price_discount_rule()' ...", check_env='FTP_DEBUG_PRICING_RULE')
+
 	item_details.pricing_rule_for = pricing_rule.rate_or_discount
 
+	# Margin logic:
 	if (pricing_rule.margin_type in ["Amount", "Percentage"] and pricing_rule.currency == args.currency) or (
 		pricing_rule.margin_type == "Percentage"
 	):
 		item_details.margin_type = pricing_rule.margin_type
 		item_details.has_margin = True
 
+		# Margin Rate/Amounts are aggregated when 'Apply Multiple Pricing Rules' is enabled.
 		if pricing_rule.apply_multiple_pricing_rules and item_details.margin_rate_or_amount is not None:
 			item_details.margin_rate_or_amount += pricing_rule.margin_rate_or_amount
 		else:
@@ -674,9 +948,10 @@ def remove_pricing_rules(item_list):
 
 
 def set_transaction_type(args):
+	# Farm To People: Added Daily Order.
 	if args.transaction_type:
 		return
-	if args.doctype in ("Opportunity", "Quotation", "Sales Order", "Delivery Note", "Sales Invoice"):
+	if args.doctype in ("Opportunity", "Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "Daily Order"):
 		args.transaction_type = "selling"
 	elif args.doctype in (
 		"Material Request",
@@ -717,3 +992,82 @@ def get_item_uoms(doctype, txt, searchfield, start, page_len, filters):
 		fields=["distinct uom"],
 		as_list=1,
 	)
+
+# Datahenge Functions - begin
+def pricing_rule_matches_coupon_list(pricing_rule, coupon_code_list, verbose=False):
+	"""
+		Arguments:
+			pricing_rule:  		Frappe dictionary
+			coupon_code_list: 	Python List of Strings, representing Coupon Codes.
+	"""
+	from temporal import validate_datatype  # Late import from across Python modules.
+
+	validate_datatype('pricing_rule', pricing_rule, (dict, PricingRule), mandatory=True)
+	validate_datatype('coupon_code_list', coupon_code_list, list, mandatory=False)
+
+	if not bool(pricing_rule.coupon_code_based):
+		return True
+
+	if not coupon_code_list:
+		return False	# no coupons provided, so matching is impossible.
+
+	# This is some REALLY screwed up syntax for escaping SQL 'WHERE IN'.  But it appears
+	# to be prolific throughout ERPNext.
+	coupon_codes = coupon_code_list
+	result = frappe.db.sql(""" SELECT Code.coupon_code
+		FROM `tabCoupon Code`	AS Code
+		INNER JOIN
+			`tabCoupon Code Pricing Rule` 	CodePricingRule
+		ON
+			CodePricingRule.parenttype = 'Coupon Code'
+		AND CodePricingRule.parent = Code.name
+		AND CodePricingRule.pricing_rule = %s
+		WHERE coupon_code in (%s) """ %
+		('%s', ', '.join(['%s'] * len(coupon_codes))),
+		values=tuple([pricing_rule.name] + coupon_codes),
+		debug=False, explain=False)
+
+	if (not result) or (not result[0]) or (not result[0][0]):
+		if verbose:
+			print(f"Not applying Pricing Rule = '{pricing_rule.name}'.  This rule requires a coupon, but none was found.")
+		return False
+	return True
+
+
+def create_nth_order_list(customer_id, daily_order=None):
+	"""
+	Farm To People:  Return a List of Daily Orders, filtered, and sorted by Delivery Date ascending.
+
+	Example:  [	{"name": "CDO-2022-01640", "delivery_date": "2022-03-15", "status_delivery": "Delivered", "nth_order_index": 128},
+	            {"name": "CDO-2022-01638", "delivery_date": "2022-03-22", "status_delivery": "Delivered", "nth_order_index": 129},
+				{"name": "CDO-2022-01641", "delivery_date": "2022-03-29", "status_delivery": "Delivered", "nth_order_index": 130}
+			  ]
+	"""
+
+	from temporal import validate_datatype, any_to_date
+	from ftp.ftp_module.doctype.daily_order.daily_order import DailyOrder
+
+	validate_datatype("customer_id", customer_id, str, mandatory=True)
+	validate_datatype("daily_order", daily_order, DailyOrder, mandatory=False)
+
+	dbp_order_quantity = frappe.db.get_value("Customer", customer_id, "dbp_order_quantity")
+
+	fields=['name', 'delivery_date', 'status_delivery']
+	filters={ "status_delivery": ["not in", ['Paused', 'Skipped', 'Cancelled']],
+	          "customer": customer_id
+	}
+	orders = frappe.get_list("Daily Order", filters=filters, fields=fields)
+
+	# NOTE: In the 'orders' object above, the delivery_date variables are DateTime dates...
+
+	if daily_order and daily_order not in [ each_order['name'] for each_order in orders ]:
+		orders.append({"name": daily_order.name,
+		               "delivery_date": any_to_date(daily_order.delivery_date)  # ...so this must be too
+					   })
+	ret = sorted(orders, key=lambda k: k['delivery_date'])
+
+	# Assigned each order an 'nth_order_index' value
+	for index, order in enumerate(ret):
+		order['nth_order_index'] = index + 1 + dbp_order_quantity
+
+	return ret

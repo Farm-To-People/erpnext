@@ -9,5 +9,6 @@ frappe.listview_settings["Payment Entry"] = {
 				};
 			};
 		}
+		console.log("payment_entry_list.js: I'm still being called, and that is a good thing.");
 	},
 };

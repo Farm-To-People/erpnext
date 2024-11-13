@@ -545,7 +545,11 @@ class PaymentEntry(AccountsController):
 								title=_("Invalid Purchase Invoice"),
 							)
 
-					if ref_doc.docstatus != 1:
+					#if ref_doc.doctype == "Daily Order":
+					#	allowed_delivery_status = ["Ready", "Delivered", "For Review", "Good Faith"]
+					#	if ref_doc.status_delivery not in allowed_delivery_status:
+					#		frappe.throw(_(f"Daily Order delivery status must be one of {', '.join(allowed_delivery_status)}"))
+					if ref_doc.docstatus != 1 and ref_doc.doctype != "Daily Order":
 						frappe.throw(
 							_("{0} {1} must be submitted").format(_(d.reference_doctype), d.reference_name)
 						)
@@ -594,7 +598,7 @@ class PaymentEntry(AccountsController):
 				je_accounts = frappe.db.sql(
 					"""select debit, credit from `tabJournal Entry Account`
 					where account = %s and party=%s and docstatus = 1 and parent = %s
-					and (reference_type is null or reference_type in ("", "Sales Order", "Purchase Order"))
+					and (reference_type is null or reference_type in ("", "Sales Order", "Purchase Order", "Daily Order"))
 					""",
 					(self.party_account, self.party, d.reference_name),
 					as_dict=True,
@@ -680,9 +684,17 @@ class PaymentEntry(AccountsController):
 				)
 			else:
 				if allocated_amount > outstanding:
+
+					#frappe.throw(
+					#	_("Row #{0}: Cannot allocate more than {1} against payment term {2}").format(
+					#		idx, fmt_money(outstanding), key[0]
+					#	)
+					#)
+
+					# Datahenge: This is a bit clearer
 					frappe.throw(
-						_("Row #{0}: Cannot allocate more than {1} against payment term {2}").format(
-							idx, fmt_money(outstanding), key[0]
+						_("Row #{0}: Cannot allocate {1} against outstanding amount {2} with payment term {3}").format(
+							idx, allocated_amount, outstanding, key[0]
 						)
 					)
 
@@ -1118,6 +1130,8 @@ class PaymentEntry(AccountsController):
 		self.make_advance_gl_entries(cancel=cancel)
 
 	def add_party_gl_entries(self, gl_entries):
+
+		# TODO: Datahenge:  Had to edit this in V13.  May have some problems in here V15 too.
 		if not self.party_account:
 			return
 
@@ -2194,6 +2208,14 @@ def get_reference_details(
 			party_field = "customer" if reference_doctype == "Sales Order" else "supplier"
 			party = ref_doc.get(party_field)
 			account = get_party_account(party_type, party, ref_doc.company)
+
+	# FTP : Adding Daily Order
+	elif reference_doctype == "Daily Order":
+		total_amount = ref_doc.get("amount_grandtotal_post_discounts")
+		exchange_rate = 1
+		outstanding_amount = ref_doc.get("total_amount_due")
+	# FTP : End
+
 	else:
 		# Get the exchange rate based on the posting date of the ref doc.
 		exchange_rate = get_exchange_rate(party_account_currency, company_currency, ref_doc.posting_date)

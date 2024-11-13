@@ -22,6 +22,7 @@ from erpnext.accounts.utils import (
 )
 from erpnext.controllers.accounts_controller import get_advance_payment_entries_for_regional
 
+# Datahenge: This entire line of thinking should be strongly questioned, and avoided for now.
 
 class PaymentReconciliation(Document):
 	# begin: auto-generated types
@@ -518,6 +519,10 @@ class PaymentReconciliation(Document):
 
 	@frappe.whitelist()
 	def reconcile(self):
+
+		# Datahenge: Version 13 code was terrifying.  I'll have to review later and see if Version 15 is any better.
+		raise frappe.exceptions.Forbidden("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
+
 		if frappe.db.get_single_value("Accounts Settings", "auto_reconcile_payments"):
 			running_doc = is_any_doc_running(
 				dict(
@@ -736,6 +741,8 @@ class PaymentReconciliation(Document):
 
 
 def reconcile_dr_cr_note(dr_cr_notes, company, active_dimensions=None):
+
+	raise frappe.exceptions.Forbidden("This function is forbidden, per Datahenge.  See 'Customer Account Settlements'")
 	for inv in dr_cr_notes:
 		voucher_type = "Credit Note" if inv.voucher_type == "Sales Invoice" else "Debit Note"
 

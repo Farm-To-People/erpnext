@@ -129,7 +129,8 @@ frappe.ui.form.on("Payment Entry", {
 		frm.set_query("reference_doctype", "references", function () {
 			let doctypes = ["Journal Entry"];
 			if (frm.doc.party_type == "Customer") {
-				doctypes = ["Sales Order", "Sales Invoice", "Journal Entry", "Dunning"];
+				// Datahenge:  Adding "Daily Order" as a possible reference DocType
+				doctypes = ["Sales Order", "Sales Invoice", "Journal Entry", "Dunning", "Daily Order"];
 			} else if (frm.doc.party_type == "Supplier") {
 				doctypes = ["Purchase Order", "Purchase Invoice", "Journal Entry"];
 			}
@@ -157,13 +158,20 @@ frappe.ui.form.on("Payment Entry", {
 		frm.set_query("reference_name", "references", function (doc, cdt, cdn) {
 			const child = locals[cdt][cdn];
 			const filters = { docstatus: 1, company: doc.company };
+			// Datahenge:  Adding "Daily Order" as a possible reference DocType
 			const party_type_doctypes = [
 				"Sales Invoice",
 				"Sales Order",
 				"Purchase Invoice",
 				"Purchase Order",
 				"Dunning",
+				"Daily Order",
 			];
+			// Farm To People: Daily Orders are never Submitted, their docstatus is perpetually zero
+			if(child.reference_doctype == "Daily Order") {
+				filters["docstatus"] = 0;
+				filters["status_delivery"] = "Ready";
+			}
 
 			if (in_list(party_type_doctypes, child.reference_doctype)) {
 				filters[doc.party_type.toLowerCase()] = doc.party;
@@ -1037,7 +1045,8 @@ frappe.ui.form.on("Payment Entry", {
 	},
 
 	get_order_doctypes: function (frm) {
-		return ["Sales Order", "Purchase Order"];
+		// Datahenge : Add Daily Order
+		return ["Sales Order", "Purchase Order", "Daily Order"];
 	},
 
 	get_invoice_doctypes: function (frm) {
@@ -1078,6 +1087,8 @@ frappe.ui.form.on("Payment Entry", {
 			var allocated_positive_outstanding = paid_amount + allocated_negative_outstanding;
 		} else if (["Customer", "Supplier"].includes(frm.doc.party_type)) {
 			total_negative_outstanding = flt(total_negative_outstanding, precision("outstanding_amount"));
+
+			/* DATAHENGE: Disabling so you can Credit a customer whenever you need to.
 			if (paid_amount > total_negative_outstanding) {
 				if (total_negative_outstanding == 0) {
 					frappe.msgprint(
@@ -1096,14 +1107,14 @@ frappe.ui.form.on("Payment Entry", {
 					);
 					return false;
 				}
-			} else {
+			} else { */
 				allocated_positive_outstanding = total_negative_outstanding - paid_amount;
 				allocated_negative_outstanding =
 					paid_amount +
 					(total_positive_outstanding_including_order < allocated_positive_outstanding
 						? total_positive_outstanding_including_order
 						: allocated_positive_outstanding);
-			}
+			// }
 		}
 
 		$.each(frm.doc.references || [], function (i, row) {
@@ -1245,14 +1256,15 @@ frappe.ui.form.on("Payment Entry", {
 				return;
 			}
 
+			// Datahenge: Add Daily Order
 			if (
 				frm.doc.party_type == "Customer" &&
-				!["Sales Order", "Sales Invoice", "Journal Entry", "Dunning"].includes(row.reference_doctype)
+				!["Sales Order", "Sales Invoice", "Journal Entry", "Dunning", "Daily Order"].includes(row.reference_doctype)
 			) {
 				frappe.model.set_value(row.doctype, row.name, "reference_doctype", null);
 				frappe.msgprint(
 					__(
-						"Row #{0}: Reference Document Type must be one of Sales Order, Sales Invoice, Journal Entry or Dunning",
+						"Row #{0}: Reference Document Type must be one of Daily Order, Sales Order, Sales Invoice, Journal Entry or Dunning",
 						[row.idx]
 					)
 				);

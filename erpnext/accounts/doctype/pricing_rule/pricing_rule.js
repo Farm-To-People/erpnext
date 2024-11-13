@@ -1,6 +1,8 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
+// TODO: Might be able to make this a completely patched function in FTP Module
+
 frappe.ui.form.on("Pricing Rule", {
 	setup: function (frm) {
 		frm.fields_dict["for_price_list"].get_query = function (doc) {
@@ -99,6 +101,12 @@ frappe.ui.form.on("Pricing Rule", {
 		frm.set_df_property("pricing_rule_help", "options", help_content);
 		frm.events.set_options_for_applicable_for(frm);
 		frm.trigger("toggle_reqd_apply_on");
+
+		// Datahenge Begin
+		frm.add_custom_button(__('Weighted Price Calculator'), () => {
+			weighted_price_calculator(frm);
+		},(''));
+		// Datahenge End
 	},
 
 	apply_on: function (frm) {
@@ -162,4 +170,126 @@ frappe.ui.form.on("Pricing Rule", {
 		if (!in_list(options, applicable_for)) applicable_for = null;
 		frm.set_value("applicable_for", applicable_for);
 	},
+
+	after_save: function(frm) {
+
+		if (frm.doc.coupon_code_based == true) {
+			return;
+		}
+		frappe.db.get_single_value("FTP Custom Settings", "open_dialog_on_price_change").then(val => {
+
+			if (val == false) {
+				return;
+			}
+			var my_dialog = new frappe.ui.Dialog({
+				title: 'Update Orders?',
+				width: 100,
+				fields: [
+					{
+						fieldtype: 'Select',
+						fieldname: 'update_existing_orders',
+						label: __('Update existing orders?'),
+						options: __('No\nYes'),
+						default: 'No',
+						reqd: 1,
+						onchange: function() {
+							if(my_dialog.fields_dict.update_existing_orders.value == 'Yes') {
+								my_dialog.set_df_property("delivery_date_start", "hidden", 0);
+							} else {
+								my_dialog.set_df_property("delivery_date_start", "hidden", 1);
+							}
+						}
+					},
+					{
+						'fieldtype': 'Date',
+						'fieldname': 'delivery_date_start',
+						'label': __('Starting with Delivery Date:'),
+						default: ((frm.doc.valid_from > frappe.datetime.get_today()) ? frm.doc.valid_from :frappe.datetime.get_today()),
+						hidden: true
+					}
+				]
+			});
+	
+			my_dialog.set_primary_action(__('Continue'), args => {
+	
+				if (args.update_existing_orders == 'Yes') {
+	
+					const dialog_data = my_dialog.get_values();
+					let delivery_date_start = dialog_data.delivery_date_start;
+	
+					frappe.call({
+						method:"ftp.utilities.pricing.js_recalculate_pricing_rule",
+						args: {
+							"pricing_rule_name": frm.doc.name,
+							"delivery_date_start": delivery_date_start
+						},
+						callback: function(r) {
+							if (r.message) {
+								frappe.msgprint(r.message);
+							}
+						}
+					});
+				}
+				my_dialog.hide();	
+			});
+			my_dialog.show();
+		})
+	},
 });
+
+
+function weighted_price_calculator(frm) {
+
+	const title = __("Weighted Price Calculator");
+	const fields = [
+		{
+			fieldname: 'item_code',
+			fieldtype: 'Link',
+			options: 'Item',
+			label: __('Item'),
+			reqd: 1
+		},
+		{
+			fieldname: 'as_of_date',
+			fieldtype:'Date',
+			label: __('Price Date'),
+			default: frappe.datetime.get_today(),
+			reqd: 1
+		},
+		{
+			fieldname: 'discount_price',
+			fieldtype: 'Float',
+			label: __('Discounted Unit Price'),
+			reqd: 1
+		},
+		{
+			fieldname: 'discount_per_qty',
+			fieldtype: 'Int',
+			label: __('Per Quantity'),
+			reqd: 1
+		},
+	];
+
+	var this_dialog = new frappe.ui.Dialog({
+		title: title,
+		fields: fields
+	});
+
+	this_dialog.set_primary_action(__('Calculate'), function() {
+		const dialog_data = this_dialog.get_values();
+		frappe.call({
+			'method': 'erpnext.accounts.doctype.pricing_rule.weighted_discounts.show_weighted_discounts',
+			'args': {
+				'item_code': dialog_data.item_code,
+				'discount_price': dialog_data.discount_price,
+				'discount_per_qty': dialog_data.discount_per_qty,
+				'as_of_date': dialog_data.as_of_date
+			},
+			'callback': (r) => {
+				console.log(r);
+			}
+		});
+		this_dialog.hide();
+	});
+	this_dialog.show();
+}
