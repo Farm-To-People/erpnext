@@ -169,7 +169,7 @@ def validate_fiscal_year(date, fiscal_year, company, label="Date", doc=None):
 		else:
 			throw(_("{0} '{1}' not in Fiscal Year {2}").format(label, formatdate(date), fiscal_year))
 
-
+# TODO: Datahenge: Seems like this function could be problematic ...
 @frappe.whitelist()
 def get_balance_on(
 	account=None,
@@ -386,6 +386,7 @@ def get_count_on(account, fieldname, date):
 
 @frappe.whitelist()
 def add_ac(args=None):
+	# Datahenge: Why not just spell out 'account'  :eye_roll:	
 	from frappe.desk.treeview import make_tree_args
 
 	if not args:
@@ -418,6 +419,7 @@ def add_ac(args=None):
 
 @frappe.whitelist()
 def add_cc(args=None):
+	# Datahenge: Why not just spell out cost_center  :eye_roll:	
 	from frappe.desk.treeview import make_tree_args
 
 	if not args:
@@ -451,7 +453,7 @@ def _build_dimensions_dict_for_exc_gain_loss(
 			dimensions_dict[dim.fieldname] = entry.get(dim.fieldname)
 	return dimensions_dict
 
-
+# TODO : Datahenge : Very concerned about this.  See documentation about 'Customer Account Settlements'
 def reconcile_against_document(
 	args, skip_ref_details_update_for_pe=False, active_dimensions=None
 ):  # nosemgrep
@@ -982,6 +984,7 @@ def get_held_invoices(party_type, party):
 	"""
 	Returns a list of names Purchase Invoices for the given party that are on hold
 	"""
+	# DH: Purchase invoices with a future release date
 	held_invoices = None
 
 	if party_type == "Supplier":

@@ -31,6 +31,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 	def get_data(self, args):
 		self.data = []
+		# DH: Fetches a List of Dictionary data containing AR transactions.
 		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
 		self.currency_precision = get_currency_precision() or 2
 
@@ -74,7 +75,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			row.update(party_dict)
 
 			# Advance against party
-			row.advance = party_advance_amount.get(party, 0)
+			row.advance = party_advance_amount.get(party, 0)  # NOTE: Datahenge be mindful of V15 correctly handling Prepayment reversals.
 
 			# In AR/AP, advance shown in paid columns,
 			# but in summary report advance shown in separate column

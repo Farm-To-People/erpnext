@@ -173,6 +173,22 @@ def get_party_details(party, party_type, args=None):
 
 def get_tax_template(posting_date, args):
 	"""Get matching tax rule"""
+	# Datahenge:  For this function, the value of 'args' should look something like this:
+	# 	{'customer': 'CUST-0062303',
+	#    'company': 'Farm To People',
+	#    'customer_group': 'None',
+	#    'billing_city': 'Jersey City',
+	#    'billing_county': None,
+	#    'billing_state': 'NJ',
+	#    'billing_zipcode': '07311',
+	#    'billing_country': 'United States',
+	#    'shipping_city': 'Jersey City',
+	#    'shipping_county': None,
+	#    'shipping_state': 'NJ',
+	#    'shipping_zipcode': '07311',
+	#    'shipping_country': 'United States',
+	#    'tax_type': 'Sales'}
+
 	args = frappe._dict(args)
 	conditions = []
 

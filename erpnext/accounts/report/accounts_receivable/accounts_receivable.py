@@ -221,6 +221,8 @@ class ReceivablePayableReport:
 	def update_voucher_balance(self, ple):
 		# get the row where this balance needs to be updated
 		# if its a payment, it will return the linked invoice or will be considered as advance
+
+		# TODO: Datahenge: This required modification in V13.  Be mindful of any problems related to Prepayment reversals.
 		row = self.get_voucher_balance(ple)
 		if not row:
 			return
@@ -1022,13 +1024,14 @@ class ReceivablePayableReport:
 				fieldtype="Data",
 			)
 
-		if self.account_type == "Receivable":
-			self.add_column(
-				_("Customer Contact"),
-				fieldname="customer_primary_contact",
-				fieldtype="Link",
-				options="Contact",
-			)
+		# Datahenge: Hiding because showing Contacts on AR Aging Reports is weird.
+		#if self.account_type == "Receivable":
+		#	self.add_column(
+		#		_("Customer Contact"),
+		#		fieldname="customer_primary_contact",
+		#		fieldtype="Link",
+		#		options="Contact",
+		#	)
 
 		self.add_column(label=_("Cost Center"), fieldname="cost_center", fieldtype="Data")
 		self.add_column(label=_("Voucher Type"), fieldname="voucher_type", fieldtype="Data")

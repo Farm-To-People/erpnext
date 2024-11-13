@@ -50,12 +50,27 @@ class ShippingRule(Document):
 		label: DF.Data
 		shipping_amount: DF.Currency
 		shipping_rule_type: DF.Literal["Selling", "Buying"]
+		is_default_rule: DF.Check
 	# end: auto-generated types
 
 	def validate(self):
 		self.validate_from_to_values()
 		self.sort_shipping_rule_conditions()
 		self.validate_overlapping_shipping_rule_conditions()
+
+	def on_update(self):
+		"""
+		If this rule is the Default, ensure no other rules are the default.
+		"""
+		# Another mistake in Frappe framework.  Checkboxes should automatically be Booleans, not Integers.
+		# I understand that MySQL stores them as TinyINT. That's no excuse for not correctly casting them to Boolean
+		# in the Document framework. Because in Python, `1 == True` is True.  But `1 is True` equals False.
+		#
+		# Demonstration:  frappe.whatis(self.is_default_rule)
+		#
+		if bool(self.is_default_rule) is True:
+			statement = """ UPDATE `tabShipping Rule` SET is_default_rule = 0 WHERE name <> %(rule_name)s """
+			frappe.db.sql(statement, values={'rule_name': self.name}, debug=False, explain=False)
 
 	def validate_from_to_values(self):
 		zero_to_values = []
@@ -85,27 +100,37 @@ class ShippingRule(Document):
 	def apply(self, doc):
 		"""Apply shipping rule on given doc. Called from accounts controller"""
 
+		# DATAHENGE: Frappe makes -huge- assumptions about the names of fields on 'doc'
+		# Examples: base_net_total, total_net_weight, shipping_amount, conversion_rate, company_currency
+		# Instead of receiving a 'doc', it should receive a Dictionary with a predefined schema.
+		# Regardless, I am simplifying Frappe's code a bit.
+
 		shipping_amount = 0.0
-		by_value = False
+		# by_value = False
 
 		if doc.get_shipping_address():
 			# validate country only if there is address
 			self.validate_countries(doc)
 
 		if self.calculate_based_on == "Net Total":
-			value = doc.base_net_total
-			by_value = True
+			# value = doc.base_net_total
+			# by_value = True
+			shipping_amount = self.get_shipping_amount_from_rules(doc.base_net_total)
 
 		elif self.calculate_based_on == "Net Weight":
-			value = doc.total_net_weight
-			by_value = True
+			#value = doc.total_net_weight
+			#by_value = True
+			shipping_amount = self.get_shipping_amount_from_rules(doc.total_net_weight)
 
 		elif self.calculate_based_on == "Fixed":
 			shipping_amount = self.shipping_amount
 
+		else:
+			raise ValueError(f"Unknown value {self.calculate_based_on}' for Shipping Rule field 'calculate_based_on'")
+
 		# shipping amount by value, apply conditions
-		if by_value:
-			shipping_amount = self.get_shipping_amount_from_rules(value)
+		#if by_value:
+		#	shipping_amount = self.get_shipping_amount_from_rules(value)
 
 		# convert to order currency
 		if doc.currency != doc.company_currency:

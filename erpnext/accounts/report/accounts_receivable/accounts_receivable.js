@@ -55,6 +55,7 @@ frappe.query_reports["Accounts Receivable"] = {
 		{
 			fieldname: "party",
 			label: __("Party"),
+			reqd: 1,  // Datahenge : Precaution to prevent performance hits.
 			fieldtype: "MultiSelectList",
 			get_data: function (txt) {
 				if (!frappe.query_report.filters) return;

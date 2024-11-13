@@ -47,7 +47,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "in_standard_filter": 1,
    "label": "Company",
    "oldfieldname": "company",
@@ -72,6 +72,7 @@
   {
    "fieldname": "tax_category",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Tax Category",
    "options": "Tax Category"
   }
@@ -79,7 +80,7 @@
  "icon": "fa fa-money",
  "idx": 1,
  "links": [],
- "modified": "2024-01-30 13:07:28.801104",
+ "modified": "2024-09-30 13:07:28.801104",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Taxes and Charges Template",
