@@ -45,6 +45,8 @@ frappe.ui.form.on("Purchase Order", {
 				},
 			};
 		});
+
+		set_target_warehouse(frm);  // Farm To People
 	},
 
 	company: function (frm) {
@@ -53,7 +55,7 @@ frappe.ui.form.on("Purchase Order", {
 
 	refresh: function (frm) {
 		if (frm.doc.is_old_subcontracting_flow) {
-			frm.trigger("get_materials_from_supplier");
+			frm.trigger("get_materials_from_supplier");  // Datahenge: This is the Standard ERPNext function, not the Farm to People function.
 
 			$("a.grey-link").each(function () {
 				var id = $(this).children(":first-child").attr("data-label");
@@ -63,9 +65,104 @@ frappe.ui.form.on("Purchase Order", {
 				}
 			});
 		}
-	},
 
+		if (frm.doc.docstatus == 0) {
+			// Custom Submit button #1
+			frm.add_custom_button(__('Email & Submit'),
+				function() {
+					frappe.db.get_value("Supplier", {"name": frm.doc.supplier}, "emails_for_purchase_order").then(val => {
+
+						let recipients = val.message.emails_for_purchase_order;
+						new frappe.views.CommunicationComposer({
+							doc: frm.doc,
+							frm: frm,
+							subject: __(frm.meta.name) + ': ' + frm.docname,
+							recipients: recipients,
+							attach_document_print: true,
+							message: "Purchase Order from Farm To People:",
+							real_name: frm.doc.real_name || frm.doc.contact_display || frm.doc.contact_name
+						});
+					});
+				}
+			);
+
+			if (frm.doc.supplier) {
+				/* FTP: Add 'Supplier' to 'Get Items From'
+				   Result is 1 PO line for each Item with a matching Default Supplier.
+				*/
+				frm.add_custom_button(__('Supplier'), () => {
+					frappe.call({
+						method: "erpnext.buying.doctype.purchase_order.purchase_order.get_suppliers_default_items",
+						args: { "supplier_id": frm.doc.supplier},
+						callback: function(r) {
+							if (r.message) {
+								frappe.msgprint(__("Added new PO lines; please update Quantity and Rates."));
+								let possible_new_lines = r.message;  // array of objects from the Python function
+								possible_new_lines.forEach(function (row, index) {
+
+									// console.log(row);
+
+									// Does this row already exist?
+									let existing_rows = frm.doc.items;
+									console.log(existing_rows);
+
+									// Create a new Purchase Order Line:
+									var new_order_line = cur_frm.add_child("items");
+									new_order_line.item_code = row['item_code'];
+									new_order_line.uom = row['purchase_uom'];
+									new_order_line.item_name = row['item_name'];
+									new_order_line.rate = row['price_list_rate'];
+									new_order_line.price_list_rate = new_order_line.rate;
+									// "Base" Rates are the Company Currency Rates
+									new_order_line.base_rate = new_order_line.rate;
+									new_order_line.base_price_list_rate = new_order_line.price_list_rate;
+									new_order_line.conversion_factor = row['conversion_factor']
+									new_order_line.schedule_date = frm.doc.schedule_date;
+									cur_frm.refresh_fields("items");  // Important to refresh that portion of the page!
+								});
+							}
+						}
+					});
+				}, __("Get Items From"));
+
+				// FTP: Add lines based on Daily Order's where this is the default Supplier of the Item.
+				frm.add_custom_button(__('Daily Orders'), 
+				                      () => frm.trigger('create_lines_from_daily_orders'),
+									  __("Get Items From"));
+			}
+		}  // end of if docstatus == 0
+
+		// FTP: Add the ability to reverse a Submit.
+		if (frm.doc.docstatus == 1) {
+			frm.add_custom_button(
+				__('Revert to Draft'),
+				() => {
+					frappe.call({
+						method: "revert_to_draft_ftp",
+						doc: frm.doc,
+						callback: function(r) {
+							if (r.message) {
+								frappe.msgprint(__("{0}", [r.message]));
+							}
+							frm.reload_doc();  // Because the docstatus changed.
+							}
+						});
+					}, 
+				__('Status'),
+				{ icon: 'full-page' }
+			)
+		}
+
+	// end of refresh()		
+	},
+  
 	get_materials_from_supplier: function (frm) {
+		/*
+			Datahenge: WARNING, the code below is an Out-Of-The-Box function. 
+			           It's used as part of Raw Material subcontracting with a Supplier.
+				       It is --not-- the same as FTP's function that gets all Item Codes who have a default Supplier.
+					   See instead: get_suppliers_default_items()
+		*/		
 		let po_details = [];
 
 		if (frm.doc.supplied_items && (flt(frm.doc.per_received, 2) == 100 || frm.doc.status === "Closed")) {
@@ -143,18 +240,102 @@ frappe.ui.form.on("Purchase Order", {
 			},
 		});
 	},
+
+	// Datahenge Begin
+	create_lines_from_daily_orders: function(frm) {
+
+		// First, open a Dialog Box with a date range.
+		let mydialog = new frappe.ui.Dialog({
+			title: __('Add PO lines based on Daily Orders'),
+			fields: [
+				{
+					"fieldname": "delivery_date_from",
+					"label" : __("Date From"),
+					"fieldtype": "Date",
+					"reqd": 1,
+				},
+				{
+					"fieldname": "delivery_date_to",
+					"label" : __("Date To"),
+					"fieldtype": "Date",
+					"reqd": 1,
+				}
+			],
+			primary_action: function() {
+				let dialog_args = mydialog.get_values();
+
+				frappe.call({
+					method: "erpnext.buying.doctype.purchase_order.purchase_order.get_purchase_lines_based_on_sales",
+					args: {
+						supplier_id: frm.doc.supplier,
+						delivery_date_from: dialog_args.delivery_date_from,
+						delivery_date_to: dialog_args.delivery_date_to
+					},
+					callback: function(r) {
+						if (r.message) {
+							let number_of_rows = r.message.length;
+							r.message.forEach(row => {
+								// Create a new Purchase Order Line:
+								let new_order_line = frm.add_child("items");
+								new_order_line.item_code = row['item_code'];
+								new_order_line.item_name = row['item_name'];
+								new_order_line.uom = row['uom'];
+								new_order_line.qty = row['quantity'];
+								new_order_line.rate = row['price_list_rate'];
+								new_order_line.price_list_rate = new_order_line.rate;
+								new_order_line.amount = new_order_line.qty * new_order_line.rate;
+								// "Base" Rates are the Company Currency Rates
+								new_order_line.base_rate = new_order_line.rate;
+								new_order_line.base_price_list_rate = new_order_line.price_list_rate;
+								new_order_line.base_amount = new_order_line.amount;
+
+								new_order_line.conversion_factor = 1;
+								new_order_line.schedule_date = frm.doc.schedule_date;
+							});
+							frm.refresh_fields("items");  // Important to refresh that portion of the page!
+							// frm.save();   // Do not save, per conversation with Shelby on 15th of April.
+							frappe.msgprint(__("Added {0} new lines to the Purchase Order.", [number_of_rows]));
+							mydialog.hide();						
+						}
+					}
+				});
+			},
+			primary_action_label: __('Add')
+		});
+		mydialog.show();
+	},
+
+	schedule_date: function(frm) {
+		// Farm To People: Update the "Stock Use Date" whenever the Order Confirmation Date is updated.
+		frappe.db.get_single_value("Buying Settings FTP", "stock_use_days_offset").then(val => {
+			let new_stock_use_date = frappe.datetime.add_days(frm.doc.schedule_date, val);
+			frm.set_value("stock_use_date", new_stock_use_date );
+		})
+	},
+
+	// Datahenge End
+
 });
 
 frappe.ui.form.on("Purchase Order Item", {
 	schedule_date: function (frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		if (row.schedule_date) {
-			if (!frm.doc.schedule_date) {
-				erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "schedule_date");
-			} else {
-				set_schedule_date(frm);
+
+		/*
+			Farm To People: Adding a means of prioritizing Order Header's schedule_date, over Lines.
+		*/	
+		frappe.db.get_single_value("Buying Settings FTP", "use_header_required_by").then(val => {
+			if (val == 1) {
+				return;
 			}
-		}
+			var row = locals[cdt][cdn];
+			if (row.schedule_date) {
+				if (!frm.doc.schedule_date) {
+					erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "schedule_date");
+				} else {
+					set_schedule_date(frm);
+				}
+			}
+		});
 	},
 
 	item_code: async function (frm, cdt, cdn) {
@@ -304,7 +485,8 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 								frm: this.frm,
 								child_docname: "items",
 								child_doctype: "Purchase Order Detail",
-								cannot_add_row: false,
+								cannot_add_row: true,  // Farm To People Request
+								cannot_delete_row: true  // Farm To People request
 							});
 						});
 					}
@@ -500,6 +682,10 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 	}
 
 	add_from_mappers() {
+		/* DH Notes:
+			* The code for "Get Items From: Product Bundle" is defined in 'buying.js', not here.
+			* This function cannot consolidate multiple Material Request Lines into a Single PO line.
+		*/
 		var me = this;
 		this.frm.add_custom_button(
 			__("Material Request"),
@@ -528,6 +714,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 
 		this.frm.add_custom_button(
 			__("Supplier Quotation"),
+			/* Datahenge:  This function cannot consolidate multiple Supplier Quotation Lines into a Single PO line. */
 			function () {
 				erpnext.utils.map_current_doc({
 					method: "erpnext.buying.doctype.supplier_quotation.supplier_quotation.make_purchase_order",
@@ -758,6 +945,16 @@ function set_schedule_date(frm) {
 		);
 	}
 }
+
+function set_target_warehouse(frm) {
+	// Farm To People:  Write a value for target Warehouse, falling back to Buying Settings FTP if necessary.
+	if(! frm.doc.set_warehouse){
+		frappe.db.get_single_value("Buying Settings FTP", "default_target_warehouse").then(val => {
+			frm.doc.set_warehouse = val;
+		});
+	}
+}
+
 
 frappe.provide("erpnext.buying");
 
