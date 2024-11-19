@@ -11,16 +11,19 @@
   "customer_group_name",
   "parent_customer_group",
   "is_group",
-  "onfleet_merchant",
   "cb0",
   "default_price_list",
   "payment_terms",
-  "default_shipping_rule",
-  "cannot_subscribe_to_totes",
   "lft",
   "rgt",
   "old_parent",
-  "email_overrides_section",
+  "sb_ftp",
+  "cannot_subscribe_to_totes",
+  "default_shipping_rule",
+  "column_break_12",
+  "onfleet_merchant",
+  "hdwd_behavior",
+  "section_break_15",
   "override",
   "default_receivable_account",
   "accounts",
@@ -153,13 +156,9 @@
    "label": "Onfleet Merchant"
   },
   {
-   "fieldname": "email_overrides_section",
-   "fieldtype": "Section Break",
-   "label": "Email Overrides"
-  },
-  {
    "fieldname": "override",
    "fieldtype": "Table",
+   "label": "Email Overrides",
    "options": "Transactional Email Override"
   },
   {
@@ -168,13 +167,35 @@
    "fieldname": "cannot_subscribe_to_totes",
    "fieldtype": "Check",
    "label": "No Reusable Totes"
+  },
+  {
+   "fieldname": "sb_ftp",
+   "fieldtype": "Section Break",
+   "label": "FTP"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_15",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "Normal",
+   "fieldname": "hdwd_behavior",
+   "fieldtype": "Select",
+   "label": "HDWD Behavior",
+   "options": "Normal\nWithout Short-Sub\nNever",
+   "reqd": 1,
+   "reqd_in_database": 1
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2024-10-24 11:17:37.241412",
+ "modified": "2024-11-19 16:42:31.436095",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",
