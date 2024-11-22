@@ -28,8 +28,6 @@ class ItemPrice(Document):
 		# Datahenge: Not sure why self.validate_item() is necessary, when we have built-in Link Validation.
 		# self.validate_item()
 
-		from ftp.ftp_invent import validate_uom_compatibility  # Late import due to Cross Module dependency.
-
 		self.validate_dates()
 		self.update_price_list_details()  # <---- This can change the Buying and Selling booleans
 
@@ -40,12 +38,9 @@ class ItemPrice(Document):
 
 		self.update_item_details()
 		self.check_duplicates()  # standard Frappe function.
-		# self.validate_overlapping_prices_ftp()  # commented out July 2022, because it was causing headaches for FTP data entry.
 
-		# FTP - Validate units of measure conversion:
-		stock_uom = frappe.get_value("Item", self.item_code, "stock_uom")
-		if not validate_uom_compatibility(stock_uom, self.uom, self.item_code):
-			raise ValueError(f"Item is missing a conversion factor from UOM '{self.uom}' to stock UOM '{stock_uom}'.")
+		from ftp.ftp_invent import item_price_validate  # Late import due to Cross Module dependency.		
+		item_price_validate(self)
 
 	def validate_item(self):
 		if not frappe.db.exists("Item", self.item_code):

@@ -43,12 +43,14 @@
   "segregation",
   "packing_sort_code",
   "dbp_product_id",
-  "column_break_29",
+  "cb_misc_ftp_1",
   "can_be_favorite",
   "include_in_popular_searches",
   "exclude_from_shipping_rule_subtotal",
+  "cb_misc_ftp_2",
   "exclude_from_subtotal_discounts",
   "exclude_from_weekly_sales_controls",
+  "scale_weight_required",
   "section_break_11",
   "is_item_from_hub",
   "brand",
@@ -1177,10 +1179,6 @@
    "label": "Packing Slip Position"
   },
   {
-   "fieldname": "column_break_29",
-   "fieldtype": "Column Break"
-  },
-  {
    "allow_in_quick_entry": 1,
    "default": "0",
    "description": "When checked, customers can mark this Product as a Favorite on the website.",
@@ -1250,6 +1248,22 @@
    "fieldname": "volume_rating",
    "fieldtype": "Float",
    "label": "Volume Rating"
+  },
+  {
+   "fieldname": "cb_misc_ftp_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cb_misc_ftp_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Product must be weighed on a scale during packing.\nHDWD cannot be transmitted without weights.",
+   "fieldname": "scale_weight_required",
+   "fieldtype": "Check",
+   "label": "Weight Required during Packing",
+   "search_index": 1
   }
  ],
  "icon": "fa fa-tag",
@@ -1264,7 +1278,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-11-11 13:27:01.139483",
+ "modified": "2024-11-21 11:38:03.754151",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
