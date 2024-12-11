@@ -114,7 +114,8 @@ frappe.ui.form.on("Customer", {
 	customer_primary_contact: function (frm) {
 		if (!frm.doc.customer_primary_contact) {
 			frm.set_value("mobile_no", "");
-			frm.set_value("email_id", "");
+			// Farm To People: Do NOT reset email_id.  It's now a fixed value on Customer table.
+			// frm.set_value("email_id", "");
 		}
 	},
 
@@ -167,6 +168,10 @@ frappe.ui.form.on("Customer", {
 				__("Create")
 			);
 
+			// Datahenge: Commenting out, because it seems dangerous to update Customer settings,
+			// without asking for confirmation and explaining to the User what is about to happen??
+
+			/*
 			frm.add_custom_button(
 				__("Get Customer Group Details"),
 				function () {
@@ -174,6 +179,7 @@ frappe.ui.form.on("Customer", {
 				},
 				__("Actions")
 			);
+			*/
 
 			if (cint(frappe.defaults.get_default("enable_common_party_accounting"))) {
 				frm.add_custom_button(

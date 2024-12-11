@@ -14,6 +14,9 @@
   "naming_series",
   "salutation",
   "customer_name",
+  "first_name",
+  "last_name",
+  "email_id",
   "customer_type",
   "customer_group",
   "column_break0",
@@ -52,10 +55,13 @@
   "column_break_26",
   "customer_primary_address",
   "primary_address",
+  "default_shipping_rule",
+  "delivery_instructions",
+  "disable_postal_code_validation",
   "column_break_nwor",
   "customer_primary_contact",
   "mobile_no",
-  "email_id",
+  "packing_notes_ftp",
   "tax_tab",
   "taxation_section",
   "tax_id",
@@ -85,7 +91,20 @@
   "is_frozen",
   "disabled",
   "portal_users_tab",
-  "portal_users"
+  "portal_users",
+  "sb_pauses",
+  "pauses",
+  "ftp_custom_controls_section",
+  "ftp_options",
+  "reusable_packaging_opt_in",
+  "dbp_order_quantity",
+  "dbp_login_id",
+  "customer_acquisition_channel",
+  "registration_date",
+  "email_overrides_section",
+  "first_order_email_sent",
+  "override",  
+  "customer_retention_segment"
  ],
  "fields": [
   {
@@ -99,7 +118,7 @@
    "fieldtype": "Select",
    "label": "Series",
    "no_copy": 1,
-   "options": "CUST-.YYYY.-",
+   "options": "CUST-.",
    "set_only_once": 1
   },
   {
@@ -111,9 +130,11 @@
   },
   {
    "bold": 1,
+   "columns": 2,
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "in_global_search": 1,
+   "in_list_view": 1,
    "label": "Customer Name",
    "no_copy": 1,
    "oldfieldname": "customer_name",
@@ -129,7 +150,7 @@
    "options": "Gender"
   },
   {
-   "default": "Company",
+   "default": "Individual",
    "fieldname": "customer_type",
    "fieldtype": "Select",
    "label": "Customer Type",
@@ -176,7 +197,7 @@
   {
    "fieldname": "customer_group",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "in_standard_filter": 1,
    "label": "Customer Group",
    "oldfieldname": "customer_group",
@@ -193,7 +214,8 @@
    "oldfieldname": "territory",
    "oldfieldtype": "Link",
    "options": "Territory",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "fieldname": "tax_id",
@@ -254,6 +276,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_in_quick_entry": 1,
    "fieldname": "language",
    "fieldtype": "Link",
    "label": "Print Language",
@@ -312,11 +335,16 @@
    "options": "Mobile"
   },
   {
-   "fetch_from": "customer_primary_contact.email_id",
+   "columns": 3,
    "fieldname": "email_id",
-   "fieldtype": "Read Only",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Email Id",
-   "options": "Email"
+   "options": "Email",
+   "reqd": 1,
+   "set_only_once": 1,
+   "unique": 1
   },
   {
    "fieldname": "column_break_26",
@@ -328,6 +356,7 @@
    "fieldtype": "Link",
    "label": "Customer Primary Address",
    "options": "Address"
+   ,"search_index": 1
   },
   {
    "fieldname": "primary_address",
@@ -581,7 +610,148 @@
    "no_copy": 1,
    "options": "Prospect",
    "print_hide": 1
-  }
+  },
+	{
+	"fieldname": "first_name",
+	"fieldtype": "Data",
+	"label": "First Name"
+	},
+	{
+	"fieldname": "last_name",
+	"fieldtype": "Data",
+	"label": "Last Name"
+	},
+	{
+	"collapsible": 1,
+	"fieldname": "sb_pauses",
+	"fieldtype": "Section Break",
+	"label": "Pauses"
+	},
+	{
+	"fieldname": "pauses",
+	"fieldtype": "Table",
+	"options": "Customer Holds"
+	},
+	{
+	"description": "Instructions for driver to deliver products.",
+	"fieldname": "delivery_instructions",
+	"fieldtype": "Small Text",
+	"label": "Delivery Instructions"
+	},
+	{
+	"default": "0",
+	"description": "This can be used to ship products out of the typical geography.\nIt will disable the Postal Code Validation on Daily Orders.",
+	"fieldname": "disable_postal_code_validation",
+	"fieldtype": "Check",
+	"label": "Disable Zip Code Validation"
+	},
+	{
+	"collapsible": 1,
+	"fieldname": "sb_1",
+	"fieldtype": "Section Break",
+	"label": "Misc"
+	},
+	{
+	"fieldname": "cb_primary_contact",
+	"fieldtype": "Column Break"
+	},
+	{
+	"fieldname": "heading_addresses",
+	"fieldtype": "Heading",
+	"label": "Addresses"
+	},
+	{
+	"fieldname": "heading_contacts",
+	"fieldtype": "Heading",
+	"label": "Contacts"
+	},
+	{
+	"description": "This text is printed on the customer's Packing Slips.",
+	"fieldname": "packing_notes_ftp",
+	"fieldtype": "Small Text",
+	"label": "Packing Notes"
+	},
+	{
+	"fieldname": "dbp_order_quantity",
+	"fieldtype": "Int",
+	"label": "Quantity of DBP Orders",
+	"read_only": 1
+	},
+	{
+	"fieldname": "dbp_login_id",
+	"fieldtype": "Data",
+	"label": "DBP Login",
+	"read_only": 1,
+	"search_index": 1
+	},
+	{
+	"description": "If set, this overrides the default Global and Customer Group rule.",
+	"fieldname": "default_shipping_rule",
+	"fieldtype": "Link",
+	"label": "Default Shipping Rule",
+	"options": "Shipping Rule"
+	},
+	{
+	"fieldname": "column_break_23",
+	"fieldtype": "Column Break"
+	},
+	{
+	"collapsible": 1,
+	"fieldname": "ftp_custom_controls_section",
+	"fieldtype": "Section Break",
+	"label": "FTP Custom Controls"
+	},
+	{
+	"default": "0",
+	"fieldname": "first_order_email_sent",
+	"fieldtype": "Check",
+	"label": "First Order email was Sent",
+	"read_only": 1
+	},
+	{
+	"fieldname": "ftp_options",
+	"fieldtype": "Table",
+	"label": "FTP Options",
+	"options": "Customer Options"
+	},
+	{
+	"collapsible": 1,
+	"fieldname": "email_overrides_section",
+	"fieldtype": "Section Break",
+	"label": "Email Overrides"
+	},
+	{
+	"fieldname": "override",
+	"fieldtype": "Table",
+	"options": "Transactional Email Override"
+	},
+	{
+	"default": "Unknown",
+	"fieldname": "reusable_packaging_opt_in",
+	"fieldtype": "Select",
+	"label": "Reusable Packaging Opt In",
+	"options": "Unknown\nYes\nNo"
+	},
+	{
+	"fieldname": "customer_acquisition_channel",
+	"fieldtype": "Link",
+	"label": "Acquisition Channel",
+	"options": "Acquisition Channel",
+	"search_index": 1
+	},
+	{
+	"fieldname": "registration_date",
+	"fieldtype": "Date",
+	"label": "Registration Date",
+	"search_index": 1
+	},
+	{
+	"fieldname": "customer_retention_segment",
+	"fieldtype": "Link",
+	"label": "Customer Retention Segment",
+	"options": "Customer Retention Segment"
+	}
+
  ],
  "icon": "fa fa-user",
  "idx": 363,
@@ -592,9 +762,19 @@
    "group": "Allowed Items",
    "link_doctype": "Party Specific Item",
    "link_fieldname": "party"
-  }
+  },
+  {
+   "group": "Other",
+   "link_doctype": "Customer Activity Log",
+   "link_fieldname": "customer"
+   },
+  {
+   "group": "Other",
+	"link_doctype": "Customer Integrations",
+	"link_fieldname": "customer"
+  }  
  ],
- "modified": "2024-06-17 03:24:59.612974",
+ "modified": "2024-10-30 03:24:59.612974",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

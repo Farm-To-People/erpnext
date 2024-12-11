@@ -1,6 +1,11 @@
 // Copyright (c) 2016, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
 
+// Datahenge: Despite the suffix "_list", this is NOT JavaScript code for a 'List Page'.
+// The ERPNext maintainers just gave this DocType a confusing name: "Holiday List"
+// Consequently, this DocType's List Page would actually be named 'holiday_list_list.js'
+
+
 frappe.ui.form.on("Holiday List", {
 	refresh: function (frm) {
 		if (frm.doc.holidays) {

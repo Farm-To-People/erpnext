@@ -376,9 +376,11 @@ doc_events = {
 			"erpnext.regional.italy.utils.set_state_code",
 		],
 	},
+
 	"Contact": {
 		"on_trash": "erpnext.support.doctype.issue.issue.update_issue",
-		"after_insert": "erpnext.telephony.doctype.call_log.call_log.link_existing_conversations",
+		# Datahenge: Removing this hook, which contains a SQL commit(), and is harming the Anonymous Customer Registration by preventing rollbacks.
+		# "after_insert": "erpnext.telephony.doctype.call_log.call_log.link_existing_conversations",
 		"validate": ["erpnext.crm.utils.update_lead_phone_numbers"],
 	},
 	"Email Unsubscribe": {
@@ -401,15 +403,17 @@ auto_cancel_exempted_doctypes = [
 	"Payment Entry",
 ]
 
+
+# Datahenge: Turning off some of these events, so the queues and workers don't waste time on them
 scheduler_events = {
 	"cron": {
 		"0/15 * * * *": [
 			"erpnext.manufacturing.doctype.bom_update_log.bom_update_log.resume_bom_cost_update_jobs",
 			"erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs",
 		],
-		"0/30 * * * *": [
-			"erpnext.utilities.doctype.video.video.update_youtube_data",
-		],
+		#"0/30 * * * *": [
+		#	"erpnext.utilities.doctype.video.video.update_youtube_data",
+		#],
 		# Hourly but offset by 30 minutes
 		"30 * * * *": [
 			"erpnext.accounts.doctype.gl_entry.gl_entry.rename_gle_sle_docs",
@@ -420,7 +424,7 @@ scheduler_events = {
 		],
 	},
 	"hourly": [
-		"erpnext.erpnext_integrations.doctype.plaid_settings.plaid_settings.automatic_synchronization",
+		# "erpnext.erpnext_integrations.doctype.plaid_settings.plaid_settings.automatic_synchronization",
 		"erpnext.projects.doctype.project.project.project_status_update_reminder",
 		"erpnext.projects.doctype.project.project.hourly_reminder",
 		"erpnext.projects.doctype.project.project.collect_project_status",

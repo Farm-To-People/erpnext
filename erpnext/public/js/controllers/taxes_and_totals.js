@@ -7,6 +7,19 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 	}
 
 	apply_pricing_rule_on_item(item) {
+		/* 
+			Argument 'item' is in fact a Generic for some kind of child Order Line.
+
+			This function is poorly named.  It does not actually "apply" a Pricing Rule.
+			Instead it uses the current 'price_list_rate' (precalculated elsewhere) and assigns it to an Order Line (function argument 'item')
+
+			The following Order Line fields are touched:
+			1. order_line.rate_with_margin  (and base_rate_with_margin)
+			2. discount_amount -or- discount_percentage
+			3. rate
+
+			This function works well, assuming the 'price_list_rate' is accurate to begin with.
+		*/		
 		let effective_item_rate = item.price_list_rate;
 		let item_rate = item.rate;
 		if (["Sales Order", "Quotation"].includes(item.parenttype) && item.blanket_order_rate) {

@@ -93,10 +93,12 @@ $.extend(erpnext.utils, {
 					]),
 					"blue"
 				);
+				// Datahenge:  Be explicit about whether this is a credit amount
 				frm.dashboard.add_indicator(
-					__("Total Unpaid: {0}", [
+					__("Total Unpaid: {0} {1}", [
 						format_currency(company_wise_info[0].total_unpaid, company_wise_info[0].currency),
-					]),
+						company_wise_info[0].total_unpaid < 0 ? '(credit)' : '']
+					),
 					company_wise_info[0].total_unpaid ? "orange" : "green"
 				);
 
@@ -598,6 +600,7 @@ erpnext.utils.select_alternate_items = function (opts) {
 erpnext.utils.update_child_items = function (opts) {
 	const frm = opts.frm;
 	const cannot_add_row = typeof opts.cannot_add_row === "undefined" ? true : opts.cannot_add_row;
+	const cannot_delete_row = (typeof opts.cannot_delete_row === 'undefined') ? true : opts.cannot_delete_row;  // Datahenge	
 	const child_docname = typeof opts.cannot_add_row === "undefined" ? "items" : opts.child_docname;
 	const child_meta = frappe.get_meta(`${frm.doc.doctype} Item`);
 	const has_reserved_stock = opts.has_reserved_stock ? true : false;
@@ -767,6 +770,7 @@ erpnext.utils.update_child_items = function (opts) {
 				fieldtype: "Table",
 				label: "Items",
 				cannot_add_rows: cannot_add_row,
+				cannot_delete_rows: cannot_delete_row,  // Datahenge				
 				in_place_edit: false,
 				reqd: 1,
 				data: this.data,

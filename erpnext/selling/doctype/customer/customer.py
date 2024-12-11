@@ -252,7 +252,7 @@ class Customer(TransactionBase):
 				contact = make_contact(self)
 				self.db_set("customer_primary_contact", contact.name)
 				self.db_set("mobile_no", self.mobile_no)
-				self.db_set("email_id", self.email_id)
+				# self.db_set("email_id", self.email_id)  Datahenge: Disabling this
 
 	def create_primary_address(self):
 		from frappe.contacts.doctype.address.address import get_address_display
@@ -271,6 +271,11 @@ class Customer(TransactionBase):
 			frappe.db.set_value("Lead", self.lead_name, "status", "Converted")
 
 	def link_lead_address_and_contact(self):
+
+		# Datahenge: Don't create a Contact; website registration is already handling this.
+		if self.flags.get("dh_do_not_create_contact"):
+			return
+
 		if self.lead_name:
 			# assign lead address and contact to customer (if already not set)
 			linked_contacts_and_addresses = frappe.get_all(
@@ -356,6 +361,8 @@ class Customer(TransactionBase):
 		delete_contact_and_address("Customer", self.name)
 		if self.lead_name:
 			frappe.db.sql("update `tabLead` set status='Interested' where name=%s", self.lead_name)
+
+		self.flags.dh_ignore_linked_doctypes = tuple('Customer Activity Log')  # Allows for deletion of Payment Entries, even if Customer Activity Log exists.
 
 	def after_rename(self, olddn, newdn, merge=False):
 		if frappe.defaults.get_global_default("cust_master_name") == "Customer Name":
@@ -629,6 +636,10 @@ def get_customer_outstanding(customer, company, ignore_outstanding_sales_order=F
 
 		outstanding_based_on_so = flt(outstanding_based_on_so[0][0]) if outstanding_based_on_so else 0
 
+	# Datahenge: Skip all this Unmarked Delivery Note and SI nonsense; it kills performance and it should be CONFIGURABLE.
+	# pylint: disable=unreachable
+	return outstanding_based_on_gle + outstanding_based_on_so
+
 	# Outstanding based on Delivery Note, which are not created against Sales Order
 	outstanding_based_on_dn = 0
 
@@ -783,7 +794,7 @@ def make_address(args, is_primary_address=1, is_shipping_address=1):
 
 	return address
 
-
+# NOTE: Datahenge: This Frappe script looks incorrect.  Doesn't filter on Customer boolean DocField 'is_primary_contact'
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_customer_primary_contact(doctype, txt, searchfield, start, page_len, filters):

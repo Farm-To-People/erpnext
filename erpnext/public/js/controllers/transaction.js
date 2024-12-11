@@ -567,6 +567,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 							child_doctype: item.doctype,
 							child_docname: item.name,
 							is_old_subcontracting_flow: me.frm.doc.is_old_subcontracting_flow,
+							// Datahenge: Need to create an Array of 'coupon_code' string
+							coupon_codes: me._get_coupon_code_list(me.frm.doc.coupon_code_set),
 						}
 					},
 
@@ -660,11 +662,18 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	}
 
 	price_list_rate(doc, cdt, cdn) {
-		var item = frappe.get_doc(cdt, cdn);
+		//
+		// This function is rarely called "directly" by the touching 'price_list_rate'.
+		// Because that's typically a non-editable field.
+		// Rather this function is "triggered" by other JS code.  Look around for something like 'trigger("price_list_rate"'
+		//		
+		var item = frappe.get_doc(cdt, cdn);  // A better variable name would have been "order_line"
 		frappe.model.round_floats_in(item, ["price_list_rate", "discount_percentage"]);
 
 		// check if child doctype is Sales Order Item/Quotation Item and calculate the rate
 		if (in_list(["Quotation Item", "Sales Order Item", "Delivery Note Item", "Sales Invoice Item", "POS Invoice Item", "Purchase Invoice Item", "Purchase Order Item", "Purchase Receipt Item"]), cdt)
+			// NOTE:  Call to poorly-named function.  Does not "apply" any Pricing Rules whatsosever.
+			// Only takes the value of the *current* 'price_list_rate, and copies it into the Order Line's rate.
 			this.apply_pricing_rule_on_item(item);
 		else
 			item.rate = flt(item.price_list_rate * (1 - item.discount_percentage / 100.0),
@@ -936,8 +945,9 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			}
 
 		}
-
-		if (frappe.meta.get_docfield(this.frm.doctype, "shipping_address") &&
+		// Datahenge: Skipping this if the Document is not saved yet.
+		if ( (!this.frm.doc.__unsaved) &&
+		    frappe.meta.get_docfield(this.frm.doctype, "shipping_address") &&
 			['Purchase Order', 'Purchase Receipt', 'Purchase Invoice'].includes(this.frm.doctype)) {
 			erpnext.utils.get_shipping_address(this.frm, function() {
 				set_party_account(set_pricing);
@@ -1567,7 +1577,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 						r.message.forEach(row_item => {
 							me.remove_pricing_rule(row_item);
 						});
-						me._set_values_for_item_list(r.message);
+						me._set_values_for_item_list(r.message);  // DH: Takes the response, and writes the values to the page.
 						me.calculate_taxes_and_totals();
 						if(me.frm.doc.apply_discount_on) me.frm.trigger("apply_discount_on");
 					}
@@ -1668,6 +1678,9 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			"coupon_code": me.frm.doc.coupon_code,
 			"is_internal_supplier": me.frm.doc.is_internal_supplier,
 			"is_internal_customer": me.frm.doc.is_internal_customer,
+			// Datahenge: Need to create an Array of 'coupon_code' string
+			"coupon_codes": this._get_coupon_code_list(me.frm.doc.coupon_code_set),
+
 		};
 	}
 
@@ -2506,6 +2519,14 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 	}
 
+	/*
+		Datahenge Note 1: The 'coupon_code' function below is commented-out because FTP requires the option
+		for *multiple* Coupon Codes, per Order.  The out-of-the-box DocField 'coupon_code' is replaced with
+		a Child DocType: 'Coupon Code Set'
+		
+		Datahenge Note 2: The original code seems broken anyway: if the User already set 'ignore_pricing_rule' = 1,
+		the code below would forcibly reset the value to zero.
+
 	coupon_code() {
 		if (this.frm.doc.coupon_code || this.frm._last_coupon_code) {
 			// reset pricing rules if coupon code is set or is unset
@@ -2519,6 +2540,21 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			]);
 		}
 	}
+	*/
+
+	_get_coupon_code_list() {
+		/*
+			Datahenge: Given a child Document 'coupon_code_set', return an Array of String.
+		*/
+		var coupon_code_list = [];
+		// As always, the symbol '$' = JQuery.  Way to think it through, Dodge.
+		$.each(coupon_code_set, (idx, row) => {  
+			if (row.name) {
+				coupon_code_list.push(row.coupon_code);
+			}
+		});
+		return coupon_code_list;
+	}	
 };
 
 erpnext.show_serial_batch_selector = function (frm, item_row, callback, on_close, show_dialog) {
