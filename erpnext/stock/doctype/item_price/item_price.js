@@ -17,9 +17,9 @@ frappe.ui.form.on("Item Price", {
 			if (frm.doc.item_price_type == 'Selling') {
 				frm.add_fetch("item_code", "sales_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
 			} else if (frm.doc.item_price_type == 'Buying') {
-				frm.add_fetch("item_code", "purchase_uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+				frm.add_fetch("item_code", "purchase_uom", "uom");  // FTP - We want the Purchase UOM here from tabItem.	
 			} else {
-				frm.add_fetch("item_code", "uom", "uom");  // FTP - We want the Sales UOM here from tabItem.	
+				frm.add_fetch("item_code", "uom", "uom");  // FTP - We want the Stock UOM here from tabItem.	
 			}
 		}
 
@@ -113,12 +113,14 @@ frappe.ui.form.on("Item Price", {
 
 	,refresh: function(frm) {
 		// Farm To People: Add a button that validates the entire range of Item Price permutations and combinations.
+		/*
 		frm.add_custom_button(__("Validate Item Prices"), function() {
 			frappe.call({
 				method: "validate_by_item_code",
 				doc: frm.doc
 			})
 		}, __("")).addClass("btn-warning").css({'color':'green','font-weight': 'bold'});
+		*/
 	}
 });
 

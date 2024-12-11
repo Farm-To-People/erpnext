@@ -1147,7 +1147,7 @@
    "fieldname": "segregation",
    "fieldtype": "Select",
    "label": "Segregation",
-   "options": "Bakery\nFarm Boxes and Bundles\nFrozen\nGrocery\nOther\nProduce\nRefrigerated",
+   "options": "Bakery\nFarm Boxes and Bundles\nFrozen\nGrocery\nOther\nProduce\nRefrigerated\nThanksgiving",
    "reqd": 1,
    "reqd_in_database": 1
   },
@@ -1278,7 +1278,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-11-21 11:38:03.754151",
+ "modified": "2024-11-23 15:08:25.576347",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
