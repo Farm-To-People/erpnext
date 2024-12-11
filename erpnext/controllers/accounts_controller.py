@@ -708,7 +708,7 @@ class AccountsController(TransactionBase):
 			for fieldname in self.meta.get_valid_columns():
 				parent_dict[fieldname] = self.get(fieldname)
 
-			if self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
+			if self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "Daily Order"]:
 				document_type = f"{self.doctype} Item"
 				parent_dict.update({"document_type": document_type})
 
@@ -719,6 +719,16 @@ class AccountsController(TransactionBase):
 				and parent_dict.get("party_name")
 			):
 				parent_dict.update({"customer": parent_dict.get("party_name")})
+
+			# ----------------
+			# Datahenge: If applicable, create a List of coupon codes, and add them to the Arguments.
+			# ----------------
+			if self.doctype in ["Sales Order", "Daily Order"]:
+				coupon_code_list = []
+				for row in self.coupon_code_set:
+					coupon_code_list.append(row.coupon_code)
+				parent_dict.update({"coupon_codes": coupon_code_list})
+			# ----------------
 
 			self.pricing_rules = []
 
@@ -741,7 +751,17 @@ class AccountsController(TransactionBase):
 					if self.get("is_subcontracted"):
 						args["is_subcontracted"] = self.is_subcontracted
 
+					# Datahenge: Add a new argument 'coupon_codes'
+					if self.doctype in ["Sales Order", "Daily Order"] and coupon_code_list:
+						args["coupon_codes"] = coupon_code_list
+					# --------
+
+					# IMPORTANT LOGIC BELOW:
+					# 1. Retrieve calculated price information for this Order (all the lines)
 					ret = get_item_details(args, self, for_validate=for_validate, overwrite_warehouse=False)
+
+					# 2. Loop through list ret.items().  For every field, update the equivalent field in the 
+					#    actual child record 'item'					
 					for fieldname, value in ret.items():
 						if item.meta.get_field(fieldname) and value is not None:
 							if item.get(fieldname) is None or fieldname in force_item_fields:
@@ -792,6 +812,7 @@ class AccountsController(TransactionBase):
 							self.get("cost_center") or erpnext.get_default_cost_center(self.company),
 						)
 
+					# DH3 : If ret contains a List of pricing rules, apply that logic as well.
 					if ret.get("pricing_rules"):
 						self.apply_pricing_rule_on_items(item, ret)
 						self.set_pricing_rule_details(item, ret)
@@ -857,6 +878,11 @@ class AccountsController(TransactionBase):
 						)
 
 	def set_pricing_rule_details(self, item_row, args):
+		"""
+		On documents like 'Sales Order', there exists a child table named 'Pricing Rules'
+		The purpose of this table 'appears' to be simply documenting what Pricing Rules
+		were applied to particular Order Lines.
+		"""		
 		pricing_rules = get_applied_pricing_rules(args.get("pricing_rules"))
 		if not pricing_rules:
 			return
@@ -2562,6 +2588,10 @@ def get_taxes_and_charges(master_doctype, master_name):
 def validate_conversion_rate(currency, conversion_rate, conversion_rate_label, company):
 	"""common validation for currency and price list currency"""
 
+	# DH : Error handling
+	if not currency:
+		frappe.throw("Argument 'currency' is mandatory for function 'validate_conversion_rate'")
+
 	company_currency = frappe.get_cached_value("Company", company, "default_currency")
 
 	if not conversion_rate:
@@ -3435,6 +3465,10 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			child_item.idx = len(parent.items) + 1
 			child_item.insert()
 		else:
+			# DH Begin
+			if child_item.doctype == 'Purchase Order Item':
+				child_item.flags.update_redis = True  # Farm To People: trigger an update to Website Inventory Redis on save.
+			# DH End
 			child_item.save()
 
 	parent.reload()

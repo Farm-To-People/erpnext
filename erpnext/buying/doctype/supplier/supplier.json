@@ -73,7 +73,11 @@
   "release_date",
   "portal_users_tab",
   "portal_users",
-  "column_break_1mqv"
+  "column_break_1mqv",
+  "emails_for_purchase_order",
+  "purchase_lead_days",
+  "default_print_format",
+  "po_email_template"
  ],
  "fields": [
   {
@@ -473,6 +477,30 @@
   {
    "fieldname": "column_break_mglr",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "emails_for_purchase_order",
+   "fieldtype": "Data",
+   "label": "Emails for PO"
+  },
+  {
+   "default": "1",
+   "description": "Number of days to offset Automatic PO Emails, relative to the Global Cutoff date.",
+   "fieldname": "purchase_lead_days",
+   "fieldtype": "Int",
+   "label": "PO Lead Days"
+  },
+  {
+   "fieldname": "default_print_format",
+   "fieldtype": "Link",
+   "label": "Default Print Format",
+   "options": "Print Format"
+  },
+  {
+   "fieldname": "po_email_template",
+   "fieldtype": "Link",
+   "label": "PO Email Template",
+   "options": "Email Template"
   }
  ],
  "icon": "fa fa-user",
@@ -485,7 +513,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2024-05-08 18:02:57.342931",
+ "modified": "2024-06-08 18:02:57.342931",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier",
