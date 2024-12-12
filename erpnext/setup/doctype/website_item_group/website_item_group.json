@@ -10,6 +10,10 @@
  "doctype": "DocType", 
  "document_type": "Other", 
  "editable_grid": 1, 
+ "field_order": [
+   "item_group",
+   "is_priority"
+ ], 
  "fields": [
   {
    "allow_on_submit": 0, 
@@ -36,7 +40,15 @@
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
-  }
+  },
+  {
+   "columns": 2,
+   "default": "0",
+   "fieldname": "is_priority",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Priority"
+  }  
  ], 
  "hide_heading": 0, 
  "hide_toolbar": 0, 
@@ -48,7 +60,7 @@
  "issingle": 0, 
  "istable": 1, 
  "max_attachments": 0, 
- "modified": "2016-07-11 03:28:09.919314", 
+ "modified": "2023-09-27 03:28:09.919314", 
  "modified_by": "Administrator", 
  "module": "Setup", 
  "name": "Website Item Group", 

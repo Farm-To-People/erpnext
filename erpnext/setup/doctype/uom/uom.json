@@ -10,7 +10,8 @@
  "field_order": [
   "enabled",
   "uom_name",
-  "must_be_whole_number"
+  "must_be_whole_number",
+  "uom_name_web"
  ],
  "fields": [
   {
@@ -35,7 +36,13 @@
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
-  }
+  },
+  {
+   "fieldname": "uom_name_web",
+   "fieldtype": "Data",
+   "label": "UOM on Website",
+   "reqd": 1
+  }  
  ],
  "icon": "fa fa-compass",
  "idx": 1,

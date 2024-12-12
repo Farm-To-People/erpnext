@@ -1,5 +1,6 @@
 from frappe import _
 
+# DH: Altering some of the Connection links.
 
 def get_data():
 	return {
@@ -10,18 +11,20 @@ def get_data():
 			"Opportunity": "party_name",
 			"Bank Account": "party",
 			"Subscription": "party",
+			"Item Favorites": "customer_key"
 		},
 		"dynamic_links": {"party_name": ["Customer", "quotation_to"]},
 		"transactions": [
-			{"label": _("Pre Sales"), "items": ["Opportunity", "Quotation"]},
-			{"label": _("Orders"), "items": ["Sales Order", "Delivery Note", "Sales Invoice"]},
+			# {"label": _("Pre Sales"), "items": ["Opportunity", "Quotation"]},
+			{"label": _("Website"), "items": ["Auth User", "Item Favorites"]},
+			{"label": _("Orders"), "items": ["Daily Order", "Delivery Note", "Sales Invoice"]},
 			{"label": _("Payments"), "items": ["Payment Entry", "Bank Account"]},
-			{
-				"label": _("Support"),
-				"items": ["Issue", "Maintenance Visit", "Installation Note", "Warranty Claim"],
-			},
-			{"label": _("Projects"), "items": ["Project"]},
+			#{
+			#	"label": _("Support"),
+			#	"items": ["Issue", "Maintenance Visit", "Installation Note", "Warranty Claim"],
+			#},
+			#{"label": _("Projects"), "items": ["Project"]},
 			{"label": _("Pricing"), "items": ["Pricing Rule"]},
-			{"label": _("Subscriptions"), "items": ["Subscription"]},
+			{"label": _("Web Subscriptions"), "items": ["Web Subscription"]},
 		],
 	}

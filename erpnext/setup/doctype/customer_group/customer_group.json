@@ -17,6 +17,14 @@
   "lft",
   "rgt",
   "old_parent",
+  "sb_ftp",
+  "cannot_subscribe_to_totes",
+  "default_shipping_rule",
+  "column_break_12",
+  "onfleet_merchant",
+  "hdwd_behavior",
+  "section_break_15",
+  "override",  
   "default_receivable_account",
   "accounts",
   "credit_limit_section",
@@ -134,12 +142,60 @@
    "label": "Credit Limit",
    "options": "Customer Credit Limit"
   }
+,{
+ "description": "If set, this overrides the global default Shipping Rule, for all customers who are a member of this Group.",
+ "fieldname": "default_shipping_rule",
+ "fieldtype": "Link",
+ "label": "Default Shipping Rule",
+ "options": "Shipping Rule"
+},
+{
+ "description": "Merchant value is validated with Onfleet API upon save.",
+ "fieldname": "onfleet_merchant",
+ "fieldtype": "Data",
+ "label": "Onfleet Merchant"
+},
+{
+ "fieldname": "override",
+ "fieldtype": "Table",
+ "label": "Email Overrides",
+ "options": "Transactional Email Override"
+},
+{
+ "default": "0",
+ "description": "When marked, customers in this Group cannot subscribe to Reusable Packaging.",
+ "fieldname": "cannot_subscribe_to_totes",
+ "fieldtype": "Check",
+ "label": "No Reusable Totes"
+},
+{
+ "fieldname": "sb_ftp",
+ "fieldtype": "Section Break",
+ "label": "FTP"
+},
+{
+ "fieldname": "column_break_12",
+ "fieldtype": "Column Break"
+},
+{
+ "fieldname": "section_break_15",
+ "fieldtype": "Section Break"
+},
+{
+ "default": "Normal",
+ "fieldname": "hdwd_behavior",
+ "fieldtype": "Select",
+ "label": "HDWD Behavior",
+ "options": "Normal\nWithout Short-Sub\nNever",
+ "reqd": 1,
+ "reqd_in_database": 1
+}  
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2023-06-02 13:40:34.435822",
+ "modified": "2024-11-19 13:40:34.435822",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",

@@ -21,7 +21,8 @@
   "taxes",
   "lft",
   "old_parent",
-  "rgt"
+  "rgt",
+  "sanity_sort_code"
  ],
  "fields": [
   {
@@ -32,7 +33,7 @@
   {
    "fieldname": "item_group_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Item Group Name",
    "oldfieldname": "item_group_name",
    "oldfieldtype": "Data",
@@ -128,6 +129,15 @@
    "print_hide": 1,
    "report_hide": 1
   }
+  ,{
+  "description": "Position of this Item Group (Category) in relation to <i>sibling</i> Item Groups.",
+  "fieldname": "sanity_sort_code",
+  "fieldtype": "Int",
+  "in_list_view": 1,
+  "label": "Sanity Sort Code",
+  "non_negative": 1,
+  "read_only": 1
+ }  
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
@@ -135,7 +145,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2024-01-30 14:08:38.485616",
+ "modified": "2024-06-13 14:08:38.485616",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",
