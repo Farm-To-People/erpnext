@@ -11,6 +11,7 @@
   "manufacturer_part_no",
   "column_break_3",
   "item_name",
+  "manufacturer_full_name",
   "description",
   "is_default"
  ],
@@ -19,7 +20,7 @@
    "fieldname": "manufacturer",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Manufacturer",
+   "label": "Manufacturer ID",
    "options": "Manufacturer",
    "reqd": 1
   },
@@ -52,6 +53,7 @@
    "fetch_from": "item_code.description",
    "fieldname": "description",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Description",
    "read_only": 1
   },
@@ -61,10 +63,17 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Is Default"
-  }
+  },
+  {
+   "fetch_from": "manufacturer.full_name",
+   "fieldname": "manufacturer_full_name",
+   "fieldtype": "Data",
+   "label": "Manufacturer Name",
+   "read_only": 1
+  }  
  ],
  "links": [],
- "modified": "2020-04-07 20:25:55.507905",
+ "modified": "2022-02-05 20:25:55.507905",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Manufacturer",

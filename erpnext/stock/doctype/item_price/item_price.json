@@ -34,10 +34,15 @@
   "valid_upto",
   "section_break_24",
   "note",
-  "reference"
+  "reference",
+  "item_price_type",
+  "price_date_column",
+  "valid_from_price_date",
+  "valid_to_price_date"
  ],
  "fields": [
   {
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_filter": 1,
@@ -74,9 +79,11 @@
   {
    "fieldname": "item_name",
    "fieldtype": "Data",
+   "in_standard_filter": 1,
    "in_list_view": 1,
    "label": "Item Name",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fetch_from": "item_code.brand",
@@ -108,6 +115,7 @@
    "label": "Price List",
    "options": "Price List",
    "reqd": 1,
+   "reqd_in_database": 1,
    "search_index": 1
   },
   {
@@ -219,12 +227,49 @@
    "label": "Batch No",
    "options": "Batch"
   }
+  ,{
+	"fieldname": "valid_from_price_date",
+	"fieldtype": "Date",
+	"label": "Valid From Price Date"
+   },
+   {
+	"fieldname": "valid_to_price_date",
+	"fieldtype": "Date",
+	"label": "Valid Upto Price Date"
+   },
+   {
+	"fieldname": "delivery_date_column",
+	"fieldtype": "Column Break",
+	"label": "<b>Delivery Date</b>"
+   },
+   {
+	"fieldname": "price_date_column",
+	"fieldtype": "Column Break",
+	"label": "<b>Price Date</b>"
+   },
+   {
+	"description": "Instructions will go here",
+	"fieldname": "section_break_28",
+	"fieldtype": "Section Break"
+   },
+   {
+	"columns": 1,
+	"default": "Selling",
+	"fieldname": "item_price_type",
+	"fieldtype": "Select",
+	"in_list_view": 1,
+	"in_standard_filter": 1,
+	"label": "Price Type",
+	"options": "Buying\nDeposit\nSelling",
+	"reqd": 1,
+	"reqd_in_database": 1
+   }  
  ],
  "icon": "fa fa-flag",
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-04-02 22:18:00.450641",
+ "modified": "2024-09-02 22:18:00.450641",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
@@ -258,10 +303,10 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
+ "quick_entry": 0,
  "sort_field": "modified",
  "sort_order": "ASC",
  "states": [],
- "title_field": "item_name",
+ "title_field": "item_code",
  "track_changes": 1
 }

@@ -1,22 +1,28 @@
 {
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:short_name",
+ "autoname": "naming_series:",
  "creation": "2016-01-17 11:04:52.761731",
  "description": "Manufacturers used in Items",
  "doctype": "DocType",
  "document_type": "Setup",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series",
   "short_name",
   "full_name",
-  "website",
-  "country",
+  "disabled",
   "logo",
+  "cb1",
+  "website",
+  "location",
+  "country",
   "address_contacts",
   "address_html",
   "column_break_8",
   "contact_html",
+  "website_filters_section",
+  "manufacturer_web_filters",  
   "section_break_10",
   "notes"
  ],
@@ -33,7 +39,9 @@
    "fieldname": "full_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Full Name"
+   "label": "Full Name",
+   "reqd": 1,
+   "reqd_in_database": 1
   },
   {
    "fieldname": "website",
@@ -83,12 +91,50 @@
    "fieldname": "section_break_10",
    "fieldtype": "Section Break"
   }
+  ,{
+	"default": "0",
+	"fieldname": "disabled",
+	"fieldtype": "Check",
+	"label": "Disable"
+   },
+   {
+	"fieldname": "location",
+	"fieldtype": "Data",
+	"in_list_view": 1,
+	"in_standard_filter": 1,
+	"label": "Location"
+   },
+   {
+	"fieldname": "cb_1",
+	"fieldtype": "Column Break"
+   },
+   {
+	"fieldname": "naming_series",
+	"fieldtype": "Select",
+	"label": "Series",
+	"no_copy": 1,
+	"options": "MF-.",
+	"reqd": 1,
+	"set_only_once": 1
+   },
+   {
+	"collapsible": 1,
+	"fieldname": "website_filters_section",
+	"fieldtype": "Section Break",
+	"label": "Website Filters"
+   },
+   {
+	"fieldname": "manufacturer_web_filters",
+	"fieldtype": "Table MultiSelect",
+	"options": "Manufacturer Filter Map"
+   }  
  ],
  "icon": "fa fa-certificate",
- "modified": "2019-07-06 13:06:47.237014",
+ "modified": "2024-07-06 13:06:47.237014",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Manufacturer",
+ "name_case": "UPPER CASE",
  "owner": "Administrator",
  "permissions": [
   {
