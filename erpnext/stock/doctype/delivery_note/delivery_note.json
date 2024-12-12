@@ -163,7 +163,8 @@
   "column_break5",
   "excise_page",
   "instructions",
-  "connections_tab"
+  "connections_tab",
+  "daily_order"
  ],
  "fields": [
   {
@@ -1391,13 +1392,19 @@
    "fieldname": "named_place",
    "fieldtype": "Data",
    "label": "Named Place"
+  },
+  {
+   "fieldname": "daily_order",
+   "fieldtype": "Link",
+   "label": "Daily Order",
+   "options": "Daily Order"
   }
  ],
  "icon": "fa fa-truck",
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-20 16:05:02.854990",
+ "modified": "2024-09-20 16:05:02.854990",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",

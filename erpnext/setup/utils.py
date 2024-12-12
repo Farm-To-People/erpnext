@@ -11,6 +11,12 @@ from erpnext import get_default_company
 
 
 def before_tests():
+
+	# Datahenge: This is some INCREDIBLY dangerous code.
+	# If you execute a `bench run-tests`, this would wipe out or alter production Business Data.
+	# I'm commenting-out the entire block; it's too risky.
+	"""
+
 	frappe.clear_cache()
 	# complete setup if missing
 	from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
@@ -43,7 +49,7 @@ def before_tests():
 	set_defaults_for_tests()
 
 	frappe.db.commit()
-
+	"""  # pylint: disable=pointless-string-statement
 
 @frappe.whitelist()
 def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=None):

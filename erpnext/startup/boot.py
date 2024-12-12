@@ -13,7 +13,8 @@ def boot_session(bootinfo):
 
 	if frappe.session["user"] != "Guest":
 		update_page_info(bootinfo)
-
+		# Datahenge: There is a big difference between a default VALUE and a default FILTER. 
+		# TODO: Need to stop the default filters; they are very annoying to Users.
 		bootinfo.sysdefaults.territory = frappe.db.get_single_value("Selling Settings", "territory")
 		bootinfo.sysdefaults.customer_group = frappe.db.get_single_value("Selling Settings", "customer_group")
 		bootinfo.sysdefaults.allow_stale = cint(

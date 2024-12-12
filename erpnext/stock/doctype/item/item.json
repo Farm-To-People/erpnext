@@ -15,7 +15,12 @@
   "naming_series",
   "item_code",
   "item_name",
+  "item_name_web",
   "item_group",
+  "item_type",
+  "farmbox_type",
+  "farmbox_can_customize",
+  "calc_stock_from_subproducts",
   "stock_uom",
   "column_break0",
   "disabled",
@@ -33,7 +38,22 @@
   "over_delivery_receipt_allowance",
   "over_billing_allowance",
   "image",
+  "sb_web_filters",
+  "web_filters",
+  "sb_misc",
+  "segregation",
+  "packing_sort_code",
+  "dbp_product_id",
+  "cb_misc_ftp_1",
+  "can_be_favorite",
+  "include_in_popular_searches",
+  "exclude_from_shipping_rule_subtotal",
+  "cb_misc_ftp_2",
+  "exclude_from_subtotal_discounts",
+  "exclude_from_weekly_sales_controls",
+  "scale_weight_required",
   "section_break_11",
+  "is_item_from_hub",    
   "description",
   "brand",
   "unit_of_measure_conversion",
@@ -49,6 +69,7 @@
   "warranty_period",
   "weight_per_unit",
   "weight_uom",
+  "volume_rating",
   "allow_negative_stock",
   "sb_barcodes",
   "barcodes",
@@ -82,6 +103,7 @@
   "min_order_qty",
   "safety_stock",
   "is_purchase_item",
+  "delivered_by_supplier",
   "purchase_details_cb",
   "lead_time_days",
   "last_purchase_rate",
@@ -97,10 +119,13 @@
   "customs_tariff_number",
   "sales_details",
   "sales_uom",
+  "website_uom_option",
+  "sales_uom_website",  
   "grant_commission",
   "is_sales_item",
   "column_break3",
   "max_discount",
+  "badge_promotional",
   "customer_details",
   "customer_items",
   "item_tax_section_break",
@@ -178,7 +203,7 @@
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "label": "Default Unit of Measure",
+   "label": "Stock Unit of Measure",
    "oldfieldname": "stock_uom",
    "oldfieldtype": "Link",
    "options": "UOM",
@@ -209,6 +234,7 @@
    "fieldname": "is_stock_item",
    "fieldtype": "Check",
    "label": "Maintain Stock",
+   "description": "Used in Opening Balance postings.",
    "oldfieldname": "is_stock_item",
    "oldfieldtype": "Select"
   },
@@ -316,10 +342,10 @@
    "options": "fa fa-truck"
   },
   {
+   "default": "999",
    "fieldname": "shelf_life_in_days",
    "fieldtype": "Int",
-   "label": "Shelf Life In Days",
-   "mandatory_depends_on": "eval:doc.has_batch_no && doc.has_expiry_date"
+   "label": "Shelf Life In Days"
   },
   {
    "default": "2099-12-31",
@@ -342,6 +368,7 @@
    "fieldname": "valuation_method",
    "fieldtype": "Select",
    "label": "Valuation Method",
+   "mandatory_depends_on": "is_stock_item",
    "options": "\nFIFO\nMoving Average\nLIFO"
   },
   {
@@ -526,6 +553,7 @@
    "fieldname": "purchase_uom",
    "fieldtype": "Link",
    "label": "Default Purchase Unit of Measure",
+   "mandatory_depends_on": "eval: doc.is_purchase_item == 1",
    "options": "UOM"
   },
   {
@@ -637,7 +665,9 @@
    "fieldname": "sales_uom",
    "fieldtype": "Link",
    "label": "Default Sales Unit of Measure",
-   "options": "UOM"
+   "options": "UOM",
+   "reqd": 1,
+   "reqd_in_database": 1
   },
   {
    "default": "1",
@@ -883,7 +913,173 @@
    "fieldname": "deferred_accounting_section",
    "fieldtype": "Section Break",
    "label": "Deferred Accounting"
-  }
+  },
+{
+ "bold": 1,
+ "default": "Product",
+ "fieldname": "item_type",
+ "fieldtype": "Select",
+ "in_list_view": 1,
+ "in_standard_filter": 1,
+ "label": "Item Type",
+ "length": 30,
+ "options": "Farm Box\nOther\nProduct\nPackaging\nService",
+ "reqd": 1
+},
+{
+ "fetch_from": "item_name",
+ "fetch_if_empty": 1,
+ "fieldname": "item_name_web",
+ "fieldtype": "Data",
+ "label": "Item Web Name",
+ "reqd": 1,
+ "search_index": 1
+},
+{
+ "depends_on": "eval:doc.website_uom_option == 'Custom'",
+ "description": "This descriptive tag appears on the shopping website.",
+ "fieldname": "sales_uom_website",
+ "fieldtype": "Data",
+ "label": "Sales UOM on Website",
+ "length": 60,
+ "mandatory_depends_on": "eval:doc.website_uom_option == 'Custom'",
+ "read_only_depends_on": "eval:doc.website_uom_option != 'Custom'"
+},
+{
+ "description": "Badge priority #3",
+ "fieldname": "badge_promotional",
+ "fieldtype": "Data",
+ "label": "Promotional Badge",
+ "length": 25
+},
+{
+ "fieldname": "dbp_product_id",
+ "fieldtype": "Int",
+ "label": "DBP Product ID",
+ "read_only": 1
+},
+{
+ "fieldname": "segregation",
+ "fieldtype": "Select",
+ "label": "Segregation",
+ "options": "Bakery\nFarm Boxes and Bundles\nFrozen\nGrocery\nOther\nProduce\nRefrigerated\nThanksgiving",
+ "reqd": 1,
+ "reqd_in_database": 1
+},
+{
+ "depends_on": "eval: doc.item_type == 'Farm Box'",
+ "fieldname": "farmbox_type",
+ "fieldtype": "Select",
+ "label": "Farm Box Type",
+ "length": 30,
+ "options": "\nStandard\nFlexible\nPartially Flexible"
+},
+{
+ "collapsible": 1,
+ "fieldname": "sb_misc",
+ "fieldtype": "Section Break",
+ "label": "Misc FTP"
+},
+{
+ "default": "0",
+ "depends_on": "eval: doc.item_type == 'Farm Box'",
+ "fieldname": "farmbox_can_customize",
+ "fieldtype": "Check",
+ "label": "Farmbox Can Be Customized"
+},
+{
+ "description": "Determines where the Item prints on a Packing Slip within its segregation.",
+ "fieldname": "packing_sort_code",
+ "fieldtype": "Data",
+ "label": "Packing Slip Position"
+},
+{
+ "allow_in_quick_entry": 1,
+ "default": "0",
+ "description": "When checked, customers can mark this Product as a Favorite on the website.",
+ "fieldname": "can_be_favorite",
+ "fieldtype": "Check",
+ "label": "Can Favorite"
+},
+{
+ "default": "0",
+ "depends_on": "eval: doc.item_type == 'Farm Box'",
+ "description": "Default value for new Farm Boxes. When marked, website availability is based on subproducts' availability.",
+ "fieldname": "calc_stock_from_subproducts",
+ "fieldtype": "Check",
+ "label": "Calculate Stock from Subproducts"
+},
+{
+ "fieldname": "web_filters",
+ "fieldtype": "Table MultiSelect",
+ "options": "Item Filter Map"
+},
+{
+ "collapsible": 1,
+ "fieldname": "sb_web_filters",
+ "fieldtype": "Section Break",
+ "label": "Website Filters"
+},
+{
+ "default": "0",
+ "description": "When marked, product will appear in the \"Popular\" section of searches on farmtopeople.com",
+ "fieldname": "include_in_popular_searches",
+ "fieldtype": "Check",
+ "label": "Include in Popular Searches"
+},
+{
+ "default": "None",
+ "fieldname": "website_uom_option",
+ "fieldtype": "Select",
+ "label": "Website UOM Option",
+ "options": "None\nSales UOM\nWeight\nSales UOM + Weight\nCustom",
+ "reqd": 1,
+ "reqd_in_database": 1
+},
+{
+ "default": "0",
+ "description": "When checked, this Item's line amount will be ignored when calculating Delivery Fee thresholds (Shipping Rule)",
+ "fieldname": "exclude_from_shipping_rule_subtotal",
+ "fieldtype": "Check",
+ "label": "Exclude from Shipping Rule Subtotal"
+},
+{
+ "default": "0",
+ "description": "When checked, this Item's line amount does not participate in Discounts Against Subtotal.",
+ "fieldname": "exclude_from_subtotal_discounts",
+ "fieldtype": "Check",
+ "label": "Exclude from Subtotal Discounts"
+},
+{
+ "default": "0",
+ "description": "When checked, prevents this Item from automatically appearing on Weekly Sales Controls (e.g.  certain kinds of 'Bundles')",
+ "fieldname": "exclude_from_weekly_sales_controls",
+ "fieldtype": "Check",
+ "label": "Exclude from Weekly Sales Controls"
+},
+{
+ "default": "1",
+ "description": "Used for predicting box sizes.",
+ "fieldname": "volume_rating",
+ "fieldtype": "Float",
+ "label": "Volume Rating"
+},
+{
+ "fieldname": "cb_misc_ftp_1",
+ "fieldtype": "Column Break"
+},
+{
+ "fieldname": "cb_misc_ftp_2",
+ "fieldtype": "Column Break"
+},
+{
+ "default": "0",
+ "description": "Product must be weighed on a scale during packing.\nHDWD cannot be transmitted without weights.",
+ "fieldname": "scale_weight_required",
+ "fieldtype": "Check",
+ "label": "Weight Required during Packing",
+ "search_index": 1
+}  
  ],
  "icon": "fa fa-tag",
  "idx": 2,
@@ -891,7 +1087,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2024-04-30 13:46:39.098753",
+ "modified": "2024-09-30 13:46:39.098753",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
@@ -959,7 +1155,7 @@
  "search_fields": "item_name,description,item_group,customer_code",
  "show_name_in_global_search": 1,
  "show_preview_popup": 1,
- "sort_field": "modified",
+ "sort_field": "item_code asc, modified desc",
  "sort_order": "DESC",
  "states": [],
  "title_field": "item_name",

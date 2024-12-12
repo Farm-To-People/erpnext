@@ -8,6 +8,24 @@ from frappe.query_builder import Case, Order
 from frappe.query_builder.functions import Coalesce, CombineDatetime, Sum
 from frappe.utils import flt
 
+# tabBin: A table for storing On Hand Stock data.
+#
+# SELECT
+# 	warehouse, item_code, stock_uom, reserved_qty, actual_qty, ordered_qty, indented_qty, planned_qty, projected_qty,
+# 	reserved_qty_for_production, reserved_qty_for_sub_contract, valuation_rate, stock_value
+# FROM  `tabBin`
+# WHERE item_code = 'ADD-VEG-2389'
+#
+# DEFINITIONS:
+#
+# reserved_qty = Sales Orders Submitted, not-yet Shipped
+#
+# ordered_qty = Purchase Orders Submitted, but not-yet received.
+#               Note: Currently this does not reflect FTP's special rules 'include_draft_qty_ftp'
+#               Note: Currently this does not reflect FTP's special rules 'exclude_submitted_qty_ftp'
+#
+# projected_qty = A sum of all the other Quantity Fields.
+#
 
 class Bin(Document):
 	# begin: auto-generated types
@@ -287,3 +305,7 @@ def update_qty(bin_name, args):
 		},
 		update_modified=True,
 	)
+
+	# Datahenge: Intercept the Standard Code, and update the Redis Availability.
+	from ftp.ftp_invent.redis.api import try_update_redis_inventory
+	try_update_redis_inventory(args.get("item_code"))  # Update quantities in Redis Inventory database
