@@ -24,7 +24,7 @@ from erpnext.stock.doctype.item.item import get_item_defaults, get_uom_conv_fact
 from erpnext.stock.doctype.item_manufacturer.item_manufacturer import get_item_manufacturer_part_no
 from erpnext.stock.doctype.price_list.price_list import get_price_list_details
 
-sales_doctypes = ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice"]
+sales_doctypes = ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice", "Daily Order"]
 purchase_doctypes = [
 	"Material Request",
 	"Supplier Quotation",
@@ -58,17 +58,39 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	}
 	"""
 
-	args = process_args(args)
+	# ========
+	# * Callers: JavaScript code on web pages like Sales Order.
+	# * Purpose: Calculates the Item Prices
+
+	# Datahenge: This thread-variable helps my functions understand whether JS or Python originated the call.
+	frappe.local.price_caller = "JS"  # pylint: disable=assigning-non-slot
+
+	# ----------------
+	# Datahenge: VERY IMPORTANT function.
+	# * Appears to be smart-enough to consider From-To dates in Price Lists.
+	# * For daily and sales orders, the arguments should contain a key 'coupon_codes'.  Have to modify the JS caller.
+	# ----------------
+
+	args = process_args(args)  # Datahenge: Converts args into a frappe._dict
 	for_validate = process_string_args(for_validate)
+
+	if not args.item_code:  # Datahenge: Schema enforcement
+		raise ValueError("Argument 'args.item_code' is mandatory.")
+
 	overwrite_warehouse = process_string_args(overwrite_warehouse)
 	item = frappe.get_cached_doc("Item", args.item_code)
-	validate_item_details(args, item)
+	validate_item_details(args, item)  # Datahenge: This step also validates the arguments.
 
 	if isinstance(doc, str):
 		doc = json.loads(doc)
 
 	if doc:
-		args["transaction_date"] = doc.get("transaction_date") or doc.get("posting_date")
+		# args["transaction_date"] = doc.get("transaction_date") or doc.get("posting_date")
+		# Datahenge: But what if the Document doesn't have a DocField named `posting_date` or `transaction-date`?
+		#            Then respect the args!
+		args['transaction_date'] = doc.get('transaction_date') or  doc.get('posting_date') or args['transaction_date']
+		args['posting_date'] = doc.get('posting_date') or args['posting_date']
+		# DH - End
 
 		if doc.get("doctype") == "Purchase Invoice":
 			args["bill_date"] = doc.get("bill_date")
@@ -111,6 +133,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		if args.get(key) is None:
 			args[key] = value
 
+	# Datahenge: Note that 'args' should contain a key 'coupon_codes' that is a List of String.
 	data = get_pricing_rule_for_item(args, doc=doc, for_validate=for_validate)
 
 	out.update(data)
@@ -127,6 +150,9 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		out.amount = flt(args.qty) * flt(out.rate)
 
 	out = remove_standard_fields(out)
+
+	# Datahenge: Should be the conclusion (returning to JavaScript), but reset the variable just in case.
+	frappe.local.price_caller = None  # pylint: disable=assigning-non-slot
 	return out
 
 
@@ -207,7 +233,11 @@ def get_item_code(barcode=None, serial_no=None):
 
 def validate_item_details(args, item):
 	if not args.company:
-		throw(_("Please specify Company"))
+		throw(_("Please specify Company in 'args' arguments."))
+
+	# Datahenge: Enforcing a doctype in the arguments:
+	if not args.doctype:
+		throw(_("Please include 'doctype' in arguments."))
 
 	from erpnext.stock.doctype.item.item import validate_end_of_life
 
@@ -898,6 +928,8 @@ def get_item_price(args, item_code, ignore_party=False):
 	:param item_code: str, Item Doctype field item_code
 	"""
 
+	# TODO: Datahenge: This ERPNext function could really use args validation, maybe a Schema?
+
 	ip = frappe.qb.DocType("Item Price")
 	query = (
 		frappe.qb.from_(ip)
@@ -955,7 +987,13 @@ def get_price_list_rate_for(args, item_code):
 		desired_qty = args.get("qty")
 		if desired_qty and check_packing_list(price_list_rate[0][0], desired_qty, item_code):
 			item_price_data = price_list_rate
-	else:
+		# Datahenge: This is a pretty huge bug fix.  What happens when you have a Price List Rate,
+		#            but the 'check_packing_list()' call fails?  In vanilla ERPNext, you get no results,
+		#            because 'item_price_data' is never populated.
+		else:
+			price_list_rate = None
+
+	if not price_list_rate:  # Datahenge: BUG FIX
 		for field in ["customer", "supplier"]:
 			del item_price_args[field]
 
@@ -1002,7 +1040,11 @@ def check_packing_list(price_list_rate_name, desired_qty, item_code):
 
 
 def validate_conversion_rate(args, meta):
-	from erpnext.controllers.accounts_controller import validate_conversion_rate
+	from erpnext.controllers.accounts_controller import validate_conversion_rate  as accounts_vcr  # Give this an alias because identical function name!
+
+	# Datahenge: Temporary Workaround
+	if not args.currency:
+		return
 
 	company_currency = frappe.get_cached_value("Company", args.company, "default_currency")
 	if not args.conversion_rate and args.currency == company_currency:
@@ -1014,7 +1056,7 @@ def validate_conversion_rate(args, meta):
 		)
 
 	# validate currency conversion rate
-	validate_conversion_rate(
+	accounts_vcr(
 		args.currency, args.conversion_rate, meta.get_label("conversion_rate"), args.company
 	)
 
@@ -1033,7 +1075,7 @@ def validate_conversion_rate(args, meta):
 		if not args.get("price_list_currency"):
 			throw(_("Price List Currency not selected"))
 		else:
-			validate_conversion_rate(
+			accounts_vcr(
 				args.price_list_currency,
 				args.plc_conversion_rate,
 				meta.get_label("plc_conversion_rate"),
@@ -1138,7 +1180,11 @@ def get_conversion_factor(item_code, uom):
 		stock_uom = frappe.db.get_value("Item", item_code, "stock_uom")
 		conversion_factor = get_uom_conv_factor(uom, stock_uom)
 
-	return {"conversion_factor": conversion_factor or 1.0}
+	# return {"conversion_factor": conversion_factor or 1.0}
+  	# Datahenge: Defaulting to 1.0 is a terrible practice, and could lead to a LOT of data integrity issues!
+	if not conversion_factor:
+		raise ValueError(f"Cannot find a conversion factor for Item '{item_code}', from uom '{uom}' to stocking UOM '{stock_uom}'.")
+	return {"conversion_factor": conversion_factor}
 
 
 @frappe.whitelist()

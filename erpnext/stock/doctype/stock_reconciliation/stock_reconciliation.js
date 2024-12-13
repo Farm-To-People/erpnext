@@ -83,6 +83,22 @@ frappe.ui.form.on("Stock Reconciliation", {
 		}
 
 		frm.events.set_fields_onload_for_line_item(frm);
+
+		// Datahenge: New button to Archive the stock ledger entry rows.
+		if(frm.doc.docstatus == 1 && frm.doc.purpose == "Inventory Closing") {
+
+			frm.add_custom_button(__("Archive Stock Ledger"), function() {
+				frm.events.archive_stock_ledger(frm);
+			});
+		}
+
+		// Datahenge: New button to Add more item rows.
+		if(frm.doc.docstatus == 0 && frm.doc.purpose == "Inventory Closing") {
+			frm.add_custom_button(__("Add More Items"), function() {			
+				frm.events.add_more_items(frm);
+			});
+		}
+
 	},
 
 	set_fields_onload_for_line_item(frm) {
@@ -159,7 +175,10 @@ frappe.ui.form.on("Stock Reconciliation", {
 					callback: function (r) {
 						if (r.exc || !r.message || !r.message.length) return;
 
-						frm.clear_table("items");
+						// frm.clear_table("items");
+						if (frm.doc.purpose != "Inventory Closing") {
+							frm.clear_table("items");  // DH - Learned about a new method
+						}						
 
 						r.message.forEach((row) => {
 							let item = frm.add_child("items");
@@ -267,6 +286,52 @@ frappe.ui.form.on("Stock Reconciliation", {
 			});
 		}
 	},
+
+	// Datahenge: Begin
+	add_more_items: function(frm) {
+	
+		let fields = [{
+			label: "Quantity", 
+			fieldname: "quantity",
+			fieldtype: "Int",
+		}];	
+
+		frappe.prompt(fields, function(data) {
+			frappe.call({
+				doc: frm.doc,
+				args: {
+					quantity: data.quantity,
+				},
+				method: "add_additional_items",
+				callback: function(r) {
+					frm.reload_doc();
+				}
+			})
+		}, __("Add More Items"), __("Add"));
+	},
+
+	archive_stock_ledger: function(frm) {
+		let fields = [{
+			label: "Warning", 
+			fieldname: "warning_field",
+			fieldtype: "Text",
+			default_value: "Foo",
+			options: "Foo",
+			read_only: 1
+		}];
+
+		frappe.prompt(fields, function(data) {
+			frappe.call({
+				doc: frm.doc,
+				method: "archive_stock_ledger_entry",
+				callback: function(r) {
+					frappe.msgprint("Archive task is enqueued.")
+				}
+			});
+		}, __("Choose Item"), __("Archive"));
+	},
+	// Datahenge: End
+
 });
 
 frappe.ui.form.on("Stock Reconciliation Item", {

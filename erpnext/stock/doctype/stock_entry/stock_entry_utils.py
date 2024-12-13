@@ -52,6 +52,9 @@ def make_stock_entry(**args):
 	:do_not_save: Optional flag
 	:do_not_submit: Optional flag
 	"""
+	
+	# Datahenge: Adding a 'uom' argument.
+
 	from erpnext.stock.serial_batch_bundle import SerialBatchCreation
 
 	def process_serial_numbers(serial_nos_list):
@@ -183,6 +186,7 @@ def make_stock_entry(**args):
 			"cost_center": args.cost_center,
 			"expense_account": args.expense_account,
 			"use_serial_batch_fields": args.use_serial_batch_fields,
+			'uom': args.uom,
 		},
 	)
 

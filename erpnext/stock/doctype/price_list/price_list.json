@@ -15,6 +15,7 @@
   "currency",
   "buying",
   "selling",
+  "deposit",
   "price_not_uom_dependent",
   "column_break_3",
   "countries"
@@ -79,12 +80,19 @@
    "label": "Applicable for Countries",
    "options": "Price List Country"
   }
+  ,{
+	"default": "0",
+	"fieldname": "deposit",
+	"fieldtype": "Check",
+	"in_list_view": 1,
+	"label": "Deposit"
+   }  
  ],
  "icon": "fa fa-tags",
  "idx": 1,
  "links": [],
  "max_attachments": 1,
- "modified": "2024-01-30 14:39:26.328837",
+ "modified": "2024-09-30 14:39:26.328837",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Price List",

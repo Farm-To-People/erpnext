@@ -10,6 +10,7 @@
   "naming_series",
   "company",
   "purpose",
+  "archive_after_submit",  
   "col1",
   "posting_date",
   "posting_time",
@@ -54,7 +55,7 @@
    "fieldname": "purpose",
    "fieldtype": "Select",
    "label": "Purpose",
-   "options": "\nOpening Stock\nStock Reconciliation",
+   "options": "\nOpening Stock\nStock Reconciliation\nInventory Closing",
    "reqd": 1
   },
   {
@@ -96,7 +97,7 @@
    "fieldtype": "Table",
    "label": "Items",
    "options": "Stock Reconciliation Item",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "fieldname": "section_break_9",
@@ -178,12 +179,19 @@
    "fieldname": "column_break_12",
    "fieldtype": "Column Break"
   }
+  ,{
+	"default": "0",
+	"depends_on": "eval: doc.purpose == \"Inventory Closing\";",
+	"fieldname": "archive_after_submit",
+	"fieldtype": "Check",
+	"label": "Archive after Submit"
+   }
  ],
  "icon": "fa fa-upload-alt",
  "idx": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-05-11 09:10:26.327652",
+ "modified": "2024-09-11 09:10:26.327652",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Reconciliation",

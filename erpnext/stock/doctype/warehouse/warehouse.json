@@ -39,6 +39,8 @@
   "lft",
   "rgt",
   "old_parent"
+  ,"sb_custom"
+  ,"allow_negative_stock"  
  ],
  "fields": [
   {
@@ -258,12 +260,28 @@
    "fieldtype": "Check",
    "label": "Is Rejected Warehouse"
   }
+  ,{
+	"description": "Custom fields for FTP",
+	"fieldname": "sb_custom",
+	"fieldtype": "Section Break",
+	"label": "Custom"
+   },
+   {
+	"default": "Use Global",
+	"description": "Standard ERP only supports this setting at a Global level.  This is an attempt allow a Warehouse to override that decision.",
+	"fieldname": "allow_negative_stock",
+	"fieldtype": "Select",
+	"label": "Allow Negative Stock",
+	"options": "No\nYes\nUse Global",
+	"reqd": 1,
+	"reqd_in_database": 1
+   }  
  ],
  "icon": "fa fa-building",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2024-08-14 16:08:15.733597",
+ "modified": "2024-08-15 16:08:15.733597",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Warehouse",
