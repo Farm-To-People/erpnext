@@ -8,6 +8,12 @@ from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rule_
 
 
 def get_price(item_code, price_list, customer_group, company, qty=1, party=None):
+	"""
+	Datahenge:  This function is rather inaccurate.
+	It does not take into consideration From and To Dates of 'Item Price'.
+	Unfortunately, it's being called by 'erpnext.selling.doctype.sales_order.sales_order'
+	"""
+
 	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
 
 	if price_list:

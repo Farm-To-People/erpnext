@@ -47,6 +47,7 @@ frappe.query_reports["Stock Ledger"] = {
 					query: "erpnext.controllers.queries.item_query",
 				};
 			},
+			reqd: 1, // Datahenge: Extremely Important, otherwise the report can lock SQL by fetching far too much info!
 		},
 		{
 			fieldname: "item_group",

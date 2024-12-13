@@ -105,6 +105,7 @@ def get_stock_balance(
 
 	if posting_date is None:
 		posting_date = nowdate()
+	# Datahenge: This is not a great assumption.  If I backdate the posting date, I would not "assume" I was talking about yesterday at 11:19AM
 	if posting_time is None:
 		posting_time = nowtime()
 
@@ -658,3 +659,13 @@ def get_combine_datetime(posting_date, posting_time):
 		posting_time = (datetime.datetime.min + posting_time).time()
 
 	return datetime.datetime.combine(posting_date, posting_time).replace(microsecond=0)
+
+
+# --------
+# Datahenge
+# --------
+def allow_negative_stock(item, warehouse_key: str):
+	"""
+	Instead of a global setting, let's decide whether Negative Stock is Allowed on a case-by-case basis.
+	"""
+	# TODO: Make it so.

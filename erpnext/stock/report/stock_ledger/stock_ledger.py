@@ -21,6 +21,11 @@ from erpnext.stock.utils import (
 
 
 def execute(filters=None):
+
+	# Datahenge: Protection against running without an Item Code
+	if not filters.get("item_code"):
+		raise ValueError("Item is a mandatory filter for this report.")
+
 	is_reposting_item_valuation_in_progress()
 	include_uom = filters.get("include_uom")
 	columns = get_columns(filters)

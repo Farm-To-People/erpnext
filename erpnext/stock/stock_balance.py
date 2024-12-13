@@ -77,6 +77,13 @@ def repost_actual_qty(item_code, warehouse, allow_zero_rate=False, allow_negativ
 
 
 def get_balance_qty_from_sle(item_code, warehouse):
+	"""
+	Datahenge Explains Frappe:
+
+	Because of the running "qty_after_transaction" balance in Stock Ledger Entry,
+	one way to find the current balance *now* is to query the most-recent row, per Item per Warehouse, in descending order.
+	"""
+
 	balance_qty = frappe.db.sql(
 		"""select qty_after_transaction from `tabStock Ledger Entry`
 		where item_code=%s and warehouse=%s and is_cancelled=0

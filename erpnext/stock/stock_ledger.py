@@ -610,9 +610,10 @@ class update_entries_after:
 			if not future_sle_exists(self.args):
 				self.update_bin()
 		else:
-			entries_to_fix = self.get_future_entries_to_fix()
+			entries_to_fix: list = self.get_future_entries_to_fix()
 
 			i = 0
+			# print(f"stock_ledger.update_entries_after().  Total entries to fix = {len(entries_to_fix)}.")
 			while i < len(entries_to_fix):
 				sle = entries_to_fix[i]
 				i += 1
@@ -627,12 +628,25 @@ class update_entries_after:
 			self.raise_exceptions()
 
 	def process_sle_against_current_timestamp(self):
-		sl_entries = self.get_sle_against_current_voucher()
+		"""
+		1. Find all Stock Ledger Entry records with a VERY specific timestamp, item, and warehouse.
+		2. 'Process' them
+		"""		
+		sl_entries: list = self.get_sle_against_current_voucher()  # List of dictionary
 		for sle in sl_entries:
 			self.process_sle(sle)
 
-	def get_sle_against_current_voucher(self):
+	def get_sle_against_current_voucher(self) -> list:
 		self.args["posting_datetime"] = get_combine_datetime(self.args.posting_date, self.args.posting_time)
+
+		# Datahenge
+		# Purpose: Find all Stock Ledger Entry posted at this *exact* moment in time, for this Warehouse.
+		# Questions:
+		# 1. What's the point of this?
+		# 2. What columns are truly needed?
+		# 3. Why the "FOR UPDATE"?
+
+		# NOTE:  Order by creation below, because that's the last hope of "uniqueness" if the Posting Date and Time are repeated for multiple entries.
 
 		return frappe.db.sql(
 			"""
@@ -656,7 +670,7 @@ class update_entries_after:
 			as_dict=1,
 		)
 
-	def get_future_entries_to_fix(self):
+	def get_future_entries_to_fix(self) -> list:
 		# includes current entry!
 		args = self.data[self.args.warehouse].previous_sle or frappe._dict(
 			{"item_code": self.item_code, "warehouse": self.args.warehouse}
@@ -764,6 +778,9 @@ class update_entries_after:
 			)
 
 	def process_sle(self, sle):
+		"""
+		Datahenge: This function is called a LOT in a loop, by process_sle_against_current_timestamp()
+		"""
 		# previous sle data for this warehouse
 		self.wh_data = self.data[sle.warehouse]
 
@@ -1516,6 +1533,8 @@ class update_entries_after:
 def get_previous_sle_of_current_voucher(args, operator="<", exclude_current_voucher=False):
 	"""get stock ledger entries filtered by specific posting datetime conditions"""
 
+	# TODO: Datahenge: Very likely we need to migrate the V13 refactoring into here?
+
 	if not args.get("posting_date"):
 		args["posting_datetime"] = "1900-01-01 00:00:00"
 
@@ -1589,6 +1608,9 @@ def get_stock_ledger_entries(
 	extra_cond=None,
 ):
 	"""get stock ledger entries filtered by specific posting datetime conditions"""
+
+	# Datahenge: WTF?
+
 	conditions = f" and posting_datetime {operator} %(posting_datetime)s"
 	if previous_sle.get("warehouse"):
 		conditions += " and warehouse = %(warehouse)s"
@@ -1630,10 +1652,11 @@ def get_stock_ledger_entries(
 		conditions += f"{extra_cond}"
 
 	# nosemgrep
+	# Datahenge: Adding an Index Hint, in the hope this prevents further MariaDB Locks ...
 	return frappe.db.sql(
 		"""
 		select *, posting_datetime as "timestamp"
-		from `tabStock Ledger Entry`
+		from `tabStock Ledger Entry` USE INDEX(ftp_perf_idx_1A)
 		where item_code = %(item_code)s
 		and is_cancelled = 0
 		{conditions}
@@ -1651,10 +1674,17 @@ def get_stock_ledger_entries(
 
 
 def get_sle_by_voucher_detail_no(voucher_detail_no, excluded_sle=None):
+	"""
+	Given a 'voucher_detail_no', return a few chosen columns from Stock Ledger Entry
+
+	Index: This is covered by 'voucher_detail_no_index'
+	Caller: Class 'update_entries_after', Method 'get_dependent_entries_to_fix'	
+	"""
+
 	return frappe.db.get_value(
 		"Stock Ledger Entry",
 		{"voucher_detail_no": voucher_detail_no, "name": ["!=", excluded_sle], "is_cancelled": 0},
-		[
+		fieldname=[
 			"item_code",
 			"warehouse",
 			"actual_qty",
@@ -1705,6 +1735,9 @@ def get_valuation_rate(
 	batch_no=None,
 	serial_and_batch_bundle=None,
 ):
+	"""
+	Datahenge: Another extremely slow/inefficient query, that I had to go write indexes for.
+	"""
 	from erpnext.stock.serial_batch_bundle import BatchNoValuation
 
 	if not company:
@@ -1725,6 +1758,7 @@ def get_valuation_rate(
 			)
 		)
 
+		# TODO:  For PyPika, how do I include a FORCE INDEX (ftp_perf_idx_2A) or FORCE INDEX (ftp_perf_idx_2B)
 		last_valuation_rate = query.run()
 		if last_valuation_rate:
 			return flt(last_valuation_rate[0][0])
@@ -1845,7 +1879,10 @@ def update_qty_in_future_sle(args, allow_negative_stock=False):
 	validate_negative_qty_in_future_sle(args, allow_negative_stock)
 
 
-def get_stock_reco_qty_shift(args):
+def get_stock_reco_qty_shift(args) -> float:
+	"""
+	Called when 'voucher_type' == 'Stock Reconciliation'
+	"""
 	stock_reco_qty_shift = 0
 	if args.get("is_cancelled"):
 		if args.get("previous_qty_after_transaction"):
@@ -1860,6 +1897,7 @@ def get_stock_reco_qty_shift(args):
 
 	else:
 		# reco is being submitted
+		# DH: Expensive Function.
 		last_balance = get_previous_sle_of_current_voucher(args, "<=", exclude_current_voucher=True).get(
 			"qty_after_transaction"
 		)
