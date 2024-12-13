@@ -1215,10 +1215,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 	qty: function(doc, cdt, cdn) {
 		let item = frappe.get_doc(cdt, cdn);
-
 		this.conversion_factor(doc, cdt, cdn, true);
 		this.calculate_stock_uom_rate(doc, cdt, cdn);
-		// console.log("Datahenge: transaction.js, qty field was modified.");
 		this.apply_pricing_rule(item, true);
 	},
 
