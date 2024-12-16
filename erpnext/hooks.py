@@ -280,8 +280,14 @@ doc_events = {
 	},
 	('Quotation', 'Sales Order', 'Sales Invoice'): {
 		'validate': ["erpnext.erpnext_integrations.taxjar_integration.set_sales_tax"]
-	}
+	},
+	    "Address": {
+        "on_update": "erpnext.stock.doctype.manufacturer.manufacturer.trigger_update_on_address_update"
+    }
 }
+
+
+
 
 # On cancel event Payment Entry will be exempted and all linked submittable doctype will get cancelled.
 # to maintain data integrity we exempted payment entry. it will un-link when sales invoice get cancelled.

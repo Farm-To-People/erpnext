@@ -12,16 +12,20 @@
   "naming_series",
   "short_name",
   "full_name",
+  "country",
   "disabled",
   "logo",
   "cb_1",
   "website",
   "location",
-  "country",
   "address_contacts",
   "address_html",
+  "latitude",
+  "longitude",
   "column_break_8",
   "contact_html",
+  "state",
+  "distance",
   "website_filters_section",
   "manufacturer_web_filters",
   "section_break_10",
@@ -128,11 +132,33 @@
    "fieldname": "manufacturer_web_filters",
    "fieldtype": "Table MultiSelect",
    "options": "Manufacturer Filter Map"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude"
+  },
+  {
+   "description": "Miles",
+   "fieldname": "distance",
+   "fieldtype": "Float",
+   "label": "Distance",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-certificate",
  "links": [],
- "modified": "2024-08-12 18:30:52.027396",
+ "modified": "2024-12-12 14:36:57.647538",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Manufacturer",
