@@ -14,4 +14,7 @@ def execute():
 	]
 	for x in doctypes:
 		dt = qb.DocType(x)
-		qb.from_(dt).delete().run()
+		try:
+			qb.from_(dt).delete().run()
+		except Exception as ex:
+			print(f"Error while trying to delete SQL data for DocType '{dt}' : {ex}")

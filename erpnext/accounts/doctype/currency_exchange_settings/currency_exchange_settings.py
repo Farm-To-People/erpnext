@@ -1,8 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-import frappe
 import requests
+import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import nowdate
@@ -109,8 +109,9 @@ def get_api_endpoint(service_provider: str | None = None, use_http: bool = False
 		if service_provider == "exchangerate.host":
 			api = "api.exchangerate.host/convert"
 		elif service_provider == "frankfurter.app":
-			api = "frankfurter.app/{transaction_date}"
-
+			api = "api.frankfurter.dev/v1/{transaction_date}"
+		else:
+			raise NotImplementedError(service_provider)
 		protocol = "https://"
 		if use_http:
 			protocol = "http://"
