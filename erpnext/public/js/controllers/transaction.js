@@ -567,8 +567,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 							child_doctype: item.doctype,
 							child_docname: item.name,
 							is_old_subcontracting_flow: me.frm.doc.is_old_subcontracting_flow,
-							// Datahenge: Need to create an Array of 'coupon_code' string
-							coupon_codes: me._get_coupon_code_list(me.frm.doc.coupon_code_set),
+							// Datahenge: Need to optionally create an Array of 'coupon_code' string
+							coupon_codes: me.frm.doc.doctype == 'Daily Order' ? me._get_coupon_code_list(me.frm.doc.coupon_code_set): []							
 						}
 					},
 
@@ -1679,8 +1679,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			"is_internal_supplier": me.frm.doc.is_internal_supplier,
 			"is_internal_customer": me.frm.doc.is_internal_customer,
 			// Datahenge: Need to create an Array of 'coupon_code' string
-			"coupon_codes": this._get_coupon_code_list(me.frm.doc.coupon_code_set),
-
+			"coupon_codes": me.frm.doc.doctype == 'Daily Order' ? this._get_coupon_code_list(me.frm.doc.coupon_code_set): [],
 		};
 	}
 
