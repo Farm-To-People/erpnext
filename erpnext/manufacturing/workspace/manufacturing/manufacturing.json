@@ -239,6 +239,7 @@
    "link_to": "Work Order Consumed Materials",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Work Order",
    "type": "Link"
   },
   {
@@ -316,7 +317,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-12-30 00:02:41.073161",
+ "modified": "2024-12-31 15:14:29.034561",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Manufacturing",
@@ -327,7 +328,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 8.0,
+ "sequence_id": 15.0,
  "shortcuts": [
   {
    "color": "Grey",

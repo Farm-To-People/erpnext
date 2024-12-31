@@ -99,6 +99,7 @@
    "link_to": "Accounts Payable",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
    "type": "Link"
   },
   {
@@ -109,6 +110,7 @@
    "link_to": "Accounts Payable Summary",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
    "type": "Link"
   },
   {
@@ -119,6 +121,7 @@
    "link_to": "Purchase Register",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
    "type": "Link"
   },
   {
@@ -129,6 +132,7 @@
    "link_to": "Item-wise Purchase Register",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
    "type": "Link"
   },
   {
@@ -139,6 +143,7 @@
    "link_to": "Purchase Order Analysis",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Order",
    "type": "Link"
   },
   {
@@ -149,6 +154,7 @@
    "link_to": "Received Items To Be Billed",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
    "type": "Link"
   },
   {
@@ -159,10 +165,11 @@
    "link_to": "Supplier Ledger Summary",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Purchase Invoice",
    "type": "Link"
   }
  ],
- "modified": "2024-01-18 22:09:46.221549",
+ "modified": "2024-12-31 15:14:25.839049",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payables",
@@ -173,7 +180,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 3.0,
+ "sequence_id": 8.0,
  "shortcuts": [
   {
    "doc_view": "",

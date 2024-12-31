@@ -195,26 +195,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "GoCardless Settings",
-   "link_count": 0,
-   "link_to": "GoCardless Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Mpesa Settings",
-   "link_count": 0,
-   "link_to": "Mpesa Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Plaid Settings",
    "link_count": 0,
    "link_to": "Plaid Settings",
@@ -223,7 +203,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-12-29 23:59:42.212595",
+ "modified": "2024-12-31 15:14:32.276815",
  "modified_by": "Administrator",
  "module": "ERPNext Integrations",
  "name": "ERPNext Integrations",
@@ -234,7 +214,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 21.0,
+ "sequence_id": 25.0,
  "shortcuts": [
   {
    "color": "Grey",
