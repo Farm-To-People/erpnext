@@ -763,15 +763,11 @@
    "type": "Link"
   }
  ],
- "modified": "2023-07-04 14:38:14.988756",
+ "modified": "2024-12-30 00:10:57.276410",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock",
  "number_cards": [
-  {
-   "label": "Total Warehouses",
-   "number_card_name": "Total Warehouses"
-  },
   {
    "label": "Total Stock Value",
    "number_card_name": "Total Stock Value"
