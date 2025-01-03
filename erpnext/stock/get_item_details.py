@@ -89,7 +89,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		# Datahenge: But what if the Document doesn't have a DocField named `posting_date` or `transaction-date`?
 		#            Then respect the args!
 		args['transaction_date'] = doc.get('transaction_date') or  doc.get('posting_date') or args['transaction_date']
-		args['posting_date'] = doc.get('posting_date') or args['posting_date']
+		args['posting_date'] = doc.get('posting_date') or args.get('transaction_date')
 		# DH - End
 
 		if doc.get("doctype") == "Purchase Invoice":

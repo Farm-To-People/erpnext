@@ -890,7 +890,7 @@ class BuyingController(SubcontractingController):
 		# Farm To People: The schedule_date (Required By Date) of the Purchase Order should take priority over the Lines.
 		update_header_schedule_date = True
 		if self.doctype == 'Purchase Order':
-			update_header_schedule_date = not bool(frappe.db.get_single_value("Buying Settings", "use_header_required_by"))
+			update_header_schedule_date = not bool(frappe.db.get_single_value("Buying Settings FTP", "use_header_required_by"))
 
 		if update_header_schedule_date and any(d.schedule_date for d in self.get("items")):
 			# Select earliest schedule_date.
