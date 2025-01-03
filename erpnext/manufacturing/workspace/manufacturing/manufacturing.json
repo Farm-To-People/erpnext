@@ -317,7 +317,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-12-31 15:14:29.034561",
+ "modified": "2024-12-31 16:25:11.784339",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Manufacturing",
@@ -328,7 +328,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 15.0,
+ "sequence_id": 17.0,
  "shortcuts": [
   {
    "color": "Grey",

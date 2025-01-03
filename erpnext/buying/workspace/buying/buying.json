@@ -511,7 +511,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-12-31 15:14:26.786285",
+ "modified": "2024-12-31 16:25:09.512592",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Buying",
@@ -522,7 +522,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 11.0,
+ "sequence_id": 13.0,
  "shortcuts": [
   {
    "color": "Green",
