@@ -99,7 +99,7 @@ def test_create_test_data():
 		coupon_code = frappe.get_doc(
 			{
 				"doctype": "Coupon Code",
-				"coupon_name": "SAVE30",
+				# "coupon_name": "SAVE30",
 				"coupon_code": "SAVE30",
 				"pricing_rule": pricing_rule,
 				"valid_from": "2014-01-01",

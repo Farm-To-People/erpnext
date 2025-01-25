@@ -39,14 +39,6 @@
  ],
  "fields": [
   {
-   "description": "e.g. \"Summer Holiday 2019 Offer 20\"",
-   "fieldname": "coupon_name",
-   "fieldtype": "Data",
-   "label": "Coupon Name",
-   "reqd": 1,
-   "unique": 1
-  },
-  {
    "fieldname": "coupon_type",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -86,7 +78,7 @@
    "fieldtype": "Table",
    "label": "Pricing Rule",
    "options": "Coupon Code Pricing Rule",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "description": "The dates below are calculated using the actual date the Customer applies the Coupon Code to their order: <b>not</b> delivery date.",
@@ -232,7 +224,7 @@
 
 
  ],
- "modified": "2024-09-05 12:01:24.649694",
+ "modified": "2025-01-01 12:01:24.649694",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Coupon Code",

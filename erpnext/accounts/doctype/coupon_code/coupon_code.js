@@ -13,7 +13,8 @@ frappe.ui.form.on("Coupon Code", {
 		});
 	},
 
-	// Datahenge: Don't create things automatically.
+	// Datahenge: Don't use the 'coupon_name' DocField.
+	//            Don't create data automatically.
 
 	/*
 	coupon_name: function (frm) {

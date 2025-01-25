@@ -11,6 +11,7 @@
 # 4. description
 
 # This is very confusing, so we've removed 'coupon_name' entirely.
+# Arguably 3 fields is still confusing, but we're dealing with it.
 
 import frappe
 # from frappe import _
@@ -29,7 +30,7 @@ class CouponCode(Document):
 
 		amended_from: DF.Link | None
 		coupon_code: DF.Data | None
-		coupon_name: DF.Data
+		# coupon_name: DF.Data
 		coupon_type: DF.Literal["Promotional", "Gift Card"]
 		customer: DF.Link | None
 		description: DF.TextEditor | None
