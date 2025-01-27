@@ -41,6 +41,7 @@
   "web_filters",
   "sb_misc",
   "segregation",
+  "packing_slip_section",
   "packing_sort_code",
   "dbp_product_id",
   "cb_misc_ftp_1",
@@ -1173,7 +1174,7 @@
    "label": "Farmbox Can Be Customized"
   },
   {
-   "description": "Determines where the Item prints on a Packing Slip within its segregation.",
+   "description": "Determines where the product prints within its Packing Slip section.",
    "fieldname": "packing_sort_code",
    "fieldtype": "Data",
    "label": "Packing Slip Position"
@@ -1264,6 +1265,14 @@
    "fieldtype": "Check",
    "label": "Weight Required during Packing",
    "search_index": 1
+  },
+  {
+   "description": "This determines where the product appears on the paper Packing Slip.",
+   "fieldname": "packing_slip_section",
+   "fieldtype": "Select",
+   "label": "Packing Slip Section",
+   "length": 60,
+   "options": "Section 1A: Frozen\nSection 1B: Refrigerated\nSection 2: Produce\nSection 3A: Grocery\nSection 3B: Bakery"
   }
  ],
  "icon": "fa fa-tag",
@@ -1278,7 +1287,7 @@
   }
  ],
  "max_attachments": 1,
- "modified": "2024-11-23 15:08:25.576347",
+ "modified": "2025-01-27 12:20:58.642207",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
