@@ -128,7 +128,8 @@
   "default_manufacturer_part_no",
   "total_projected_qty",
   "ftp_tab",
-  "sb_web_filters",
+  "web_categories_section",
+  "website_item_groups",
   "web_filters",
   "sb_misc",
   "segregation",
@@ -1012,13 +1013,8 @@
    "bold": 1,
    "fieldname": "web_filters",
    "fieldtype": "Table MultiSelect",
-   "label": "<b>Website Filters</b>",
+   "label": "Website Filters",
    "options": "Item Filter Map"
-  },
-  {
-   "fieldname": "sb_web_filters",
-   "fieldtype": "Section Break",
-   "hide_border": 1
   },
   {
    "default": "0",
@@ -1091,6 +1087,17 @@
    "fieldtype": "Select",
    "label": "Packing Slip Section",
    "options": "Section 1A: Frozen\nSection 1B: Refrigerated\nSection 2A: Grocery\nSection 2B: Bakery\nSection 2C: Non-Lit Produce\nSection 3: Produce"
+  },
+  {
+   "fieldname": "web_categories_section",
+   "fieldtype": "Section Break",
+   "label": "Website"
+  },
+  {
+   "fieldname": "website_item_groups",
+   "fieldtype": "Table",
+   "label": "Categories",
+   "options": "Website Item Group"
   }
  ],
  "icon": "fa fa-tag",
@@ -1099,7 +1106,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-01-27 18:25:50.745639",
+ "modified": "2025-01-29 11:37:55.102403",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
