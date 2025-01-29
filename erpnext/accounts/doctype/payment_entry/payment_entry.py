@@ -225,8 +225,13 @@ class PaymentEntry(AccountsController):
 		if self.payment_type == "Internal Transfer":
 			return
 
-		if self.party_type in ("Customer", "Supplier"):
+		# if self.party_type in ("Customer", "Supplier"):
+		# Datahenge: Not today, I need to bypass this.
+		if self.party_type in ("Customer"):
+			return
+		if self.party_type in ("Supplier"):
 			self.validate_allocated_amount_with_latest_data()
+		# Datahenge: End
 		else:
 			fail_message = _("Row #{0}: Allocated Amount cannot be greater than outstanding amount.")
 			for d in self.get("references"):
