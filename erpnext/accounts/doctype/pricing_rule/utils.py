@@ -93,7 +93,7 @@ def get_pricing_rules(args, doc=None):
 	pricing_rules = filter_pricing_rule_based_on_condition(pricing_rules, doc)
 
 	if not pricing_rules:
-		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint("\u274c: get_pricing_rules() line 96. No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 		return []
 	frappe.dprint(f"2. After filter by condition, rules are: {[ each['name'] for each in pricing_rules] }", check_env='FTP_DEBUG_PRICING_RULE')
 
@@ -123,7 +123,7 @@ def get_pricing_rules(args, doc=None):
 			rules.append(pricing_rule)
 
 	if not rules:
-		frappe.dprint("\u274c: get_pricing_rules(). No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
+		frappe.dprint("\u274c: get_pricing_rules() line 126. No pricing rules found based on conditions.", check_env='FTP_DEBUG_PRICING_RULE')
 	else:
 		frappe.dprint(f"3. Final rules include {[ each['name'] for each in rules] }", check_env='FTP_DEBUG_PRICING_RULE')
 
@@ -200,11 +200,6 @@ def _get_pricing_rules(apply_on, args, values):
 		raise ValueError("Missing mandatory args key = 'transaction_type'")
 
 	apply_on_field = frappe.scrub(apply_on)
-	if not args.get(apply_on_field):
-		return []
-
-	apply_on_field = frappe.scrub(apply_on)
-
 	if not args.get(apply_on_field):
 		return []
 
@@ -370,6 +365,8 @@ def get_other_conditions(conditions, values, args):
 		"Sales Invoice Item",
 		"POS Invoice",
 		"POS Invoice Item",
+		"Daily Order",			# FTP - This is extremely important, if you don't use it, ERPNext *assumes* you're Buying.  :eyeroll:
+		"Daily Order Item"		# FTP - This is extremely important, if you don't use it, ERPNext *assumes* you're Buying.  :eyeroll:
 	]:
 		conditions += """ and ifnull(`tabPricing Rule`.selling, 0) = 1"""
 	else:
