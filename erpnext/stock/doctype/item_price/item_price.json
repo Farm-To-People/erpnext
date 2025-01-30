@@ -78,6 +78,8 @@
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "item_code.item_name",
+   "fetch_if_empty": 1,
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -269,7 +271,7 @@
  "idx": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-26 13:11:50.253081",
+ "modified": "2025-01-30 12:03:02.386515",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Price",
