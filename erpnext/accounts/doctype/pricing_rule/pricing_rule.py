@@ -677,15 +677,17 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False) -> dict:
 								check_env='FTP_DEBUG_PRICING_RULE')
 					continue  # Skip This Pricing Rule, because this Order is not the Nth Order.
 
-				frappe.dprint(f"* Applying an Nth Order pricing rule to Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
+				frappe.dprint(f"* ... pricing rule meets Nth Order requirements on Daily Order {doc.name}", check_env='FTP_DEBUG_PRICING_RULE')
 
 				# ------------------------------------
 				# Farm To People: Pricing Rule based on Order Line's Origin Code.
 				# ------------------------------------
 				if (pricing_rule.limit_to_origin != "All") and (doc.doctype == 'Daily Order Item'):
 					if pricing_rule.limit_to_origin == 'ALC' and doc.origin_code != 'A la carte':
+						frappe.dprint(f"X  Removing pricing rule due to Origin mismatch {doc.name} - {doc.origin_code}", check_env='FTP_DEBUG_PRICING_RULE')
 						continue
 					if pricing_rule.limit_to_origin == 'Subscription' and doc.origin_code != 'Subscription':
+						frappe.dprint(f"X  Removing pricing rule due to Origin mismatch {doc.name} - {doc.origin_code}", check_env='FTP_DEBUG_PRICING_RULE')						
 						continue
 
 				# ------------------------------------
@@ -706,6 +708,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False) -> dict:
 			item_details.validate_applied_rule = pricing_rule.get("validate_applied_rule", 0  )# Doesn't make much sense, since 'item_details' is not Pricing Rule specific.
 			item_details.price_or_product_discount = pricing_rule.get("price_or_product_discount")
 
+			frappe.dprint(f"* Appending the new rule {pricing_rule}", check_env='FTP_DEBUG_PRICING_RULE')
 			rules.append(get_pricing_rule_details(args, pricing_rule))  # Append a Dictionary to the applied rules (rules) List.  No logic, very simple.
 
 			if pricing_rule.mixed_conditions or pricing_rule.apply_rule_on_other:
@@ -726,6 +729,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False) -> dict:
 					)
 
 			if pricing_rule.coupon_code_based == 1 and args.coupon_code is None:
+				frappe.dprint(f"* Pricing rule requires a Coupon Code, but there is not one. {args}", check_env='FTP_DEBUG_PRICING_RULE')
 				return item_details
 
 			if not pricing_rule.validate_applied_rule:

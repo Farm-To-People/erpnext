@@ -92,6 +92,7 @@ class PurchaseOrder(BuyingController):
 		customer_name: DF.Data | None
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
+		email_status: DF.Literal["Not Sent", "Sent"]
 		from_date: DF.Date | None
 		grand_total: DF.Currency
 		group_same_items: DF.Check

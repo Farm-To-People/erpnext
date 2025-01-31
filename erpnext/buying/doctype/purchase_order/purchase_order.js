@@ -281,6 +281,7 @@ frappe.ui.form.on("Purchase Order", {
 								let new_order_line = frm.add_child("items");
 								new_order_line.item_code = row['item_code'];
 								new_order_line.item_name = row['item_name'];
+								new_order_line.description = row['description'];
 								new_order_line.uom = row['uom'];
 								new_order_line.qty = row['quantity'];
 								new_order_line.rate = row['price_list_rate'];
