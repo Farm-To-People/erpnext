@@ -728,7 +728,7 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False) -> dict:
 						pricing_rule.apply_rule_on_other_items
 					)
 
-			if pricing_rule.coupon_code_based == 1 and args.coupon_code is None:
+			if pricing_rule.coupon_code_based and (not args.coupon_codes):
 				frappe.dprint(f"* Pricing rule requires a Coupon Code, but there is not one. {args}", check_env='FTP_DEBUG_PRICING_RULE')
 				return item_details
 
