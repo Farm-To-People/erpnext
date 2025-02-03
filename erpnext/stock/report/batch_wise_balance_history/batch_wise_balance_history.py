@@ -19,7 +19,9 @@ def _estimate_table_row_count(doctype: str):
 		frappe.db.sql(
 			f"""select table_rows
 			   from  information_schema.tables
-			   where table_name = '{table}' ;"""
+			   where table_name = '{table}'
+			   AND table_schema == '{frappe.conf.db_name')
+			    ;"""
 		)[0][0]
 	)
 
