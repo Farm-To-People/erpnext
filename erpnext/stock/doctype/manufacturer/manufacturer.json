@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
@@ -13,7 +14,6 @@
   "full_name",
   "disabled",
   "logo",
-  "cb1",
   "website",
   "location",
   "country",
@@ -21,13 +21,17 @@
   "address_html",
   "column_break_8",
   "contact_html",
-  "website_filters_section",
-  "manufacturer_web_filters",  
   "section_break_10",
-  "notes"
+  "notes",
+  "cb_1",
+  "tab_ftp",
+  "website_filters_section",
+  "manufacturer_web_filters",
+  "pick_list_sort_code"
  ],
  "fields": [
   {
+   "columns": 2,
    "description": "Limited to 12 characters",
    "fieldname": "short_name",
    "fieldtype": "Data",
@@ -38,7 +42,6 @@
   {
    "fieldname": "full_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Full Name",
    "reqd": 1,
    "reqd_in_database": 1
@@ -90,51 +93,66 @@
   {
    "fieldname": "section_break_10",
    "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disable"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Location"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "MF-.",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "website_filters_section",
+   "fieldtype": "Section Break",
+   "label": "Website Filters"
+  },
+  {
+   "fieldname": "manufacturer_web_filters",
+   "fieldtype": "Table MultiSelect",
+   "options": "Manufacturer Filter Map"
+  },
+  {
+   "fieldname": "tab_ftp",
+   "fieldtype": "Tab Break",
+   "label": "FTP"
+  },
+  {
+   "bold": 1,
+   "columns": 1,
+   "description": "Used to change where a Manufacturer's products appear on a Pick List.",
+   "fieldname": "pick_list_sort_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sort Code",
+   "length": 40,
+   "search_index": 1
   }
-  ,{
-	"default": "0",
-	"fieldname": "disabled",
-	"fieldtype": "Check",
-	"label": "Disable"
-   },
-   {
-	"fieldname": "location",
-	"fieldtype": "Data",
-	"in_list_view": 1,
-	"in_standard_filter": 1,
-	"label": "Location"
-   },
-   {
-	"fieldname": "cb_1",
-	"fieldtype": "Column Break"
-   },
-   {
-	"fieldname": "naming_series",
-	"fieldtype": "Select",
-	"label": "Series",
-	"no_copy": 1,
-	"options": "MF-.",
-	"reqd": 1,
-	"set_only_once": 1
-   },
-   {
-	"collapsible": 1,
-	"fieldname": "website_filters_section",
-	"fieldtype": "Section Break",
-	"label": "Website Filters"
-   },
-   {
-	"fieldname": "manufacturer_web_filters",
-	"fieldtype": "Table MultiSelect",
-	"options": "Manufacturer Filter Map"
-   }  
  ],
  "icon": "fa fa-certificate",
- "modified": "2024-07-06 13:06:47.237014",
+ "links": [],
+ "modified": "2025-02-05 02:17:26.352088",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Manufacturer",
- "name_case": "UPPER CASE",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -161,6 +179,8 @@
  ],
  "search_fields": "short_name, full_name",
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "short_name"
 }

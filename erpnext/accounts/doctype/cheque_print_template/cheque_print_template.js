@@ -40,7 +40,7 @@ frappe.ui.form.on("Cheque Print Template", {
 						display: block;\
 						width: {{ amt_in_word_width }}cm;\
 						line-height: {{ amt_in_words_line_spacing }}cm;\
-						word-wrap: break-word;"> Amount in Words </span>\
+						overflow-wrap: break-word;"> Amount in Words </span>\
 					<span style="top: {{ amt_in_figures_from_top_edge }}cm;\
 						left: {{ amt_in_figures_from_left_edge }}cm;\
 						position: absolute;"> 1000 </span>\
