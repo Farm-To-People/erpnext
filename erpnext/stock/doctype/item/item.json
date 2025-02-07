@@ -178,6 +178,7 @@
    "set_only_once": 1
   },
   {
+   "allow_in_quick_entry": 1,
    "bold": 1,
    "fieldname": "item_name",
    "fieldtype": "Data",
@@ -185,6 +186,8 @@
    "label": "Item Name",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
+   "reqd": 1,
+   "reqd_in_database": 1,
    "search_index": 1
   },
   {
@@ -926,12 +929,10 @@
    "reqd": 1
   },
   {
-   "fetch_from": "item_name",
-   "fetch_if_empty": 1,
    "fieldname": "item_name_web",
    "fieldtype": "Data",
    "label": "Item Web Name",
-   "reqd": 1,
+   "reqd_in_database": 1,
    "search_index": 1
   },
   {
@@ -1106,7 +1107,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-01-29 11:37:55.102403",
+ "modified": "2025-02-07 15:11:33.773789",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

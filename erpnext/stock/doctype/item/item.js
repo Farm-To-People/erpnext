@@ -258,13 +258,6 @@ frappe.ui.form.on("Item", {
 	has_variants: function (frm) {
 		erpnext.item.toggle_attributes(frm);
 	},
-
-	/* Farm to People: Default the Item Web Name */
-	item_name: function(frm) {
-		if(!frm.doc.item_name_web)
-			frm.set_value("item_name_web", frm.doc.item_name);
-	},
-
 });
 
 frappe.ui.form.on("Item Reorder", {
@@ -988,19 +981,5 @@ function open_form(frm, doctype, child_doctype, parentfield) {
 				frappe.model.trigger("item_code", frm.doc.name, new_child_doc);
 			},
 		]);
-	});
-}
-
-/* Farm To People */
-function py_update_sanity_cms(frm) {
-	frappe.msgprint("Request for update transmitted to Sanity.")
-	frappe.call({
-		method: "ftp.utilities.doc_extensions.post_ndjson_to_sanity",
-		args: {
-			"item_code": frm.doc.item_code
-		},
-		callback: function(r) {
-			frappe.msgprint(r);
-		}
 	});
 }
