@@ -1169,7 +1169,7 @@ def get_pos_profile(company, pos_profile=None, user=None):
 
 
 @frappe.whitelist()
-def get_conversion_factor(item_code, uom):
+def get_conversion_factor(item_code, uom, stock_uom=None):
 	variant_of = frappe.db.get_value("Item", item_code, "variant_of", cache=True)
 	filters = {"parent": item_code, "uom": uom}
 
@@ -1177,7 +1177,8 @@ def get_conversion_factor(item_code, uom):
 		filters["parent"] = ("in", (item_code, variant_of))
 	conversion_factor = frappe.db.get_value("UOM Conversion Detail", filters, "conversion_factor")
 	if not conversion_factor:
-		stock_uom = frappe.db.get_value("Item", item_code, "stock_uom")
+		# There is no Item-specific Conversion Factor for {uom}
+		stock_uom = stock_uom or frappe.db.get_value("Item", item_code, "stock_uom")  # Datahenge: What if the Item is brand new?
 		conversion_factor = get_uom_conv_factor(uom, stock_uom)
 
 	# return {"conversion_factor": conversion_factor or 1.0}

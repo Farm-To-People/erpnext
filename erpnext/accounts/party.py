@@ -115,7 +115,7 @@ def _get_party_details(
 
 	if not ignore_permissions:
 		ptype = "select" if frappe.only_has_select_perm(party_type) else "read"
-		frappe.has_permission(party_type, ptype, party, throw=True)
+		frappe.has_permission(party_type, ptype, party, throw=True, debug=False)
 
 	currency = party.get("default_currency") or currency or get_company_currency(company)
 
