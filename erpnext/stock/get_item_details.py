@@ -1170,6 +1170,7 @@ def get_pos_profile(company, pos_profile=None, user=None):
 
 @frappe.whitelist()
 def get_conversion_factor(item_code, uom, stock_uom=None):
+	# Datahenge: Added optional argument 'stock_uom' to support validation checks -before- an Item document is written to database.
 	variant_of = frappe.db.get_value("Item", item_code, "variant_of", cache=True)
 	filters = {"parent": item_code, "uom": uom}
 
@@ -1178,11 +1179,11 @@ def get_conversion_factor(item_code, uom, stock_uom=None):
 	conversion_factor = frappe.db.get_value("UOM Conversion Detail", filters, "conversion_factor")
 	if not conversion_factor:
 		# There is no Item-specific Conversion Factor for {uom}
-		stock_uom = stock_uom or frappe.db.get_value("Item", item_code, "stock_uom")  # Datahenge: What if the Item is brand new?
+		stock_uom = stock_uom or frappe.db.get_value("Item", item_code, "stock_uom")
 		conversion_factor = get_uom_conv_factor(uom, stock_uom)
 
 	# return {"conversion_factor": conversion_factor or 1.0}
-  	# Datahenge: Defaulting to 1.0 is a terrible practice, and could lead to a LOT of data integrity issues!
+  	# Datahenge: Defaulting to 1.0 is a terrible practice, and could lead to a LOT of data problems.  Throwing an error instead.
 	if not conversion_factor:
 		raise ValueError(f"Cannot find a conversion factor for Item '{item_code}', from uom '{uom}' to stocking UOM '{stock_uom}'.")
 	return {"conversion_factor": conversion_factor}
