@@ -14,20 +14,24 @@ class CustomerGroup(NestedSet):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-			CustomerCreditLimit,
-		)
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
+		from frappe.types import DF
+		from ftp.ftp_module.doctype.transactional_email_override.transactional_email_override import TransactionalEmailOverride
 
 		accounts: DF.Table[PartyAccount]
+		cannot_subscribe_to_totes: DF.Check
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_group_name: DF.Data
+		customer_name_suffix: DF.Data | None
 		default_price_list: DF.Link | None
+		default_shipping_rule: DF.Link | None
+		hdwd_behavior: DF.Literal["Normal", "Without Short-Sub", "Never"]
 		is_group: DF.Check
 		lft: DF.Int
 		old_parent: DF.Link | None
+		onfleet_merchant: DF.Data | None
+		override: DF.Table[TransactionalEmailOverride]
 		parent_customer_group: DF.Link | None
 		payment_terms: DF.Link | None
 		rgt: DF.Int
@@ -74,6 +78,9 @@ class CustomerGroup(NestedSet):
 		self.validate_name_with_customer()
 		super().on_update()
 		self.validate_one_root()
+		if self.get("customer_name_suffix"):
+			update_customer_names_with_suffix(self.name, self.get("customer_name_suffix"))
+
 
 	def validate_name_with_customer(self):
 		if frappe.db.exists("Customer", self.name):
@@ -94,3 +101,29 @@ def get_parent_customer_groups(customer_group):
 
 def on_doctype_update():
 	frappe.db.add_index("Customer Group", ["lft", "rgt"])
+
+
+def update_customer_names_with_suffix(customer_group_name, suffix):
+    customers = frappe.get_all("Customer", filters={"customer_group": customer_group_name}, fields=["name", "first_name", "last_name"])
+    for customer in customers:
+        full_name = f"{customer.first_name} {customer.last_name} ({suffix})"
+        frappe.db.set_value("Customer", customer.name, "customer_name", full_name)
+
+def on_customer_insert(doc, method):
+    if doc.customer_group:
+        suffix = frappe.get_value("Customer Group", doc.customer_group, "customer_name_suffix")
+        if suffix:
+            doc.full_name = f"{doc.first_name} {doc.last_name} ({suffix})"
+
+
+def on_customer_validate(doc, method):
+    if doc.customer_group:
+        suffix = frappe.get_value("Customer Group", doc.customer_group, "customer_name_suffix")
+        if suffix:
+            doc.customer_name = f"{doc.first_name} {doc.last_name} ({suffix})"
+
+
+
+
+
+
