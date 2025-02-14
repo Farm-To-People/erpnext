@@ -78,8 +78,6 @@ class CustomerGroup(NestedSet):
 		self.validate_name_with_customer()
 		super().on_update()
 		self.validate_one_root()
-		if self.get("customer_name_suffix"):
-			update_customer_names_with_suffix(self.name, self.get("customer_name_suffix"))
 
 
 	def validate_name_with_customer(self):
@@ -103,24 +101,7 @@ def on_doctype_update():
 	frappe.db.add_index("Customer Group", ["lft", "rgt"])
 
 
-def update_customer_names_with_suffix(customer_group_name, suffix):
-    customers = frappe.get_all("Customer", filters={"customer_group": customer_group_name}, fields=["name", "first_name", "last_name"])
-    for customer in customers:
-        full_name = f"{customer.first_name} {customer.last_name} ({suffix})"
-        frappe.db.set_value("Customer", customer.name, "customer_name", full_name)
 
-def on_customer_insert(doc, method):
-    if doc.customer_group:
-        suffix = frappe.get_value("Customer Group", doc.customer_group, "customer_name_suffix")
-        if suffix:
-            doc.full_name = f"{doc.first_name} {doc.last_name} ({suffix})"
-
-
-def on_customer_validate(doc, method):
-    if doc.customer_group:
-        suffix = frappe.get_value("Customer Group", doc.customer_group, "customer_name_suffix")
-        if suffix:
-            doc.customer_name = f"{doc.first_name} {doc.last_name} ({suffix})"
 
 
 

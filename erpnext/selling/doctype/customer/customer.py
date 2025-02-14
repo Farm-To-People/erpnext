@@ -153,24 +153,10 @@ class Customer(TransactionBase):
 			if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 				self.loyalty_program_tier = customer.loyalty_program_tier
 
-		if self.customer_group:
-			suffix = frappe.get_value("Customer Group", self.customer_group, "customer_name_suffix")
-			if suffix:
-				self.full_name = f"{self.first_name} {self.last_name} ({suffix})"
-				frappe.db.set_value("Customer", self.name, "customer_name", self.full_name)
-
 
 		if self.sales_team:
 			if sum(member.allocated_percentage or 0 for member in self.sales_team) != 100:
 				frappe.throw(_("Total contribution percentage should be equal to 100"))
-
-	def on_insert(self):
-		if self.customer_group:
-			suffix = frappe.get_value("Customer Group", self.customer_group, "customer_name_suffix")
-			if suffix:
-				self.full_name = f"{self.first_name} {self.last_name} ({suffix})"
-				frappe.db.set_value("Customer", self.name, "customer_name", self.full_name)
-
 
 
 

@@ -338,10 +338,6 @@ doc_events = {
 			"erpnext.portal.utils.set_default_role",
 		],
 	},
-    "Customer": {
-		"on_insert": "erpnext.setup.doctype.customer_group.customer_group.on_customer_insert",
-		"validate": "erpnext.setup.doctype.customer_group.customer_group.on_customer_validate",
-	},
 	"Communication": {
 		"on_update": [
 			"erpnext.support.doctype.service_level_agreement.service_level_agreement.on_communication_update",
