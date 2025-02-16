@@ -20,14 +20,20 @@ class CustomerGroup(NestedSet):
 		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
 			CustomerCreditLimit,
 		)
-
+		from ftp.ftp_module.doctype.transactional_email_override.transactional_email_override import TransactionalEmailOverride
 		accounts: DF.Table[PartyAccount]
+		cannot_subscribe_to_totes: DF.Check
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_group_name: DF.Data
+		customer_name_suffix: DF.Data | None
 		default_price_list: DF.Link | None
+		default_shipping_rule: DF.Link | None
+		hdwd_behavior: DF.Literal["Normal", "Without Short-Sub", "Never"]
 		is_group: DF.Check
 		lft: DF.Int
 		old_parent: DF.Link | None
+		onfleet_merchant: DF.Data | None
+		override: DF.Table[TransactionalEmailOverride]
 		parent_customer_group: DF.Link | None
 		payment_terms: DF.Link | None
 		rgt: DF.Int
