@@ -14,13 +14,11 @@ class CustomerGroup(NestedSet):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-			CustomerCreditLimit,
-		)
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
+		from frappe.types import DF
 		from ftp.ftp_module.doctype.transactional_email_override.transactional_email_override import TransactionalEmailOverride
+
 		accounts: DF.Table[PartyAccount]
 		cannot_subscribe_to_totes: DF.Check
 		credit_limits: DF.Table[CustomerCreditLimit]
@@ -29,6 +27,7 @@ class CustomerGroup(NestedSet):
 		default_price_list: DF.Link | None
 		default_shipping_rule: DF.Link | None
 		hdwd_behavior: DF.Literal["Normal", "Without Short-Sub", "Never"]
+		ignore_missing_payment_method: DF.Check
 		is_group: DF.Check
 		lft: DF.Int
 		old_parent: DF.Link | None

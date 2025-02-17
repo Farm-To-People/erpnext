@@ -11,25 +11,27 @@
   "customer_group_name",
   "parent_customer_group",
   "is_group",
-  "customer_name_suffix",
   "cb0",
   "default_price_list",
   "payment_terms",
   "lft",
   "rgt",
   "old_parent",
+  "default_receivable_account",
+  "accounts",
+  "credit_limit_section",
+  "credit_limits",
+  "tab_ftp",
   "sb_ftp",
+  "customer_name_suffix",
   "cannot_subscribe_to_totes",
   "default_shipping_rule",
   "column_break_12",
   "onfleet_merchant",
   "hdwd_behavior",
+  "ignore_missing_payment_method",
   "section_break_15",
-  "override",
-  "default_receivable_account",
-  "accounts",
-  "credit_limit_section",
-  "credit_limits"
+  "override"
  ],
  "fields": [
   {
@@ -180,7 +182,8 @@
   },
   {
    "fieldname": "section_break_15",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Email"
   },
   {
    "default": "Normal",
@@ -192,6 +195,18 @@
    "reqd_in_database": 1
   },
   {
+   "fieldname": "tab_ftp",
+   "fieldtype": "Tab Break",
+   "label": "FTP"
+  },
+  {
+   "default": "0",
+   "description": "When marked, ERP will not react to a missing account in Stripe.",
+   "fieldname": "ignore_missing_payment_method",
+   "fieldtype": "Check",
+   "label": "Ignore Missing Payment Method"
+  },
+  {
    "fieldname": "customer_name_suffix",
    "fieldtype": "Data",
    "label": "Customer Name Suffix"
@@ -201,7 +216,7 @@
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-02-13 16:27:17.321051",
+ "modified": "2025-02-17 13:58:46.419146",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",
