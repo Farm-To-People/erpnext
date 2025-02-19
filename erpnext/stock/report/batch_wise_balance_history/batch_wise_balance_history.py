@@ -12,7 +12,7 @@ from erpnext.stock.doctype.warehouse.warehouse import apply_warehouse_filter
 
 SLE_COUNT_LIMIT = 10_000
 
-
+# TODO: Datahenge: Fix this query to be compatible with Postgres
 def _estimate_table_row_count(doctype: str):
 	table = get_table_name(doctype)
 	return cint(
