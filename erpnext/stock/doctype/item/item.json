@@ -129,8 +129,8 @@
   "total_projected_qty",
   "ftp_tab",
   "web_categories_section",
-  "website_item_groups",
   "web_filters",
+  "website_item_groups",
   "sb_misc",
   "segregation",
   "packing_slip_section",
@@ -1100,7 +1100,8 @@
    "fieldname": "website_item_groups",
    "fieldtype": "Table",
    "label": "Categories",
-   "options": "Website Item Group"
+   "options": "Website Item Group",
+   "read_only": 1
   },
   {
    "fieldname": "warehouse_slot",
@@ -1121,7 +1122,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-04-20 14:49:12.767774+00:00",
+ "modified": "2025-05-07 15:49:52.633062+00:00",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

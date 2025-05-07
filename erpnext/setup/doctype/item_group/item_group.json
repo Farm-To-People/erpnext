@@ -3,7 +3,7 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:item_group_name",
- "creation": "2013-03-28 10:35:29",
+ "creation": "2013-03-28 10:35:29+00:00",
  "description": "An Item Group is a way to classify items based on types.",
  "doctype": "DocType",
  "document_type": "Setup",
@@ -12,17 +12,16 @@
   "gs",
   "item_group_name",
   "parent_item_group",
+  "column_break_5",
   "is_group",
   "image",
-  "column_break_5",
   "defaults",
   "item_group_defaults",
   "sec_break_taxes",
   "taxes",
   "lft",
   "old_parent",
-  "rgt",
-  "sanity_sort_code"
+  "rgt"
  ],
  "fields": [
   {
@@ -33,7 +32,6 @@
   {
    "fieldname": "item_group_name",
    "fieldtype": "Data",
-   "in_list_view": 0,
    "label": "Item Group Name",
    "oldfieldname": "item_group_name",
    "oldfieldtype": "Data",
@@ -129,15 +127,6 @@
    "print_hide": 1,
    "report_hide": 1
   }
-  ,{
-  "description": "Position of this Item Group (Category) in relation to <i>sibling</i> Item Groups.",
-  "fieldname": "sanity_sort_code",
-  "fieldtype": "Int",
-  "in_list_view": 1,
-  "label": "Sanity Sort Code",
-  "non_negative": 1,
-  "read_only": 1
- }  
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
@@ -145,7 +134,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2024-06-13 14:08:38.485616",
+ "modified": "2025-05-06 21:01:04.824454+00:00",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",
