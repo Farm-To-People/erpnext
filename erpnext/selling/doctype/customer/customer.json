@@ -4,7 +4,7 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
- "creation": "2013-06-11 14:26:44+00:00",
+ "creation": "2013-06-11 15:26:44+01:00",
  "description": "Buyer of Goods and Services.",
  "doctype": "DocType",
  "document_type": "Setup",
@@ -102,9 +102,12 @@
   "customer_retention_segment",
   "customer_acquisition_channel",
   "anonymous",
+  "never_substitute_me",
   "column_break_btlz",
   "registration_date",
   "zip_check_email_address",
+  "standardized_phone_number",
+  "mailchimp_contact_id",
   "sb_pauses",
   "pauses",
   "email_overrides_section",
@@ -804,6 +807,24 @@
    "fieldtype": "Data",
    "label": "Email From Zip Check",
    "read_only": 1
+  },
+  {
+   "fieldname": "standardized_phone_number",
+   "fieldtype": "Data",
+   "label": "Standardized Phone Number"
+  },
+  {
+   "fieldname": "mailchimp_contact_id",
+   "fieldtype": "Data",
+   "label": "Mailchimp Contact ID",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "If marked, customer strongly prefer never receiving substitutions under any circumstance",
+   "fieldname": "never_substitute_me",
+   "fieldtype": "Check",
+   "label": "Never Substitute Me"
   }
  ],
  "icon": "fa fa-user",
@@ -827,7 +848,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2025-10-20 23:07:08.617151+00:00",
+ "modified": "2026-01-05 10:33:24.880541+01:00",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
