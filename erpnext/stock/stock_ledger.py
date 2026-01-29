@@ -449,7 +449,7 @@ def get_items_to_be_repost(voucher_type=None, voucher_no=None, doc=None, reposti
 			filters={"voucher_type": voucher_type, "voucher_no": voucher_no},
 			fields=["item_code", "warehouse", "posting_date", "posting_time", "creation"],
 			order_by="creation asc",
-			group_by="item_code, warehouse",
+			group_by="item_code, warehouse, posting_date, posting_time, creation",
 		)
 
 	return items_to_be_repost or []
