@@ -20,6 +20,7 @@ class CustomerGroup(NestedSet):
 		from ftp.ftp_module.doctype.transactional_email_override.transactional_email_override import TransactionalEmailOverride
 
 		accounts: DF.Table[PartyAccount]
+		cannot_edit_orders: DF.Check
 		cannot_subscribe_to_totes: DF.Check
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_group_name: DF.Data

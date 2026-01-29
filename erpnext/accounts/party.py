@@ -758,6 +758,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 
 	doctype = "Sales Invoice" if party_type == "Customer" else "Purchase Invoice"
 
+	# This is bad code because it requires the customer already has a Sales Invoice which brand new customers will not.
 	companies = frappe.get_all(
 		doctype, filters={"docstatus": 1, party_type.lower(): party}, distinct=1, fields=["company"]
 	)
