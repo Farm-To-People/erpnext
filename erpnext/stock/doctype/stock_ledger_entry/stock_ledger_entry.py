@@ -94,7 +94,8 @@ class StockLedgerEntry(Document):
 		self.validate_inventory_dimension_negative_stock()
 
 	def set_posting_datetime(self, save=False):
-		from erpnext.stock.utils import get_combine_datetime
+		"""
+        from erpnext.stock.utils import get_combine_datetime
 
 		if save:
 			posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
@@ -102,6 +103,24 @@ class StockLedgerEntry(Document):
 				self.db_set("posting_datetime", posting_datetime)
 		else:
 			self.posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
+        """
+        # TODO: This is an ad hoc fix proposed 2/9/2026 to immediately fix the issue with SLEs getting the wrond `posting_datetime` and thus being backdated, screwing up the stock ledger and current stock
+		from erpnext.stock.utils import get_combine_datetime
+		from zoneinfo import ZoneInfo
+
+		local_tz = ZoneInfo('America/New_York')
+		utc_tz = ZoneInfo('UTC')
+
+		naive_local = get_combine_datetime(self.posting_date, self.posting_time)
+		aware_local = naive_local.replace(tzinfo=local_tz)
+		utc_naive = aware_local.astimezone(utc_tz).replace(tzinfo=None)
+
+		if save:
+			if not self.posting_datetime or self.posting_datetime != utc_naive:
+				self.db_set("posting_datetime", utc_naive)
+		else:
+			self.posting_datetime = utc_naive
+
 
 	def validate_inventory_dimension_negative_stock(self):
 		if self.is_cancelled:
