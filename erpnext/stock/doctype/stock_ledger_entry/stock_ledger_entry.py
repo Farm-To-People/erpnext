@@ -94,8 +94,7 @@ class StockLedgerEntry(Document):
 		self.validate_inventory_dimension_negative_stock()
 
 	def set_posting_datetime(self, save=False):
-		"""
-        from erpnext.stock.utils import get_combine_datetime
+		from erpnext.stock.utils import get_combine_datetime
 
 		if save:
 			posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
@@ -103,8 +102,16 @@ class StockLedgerEntry(Document):
 				self.db_set("posting_datetime", posting_datetime)
 		else:
 			self.posting_datetime = get_combine_datetime(self.posting_date, self.posting_time)
-        """
-        # TODO: This is an ad hoc fix proposed 2/9/2026 to immediately fix the issue with SLEs getting the wrond `posting_datetime` and thus being backdated, screwing up the stock ledger and current stock
+		"""
+        NOTE: The following was an ad hoc fix proposed 2/9/2026 to immediately fix the issue with SLEs getting the wrong `posting_datetime`
+		and thus being backdated, screwing up the stock ledger and current stock.
+		This didn't work as intended, because this only fixed the storage side ofposting_datetime — converting to UTC in
+		set_posting_datetime()— but left get_combine_datetime() unchanged. Since get_combine_datetime() is called throughout              
+		stock_ledger.py to build the posting_datetime parameter used in WHERE clauses (e.g., posting_datetime = %(posting_datetime)s in
+		get_sle_against_current_voucher, and posting_datetime <= %(posting_datetime)s in get_previous_sle_of_current_voucher
+		and get_stock_ledger_entries), those query parameters are still naive local-time values. The result is a guaranteed 5-hour
+		mismatch between what's stored (UTC) and what's queried (local), causing equality checks to fail and SLEs to not be processed.
+
 		from erpnext.stock.utils import get_combine_datetime
 		from zoneinfo import ZoneInfo
 
@@ -120,6 +127,7 @@ class StockLedgerEntry(Document):
 				self.db_set("posting_datetime", utc_naive)
 		else:
 			self.posting_datetime = utc_naive
+		"""
 
 
 	def validate_inventory_dimension_negative_stock(self):
