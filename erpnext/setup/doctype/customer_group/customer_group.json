@@ -11,7 +11,6 @@
   "customer_group_name",
   "parent_customer_group",
   "is_group",
-  "default_language",
   "cb0",
   "default_price_list",
   "payment_terms",
@@ -27,6 +26,7 @@
   "customer_name_suffix",
   "cannot_subscribe_to_totes",
   "default_shipping_rule",
+  "cannot_edit_orders",
   "column_break_12",
   "onfleet_merchant",
   "hdwd_behavior",
@@ -221,17 +221,18 @@
    "label": "Not a New Customer (Packing Slip)"
   },
   {
-   "fieldname": "default_language",
-   "fieldtype": "Link",
-   "label": "Default Language",
-   "options": "Language"
+   "default": "0",
+   "description": "If marked, these customers can not edit their carts or subscriptions",
+   "fieldname": "cannot_edit_orders",
+   "fieldtype": "Check",
+   "label": "Cannot Edit Orders"
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-08-19 17:36:09.307482+01:00",
+ "modified": "2026-02-20 19:47:36.027479+01:00",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",
