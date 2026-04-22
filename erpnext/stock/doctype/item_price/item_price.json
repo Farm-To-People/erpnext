@@ -33,9 +33,6 @@
   "valid_from",
   "valid_upto",
   "lead_time_days",
-  "price_date_column",
-  "valid_from_price_date",
-  "valid_to_price_date",
   "section_break_24",
   "column_break_lfwc",
   "note",
@@ -229,21 +226,6 @@
    "fieldtype": "Link",
    "label": "Batch No",
    "options": "Batch"
-  },
-  {
-   "fieldname": "valid_from_price_date",
-   "fieldtype": "Date",
-   "label": "Valid From Price Date"
-  },
-  {
-   "fieldname": "valid_to_price_date",
-   "fieldtype": "Date",
-   "label": "Valid Upto Price Date"
-  },
-  {
-   "fieldname": "price_date_column",
-   "fieldtype": "Column Break",
-   "label": "Price Date"
   },
   {
    "columns": 1,

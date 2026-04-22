@@ -94,8 +94,6 @@ class PricingRule(Document):
 		threshold_percentage: DF.Percent
 		title: DF.Data
 		valid_from: DF.Date | None
-		valid_from_price_date: DF.Date | None
-		valid_to_price_date: DF.Date | None
 		valid_upto: DF.Date | None
 		validate_applied_rule: DF.Check
 		warehouse: DF.Link | None
@@ -284,10 +282,6 @@ class PricingRule(Document):
 
 		self.validate_from_to_dates("valid_from", "valid_upto")
 
-		# Datahenge
-		if self.valid_from_price_date and self.valid_to_price_date and getdate(self.valid_from_price_date) > getdate(self.valid_to_price_date):
-			frappe.throw(_("'Valid From Price Date' must be less than 'Valid To Price Date'"))
-
 	def validate_condition(self):
 		if (
 			self.condition
@@ -315,8 +309,6 @@ class PricingRule(Document):
 		# Datahenge: None of these make sense for Transaction Level discounts.
 		if self.apply_on == 'Transaction':
 			self.apply_discount_on_rate = False
-			self.valid_from_price_date = None
-			self.valid_to_price_date = None
 			self.margin_type = None
 
 	def validate_nth(self):
