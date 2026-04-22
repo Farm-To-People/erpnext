@@ -348,12 +348,6 @@ def get_other_conditions(conditions, values, args):
 			and coalesce("tabPricing Rule".valid_upto, '2500-12-31')"""
 		values["transaction_date"] = args.get("transaction_date")
 
-	# July 7th, 2022: New field "price_date"
-	if args.get("price_date"):
-		conditions += """ and %(price_date)s between coalesce("tabPricing Rule".valid_from_price_date, '2000-01-01')
-			AND coalesce("tabPricing Rule".valid_to_price_date, '2500-12-31')"""
-		values['price_date'] = args.get('price_date')
-
 	if args.get("doctype") in [
 		"Quotation",
 		"Quotation Item",

@@ -66,8 +66,6 @@
   "valid_from",
   "valid_upto",
   "col_break1",
-  "valid_from_price_date",
-  "valid_to_price_date",
   "column_break_57",
   "company",
   "currency",
@@ -694,18 +692,6 @@
    "fieldname": "nth_order_only",
    "fieldtype": "Int",
    "label": "Apply to N-th Order Only"
-  },
-  {
-   "depends_on": "eval: doc.apply_on != \"Transaction\"",
-   "fieldname": "valid_from_price_date",
-   "fieldtype": "Date",
-   "label": "Valid From Price Date"
-  },
-  {
-   "depends_on": "eval: doc.apply_on != \"Transaction\"",
-   "fieldname": "valid_to_price_date",
-   "fieldtype": "Date",
-   "label": "Valid Upto Price Date"
   },
   {
    "fieldname": "column_break_57",
